@@ -33,3 +33,6 @@ legacy-src/
 web/test-results/
 web/playwright-report/
 web/.env.production
+
+# Cache local do firebase deploy
+.firebase/
