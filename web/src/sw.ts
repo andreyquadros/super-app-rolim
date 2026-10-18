@@ -16,7 +16,9 @@ cleanupOutdatedCaches();
 // SPA: qualquer navegação abre o app (exceto as rotas reservadas do Firebase)
 registerRoute(new NavigationRoute(createHandlerBoundToURL("index.html"), { denylist: [/^\/__\//] }));
 
-// Mapa base: guarda os blocos já vistos para funcionar com sinal fraco
+// Mapa base: guarda os blocos já vistos para funcionar com sinal fraco.
+// Os blocos são pedidos com CORS (crossOrigin no TileLayer), por isso podem
+// ser guardados sem o custo de cota das respostas opacas.
 registerRoute(
   ({ url }) => url.hostname.endsWith("tile.openstreetmap.org"),
   new CacheFirst({

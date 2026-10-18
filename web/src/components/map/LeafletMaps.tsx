@@ -50,7 +50,7 @@ export function MapPicker({ value, onChange, height = 320 }: MapPickerProps) {
 
   return (
     <MapContainer center={value ?? CITY_CENTER} zoom={value ? 16 : CITY_ZOOM} style={{ height }} scrollWheelZoom>
-      <TileLayer url={MAP_TILES.url} attribution={MAP_TILES.attribution} maxZoom={19} />
+      <TileLayer url={MAP_TILES.url} attribution={MAP_TILES.attribution} maxZoom={19} crossOrigin />
       <Boundary />
       <ClickToPick onPick={onChange} />
       <Recenter point={value} />
@@ -81,7 +81,7 @@ export function MapView({ markers, height = 300, center, zoom, showBoundary = fa
   const initial = center ?? (single ? { lat: single.lat, lng: single.lng } : CITY_CENTER);
   return (
     <MapContainer center={initial} zoom={zoom ?? (single ? 16 : CITY_ZOOM)} style={{ height }} scrollWheelZoom={false}>
-      <TileLayer url={MAP_TILES.url} attribution={MAP_TILES.attribution} maxZoom={19} />
+      <TileLayer url={MAP_TILES.url} attribution={MAP_TILES.attribution} maxZoom={19} crossOrigin />
       {showBoundary && <Boundary />}
       {markers.map((m) => (
         <CircleMarker
