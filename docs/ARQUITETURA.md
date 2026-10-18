@@ -16,7 +16,7 @@ A versão 1 funcionava, mas dependia de uma equipe para manter **oito serviços*
 | Loki + Grafana + Alloy | Logs | Cloud Logging (já incluso) |
 | App das lojas + painel Next.js separado | Interface | Um único PWA (cidadão + painel) |
 
-Resultado: **nenhum servidor para instalar, atualizar ou proteger** via RDP/Linux. Backups, escalonamento, certificados e atualizações de segurança ficam com o Google. Os dados ficam no Brasil (São Paulo).
+Resultado: **nenhum servidor para instalar, atualizar ou proteger** via RDP/Linux. Backups, escalonamento, certificados e atualizações de segurança ficam com o Google. Veja abaixo [onde cada dado fica](#onde-os-dados-ficam).
 
 ## Componentes
 
@@ -55,6 +55,21 @@ stateDiagram-v2
 
 Cada mudança feita pela equipe grava, no mesmo lote, o documento `history/{novoStatus}`; as regras recusam a mudança sem esse registro. Assim o histórico nunca fica incompleto.
 
+## Onde os dados ficam
+
+| Dado | Serviço | Local |
+| --- | --- | --- |
+| Cadastro (nome, CPF, celular), solicitações, histórico, notas, unidades, equipe, comunicados | Cloud Firestore | Brasil — `southamerica-east1` (São Paulo) |
+| Processamento (e-mails, avisos, auditoria) | Cloud Functions | Brasil — `southamerica-east1` |
+| Fotos anexadas à zeladoria | Cloud Storage, bucket `superapp-rolim.firebasestorage.app` | **EUA — `us-east1`** (escolha da prefeitura: cabe nos 5 GB gratuitos do Storage) |
+| Conta de acesso (e-mail, senha protegida) | Firebase Authentication | Infraestrutura global do Google (EUA) |
+| Envio de avisos push | Firebase Cloud Messaging | Infraestrutura global do Google |
+| Arquivos do app | Firebase Hosting (CDN) | Global, servido do ponto mais próximo |
+
+A transferência internacional (fotos, contas e avisos) segue o art. 33 da LGPD, com o Google como operador sob as cláusulas de proteção de dados do contrato do Google Cloud. A página **Privacidade** do app informa isso ao cidadão. Recomenda-se que o encarregado de dados (DPO) da prefeitura registre essa transferência no inventário de dados.
+
+O local do bucket padrão não pode ser alterado. Se no futuro a prefeitura quiser as fotos no Brasil, crie um bucket adicional em `southamerica-east1`, aponte `VITE_FIREBASE_STORAGE_BUCKET` e o alvo de regras do Storage para ele e copie as fotos existentes.
+
 ## Decisões e limites conhecidos
 
 - **Firebase em vez de servidor próprio:** a prioridade é operar sem equipe técnica dedicada. O backend antigo já usava Firebase para push, então a conta Google também já era uma dependência.
@@ -73,4 +88,4 @@ Cada mudança feita pela equipe grava, no mesmo lote, o documento `history/{novo
 
 ## Custos
 
-Estimativa para o porte de Rolim de Moura (~55 mil habitantes), com milhares de solicitações por ano: a maior parte do uso cabe nas cotas gratuitas do plano Blaze (Firestore, Functions, Hosting, Authentication e Cloud Messaging). O Storage em São Paulo custa centavos por GB/mês. **Espere de R$ 0 a algumas dezenas de reais por mês**; configure o alerta de orçamento para ter certeza. Preços mudam: confira https://firebase.google.com/pricing.
+Estimativa para o porte de Rolim de Moura (~55 mil habitantes), com milhares de solicitações por ano: a maior parte do uso cabe nas cotas gratuitas do plano Blaze (Firestore, Functions, Hosting, Authentication e Cloud Messaging). As fotos ficam no bucket dos EUA, dentro da cota gratuita de 5 GB do Storage (as fotos são comprimidas para ~300 KB, então cabem cerca de 15 mil). **Espere de R$ 0 a algumas dezenas de reais por mês**; configure o alerta de orçamento para ter certeza. Preços mudam: confira https://firebase.google.com/pricing.

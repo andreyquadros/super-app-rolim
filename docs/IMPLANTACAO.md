@@ -18,13 +18,13 @@ Este guia leva o app do zero até o ar, **sem servidor próprio**. Leva cerca de
 3. Em **Uso e faturamento → Detalhes e configurações**, mude para o plano **Blaze** (pagamento conforme o uso). É exigido para Cloud Functions e Storage.
 4. **Crie um alerta de orçamento** (Google Cloud → Faturamento → Orçamentos e alertas), por exemplo R$ 50/mês com aviso em 50%, 90% e 100%. Para o porte de Rolim de Moura o custo esperado fica próximo de zero (veja [ARQUITETURA.md](ARQUITETURA.md#custos)).
 
-## 2. Ativar os serviços (todos na região **southamerica-east1 – São Paulo**)
+## 2. Ativar os serviços (Firestore e Functions em **southamerica-east1 – São Paulo**)
 
 | Serviço | Onde | O que fazer |
 | --- | --- | --- |
 | Authentication | Criação → Authentication → Método de login | Ative **E-mail/senha** e **Google**. Em *Modelos*, mude o idioma para **Português (Brasil)**. |
 | Firestore | Criação → Firestore Database | **Criar banco** em modo produção, local `southamerica-east1`. (O `firebase.json` já fixa essa região: se o banco ainda não existir, o deploy o cria em São Paulo.) |
-| Storage | Criação → Storage | **Começar** → escolha **Todas as localizações** → `southamerica-east1`. Atenção: a opção destacada "sem custo" cria o bucket nos EUA, e o local não pode ser mudado depois. |
+| Storage | Criação → Storage | **Começar** e escolha a região das fotos — **a escolha é definitiva**. *Sem custo* (EUA, ex.: `us-east1`): 5 GB gratuitos, mas as fotos saem do país (é o que usa a produção de Rolim de Moura; veja [ARQUITETURA.md](ARQUITETURA.md#onde-os-dados-ficam)). *Todas as localizações* → `southamerica-east1`: dados no Brasil, centavos por GB/mês; nesse caso ajuste a página de privacidade (`web/src/pages/PrivacyPage.tsx`). |
 | Cloud Messaging | Configurações do projeto → Cloud Messaging → Configuração da Web | Em *Certificados push da Web*, clique em **Gerar par de chaves** e copie a chave (VAPID). |
 
 ## 3. Registrar o app Web e configurar o código

@@ -25,11 +25,11 @@ flowchart LR
   subgraph Celular / navegador
     PWA[PWA React<br/>cache offline + push]
   end
-  subgraph Firebase - região São Paulo
+  subgraph Firebase
     H[Hosting<br/>HTTPS + domínio]
     A[Authentication<br/>e-mail/senha e Google]
-    F[(Firestore<br/>dados + regras de segurança)]
-    S[(Storage<br/>fotos)]
+    F[(Firestore - São Paulo<br/>dados + regras de segurança)]
+    S[(Storage - EUA<br/>fotos)]
     CF[Cloud Functions<br/>e-mails, push, auditoria]
     M[Cloud Messaging<br/>avisos push]
   end

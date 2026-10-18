@@ -22,8 +22,24 @@ export default function PrivacyPage() {
         Quem tem acesso
       </Title>
       <Text>
-        Apenas você e os servidores responsáveis pelo atendimento. Observações internas da equipe não são públicas. Os dados ficam armazenados
-        no Brasil (Google Cloud, região São Paulo) e não são vendidos nem compartilhados para fins comerciais.
+        Apenas você e os servidores responsáveis pelo atendimento. Observações internas da equipe não são públicas. Os dados não são vendidos
+        nem compartilhados para fins comerciais.
+      </Text>
+      <Title order={2} fz="lg">
+        Onde os dados ficam
+      </Title>
+      <List spacing="xs">
+        <List.Item>
+          <b>No Brasil</b> (Google Cloud, São Paulo): seu cadastro (nome, CPF, celular) e as solicitações, com o histórico e as respostas.
+        </List.Item>
+        <List.Item>
+          <b>Nos Estados Unidos</b> (Google Cloud): as fotos anexadas às solicitações, a conta de acesso (e-mail e senha protegida) e o
+          serviço de envio de avisos.
+        </List.Item>
+      </List>
+      <Text>
+        O Google atua como operador e trata esses dados apenas para prestar o serviço à prefeitura, sob as cláusulas de proteção de dados do
+        contrato do Google Cloud, conforme as regras de transferência internacional da LGPD (art. 33).
       </Text>
       <Title order={2} fz="lg">
         Seus direitos
