@@ -1,6 +1,12 @@
 rules_version = '2';
 
 // Fotos da zeladoria: issues/{uid}/{issueId}/{arquivo}
+//
+// Estas regras consultam o Firestore (firestore.get) para saber quem é da
+// equipe. Isso exige o papel "Firebase Rules Firestore Service Agent" na
+// conta de serviço do Storage: publique com `firebase deploy --only storage`
+// num terminal interativo e responda "sim" (com --non-interactive o CLI pula
+// essa etapa e a equipe deixa de ver as fotos).
 // Substitui o bucket MinIO público do backend antigo — agora as fotos só
 // são visíveis para quem abriu a solicitação e para a equipe da prefeitura.
 service firebase.storage {

@@ -23,8 +23,8 @@ Este guia leva o app do zero até o ar, **sem servidor próprio**. Leva cerca de
 | Serviço | Onde | O que fazer |
 | --- | --- | --- |
 | Authentication | Criação → Authentication → Método de login | Ative **E-mail/senha** e **Google**. Em *Modelos*, mude o idioma para **Português (Brasil)**. |
-| Firestore | Criação → Firestore Database | **Criar banco** em modo produção, local `southamerica-east1`. |
-| Storage | Criação → Storage | **Começar**, local `southamerica-east1`. |
+| Firestore | Criação → Firestore Database | **Criar banco** em modo produção, local `southamerica-east1`. (O `firebase.json` já fixa essa região: se o banco ainda não existir, o deploy o cria em São Paulo.) |
+| Storage | Criação → Storage | **Começar** → escolha **Todas as localizações** → `southamerica-east1`. Atenção: a opção destacada "sem custo" cria o bucket nos EUA, e o local não pode ser mudado depois. |
 | Cloud Messaging | Configurações do projeto → Cloud Messaging → Configuração da Web | Em *Certificados push da Web*, clique em **Gerar par de chaves** e copie a chave (VAPID). |
 
 ## 3. Registrar o app Web e configurar o código
@@ -66,7 +66,13 @@ npm run setup
 firebase deploy
 ```
 
-O comando publica regras, índices, Cloud Functions e o app. Na primeira vez, o Google pode pedir para habilitar APIs — confirme e rode de novo. Ao final, o app fica em `https://<id-do-projeto>.web.app`.
+O comando publica regras, índices, Cloud Functions e o app. Ao final, o app fica em `https://<id-do-projeto>.web.app`.
+
+Particularidades da **primeira** publicação:
+
+- **Functions:** é comum falhar com *"Permission denied while using the Eventarc Service Agent"*. São permissões do Google ainda propagando: aguarde 3 a 5 minutos e rode `firebase deploy --only functions` de novo.
+- **Storage:** as regras de fotos consultam o Firestore e exigem um papel extra na conta de serviço do Storage. Rode `firebase deploy --only storage` num terminal **interativo** (sem `--non-interactive`) e responda **sim** quando perguntar *"Grant the new role?"*. Sem isso, a equipe não consegue ver as fotos.
+- **Custos de imagens:** rode uma vez `firebase functions:artifacts:setpolicy --location southamerica-east1 --days 3` para apagar imagens antigas de deploy.
 
 ## 6. Endereço da prefeitura (opcional, recomendado)
 
