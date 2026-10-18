@@ -14,7 +14,7 @@ export const BROADCAST_TOPIC = "comunicados";
  *   APP_URL=https://app.rolimdemoura.ro.gov.br
  */
 export const APP_URL = defineString("APP_URL", {
-  default: "http://localhost:5173",
+  default: "http://localhost:5180",
   description: "Endereço público do app (ex.: https://app.rolimdemoura.ro.gov.br)",
 });
 

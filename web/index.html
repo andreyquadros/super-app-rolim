@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Super App Rolim de Moura</title>
+    <meta name="description" content="Zeladoria, ouvidoria, farmácias de plantão e comunicados da Prefeitura Municipal de Rolim de Moura." />
+    <meta name="theme-color" content="#0d7a49" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0f3b28" media="(prefers-color-scheme: dark)" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Rolim de Moura" />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" href="/logo.svg" sizes="any" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />
+    <style>
+      /* Fundo imediato antes do CSS carregar (evita flash branco no modo escuro) */
+      html { background: #f6f4ee; }
+      @media (prefers-color-scheme: dark) { html { background: #141a17; } }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>Ative o JavaScript para usar o aplicativo da Prefeitura de Rolim de Moura.</noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

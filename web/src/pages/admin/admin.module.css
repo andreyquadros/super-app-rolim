@@ -1,0 +1,86 @@
+.kpi {
+  position: relative;
+  overflow: hidden;
+  background: var(--app-surface);
+
+  &[data-tone="mata"] {
+    background: linear-gradient(150deg, var(--mantine-color-mata-light), var(--app-surface) 70%);
+  }
+
+  &[data-tone="ipe"] {
+    background: linear-gradient(150deg, var(--mantine-color-ipe-light), var(--app-surface) 70%);
+  }
+}
+
+.dashGrid {
+  display: grid;
+  gap: var(--mantine-spacing-md);
+  grid-template-columns: 1fr;
+
+  @media (min-width: $mantine-breakpoint-md) {
+    grid-template-columns: 1.6fr 1fr;
+  }
+}
+
+.mapCard {
+  min-width: 0;
+}
+
+.stackBar {
+  display: flex;
+  height: 14px;
+  border-radius: 999px;
+  overflow: hidden;
+  gap: 2px;
+  background: var(--app-line);
+
+  & > span {
+    min-width: 6px;
+    transition: flex-grow var(--duration-normal) var(--ease-out-expo);
+  }
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.rankTrack {
+  height: 6px;
+  margin-top: 4px;
+  border-radius: 999px;
+  background: var(--app-line);
+  overflow: hidden;
+
+  & > span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--mantine-color-mata-6);
+  }
+}
+
+.row {
+  cursor: pointer;
+  transition: background var(--duration-fast);
+
+  &:hover {
+    background: var(--mantine-color-mata-light);
+  }
+
+  &:focus-visible {
+    outline: 3px solid var(--mantine-color-ipe-4);
+    outline-offset: -3px;
+  }
+}
+
+.switchCard {
+  transition: border-color var(--duration-fast), box-shadow var(--duration-fast);
+
+  &[data-on-duty] {
+    border-color: var(--mantine-color-barro-4);
+    box-shadow: 0 0 0 3px var(--mantine-color-barro-light);
+  }
+}

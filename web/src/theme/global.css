@@ -1,0 +1,129 @@
+:root {
+  --app-paper: #f6f4ee;
+  --app-surface: #ffffff;
+  --app-ink: #17241c;
+  --app-ink-soft: #4d5d53;
+  --app-line: #e3e0d6;
+  --app-hero: #0d7a49;
+  --app-hero-ink: #f4fbf6;
+  --app-accent: #ffbb36;
+  --app-header-h: 60px;
+  --app-tabbar-h: 68px;
+  --app-content-max: 760px;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 280ms;
+}
+
+/* O Mantine marca o <html> com o esquema ativo (claro/escuro/automático) */
+:root[data-mantine-color-scheme="dark"] {
+  --app-paper: #141a17;
+  --app-surface: #1b231f;
+  --app-ink: #e8eee9;
+  --app-ink-soft: #a9b8ae;
+  --app-line: #2a352f;
+  --app-hero: #0f3b28;
+}
+
+html,
+body {
+  background: var(--app-paper);
+  color: var(--app-ink);
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  min-height: 100dvh;
+  text-rendering: optimizeLegibility;
+}
+
+/* Grão sutil no fundo: dá textura de papel ao app sem custo de imagem */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: light-dark(0.35, 0.18);
+  background-image: radial-gradient(rgba(23, 36, 28, 0.06) 1px, transparent 1px);
+  background-size: 3px 3px;
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+}
+
+.protocol {
+  font-family: var(--mantine-font-family-monospace);
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+
+.eyebrow {
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--app-ink-soft);
+}
+
+/* Barra de progresso de navegação entre rotas carregadas sob demanda */
+.route-progress {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 3px;
+  z-index: 1000;
+  background: linear-gradient(90deg, var(--mantine-color-mata-6), var(--app-accent));
+  transform-origin: left;
+  animation: route-progress 1.2s var(--ease-out-expo) infinite;
+}
+
+@keyframes route-progress {
+  0% {
+    transform: scaleX(0);
+    opacity: 1;
+  }
+  80% {
+    transform: scaleX(0.9);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 0;
+  }
+}
+
+.leaflet-container {
+  font-family: inherit;
+  border-radius: var(--mantine-radius-lg);
+  z-index: 0;
+}
+
+.map-pin {
+  width: 34px;
+  height: 34px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  background: var(--mantine-color-mata-8);
+  border: 3px solid #fff;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
+}
+
+.map-pin::after {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  background: var(--app-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

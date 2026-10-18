@@ -1,0 +1,209 @@
+.hero {
+  position: relative;
+  margin: -20px -16px 0;
+  padding: 36px 20px 84px;
+  color: var(--app-hero-ink);
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgba(255, 187, 54, 0.28), transparent 55%),
+    linear-gradient(160deg, var(--app-hero), light-dark(#0a5c37, #0b2c1e));
+  overflow: hidden;
+  isolation: isolate;
+
+  @media (min-width: $mantine-breakpoint-sm) {
+    margin: 0;
+    border-radius: var(--mantine-radius-xl);
+    padding: 48px 40px 96px;
+  }
+
+  /* Curvas de nível: lembram o relevo da Zona da Mata */
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    opacity: 0.16;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='1.2'%3E%3Cpath d='M-20 60c40-30 80 30 120 0s80 30 160 0'/%3E%3Cpath d='M-20 100c40-30 80 30 120 0s80 30 160 0'/%3E%3Cpath d='M-20 140c40-30 80 30 120 0s80 30 160 0'/%3E%3Cpath d='M-20 180c40-30 80 30 120 0s80 30 160 0'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 240px 240px;
+  }
+}
+
+.heroEyebrow {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.85;
+  margin-bottom: 10px;
+}
+
+.heroTitle {
+  color: var(--app-hero-ink);
+  max-width: 16ch;
+  font-variation-settings: "SOFT" 50;
+}
+
+.heroText {
+  margin-top: 12px;
+  max-width: 44ch;
+  opacity: 0.9;
+  font-size: var(--mantine-font-size-md);
+}
+
+.bento {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr 1fr;
+  margin-top: -84px;
+  position: relative;
+  z-index: 2;
+
+  @media (min-width: $mantine-breakpoint-sm) {
+    grid-template-columns: 1.3fr 1fr 1fr;
+    grid-template-rows: auto auto;
+    margin-top: -72px;
+    padding-inline: 24px;
+  }
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+  min-height: 132px;
+  padding: 16px;
+  border-radius: var(--mantine-radius-lg);
+  background: var(--app-surface);
+  border: 1px solid var(--app-line);
+  color: var(--app-ink);
+  text-decoration: none;
+  box-shadow: var(--mantine-shadow-md);
+  transition:
+    transform var(--duration-normal) var(--ease-out-expo),
+    box-shadow var(--duration-normal) var(--ease-out-expo);
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--mantine-shadow-lg);
+  }
+
+  &:active {
+    transform: translateY(0) scale(0.99);
+  }
+
+  &:focus-visible {
+    outline: 3px solid var(--mantine-color-ipe-4);
+    outline-offset: 3px;
+  }
+}
+
+.tileMain {
+  grid-column: 1 / -1;
+  min-height: 188px;
+  background: light-dark(#fffdf6, #1f2a24);
+  border-color: light-dark(#efe6c8, #2f3d35);
+
+  @media (min-width: $mantine-breakpoint-sm) {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    min-height: 100%;
+  }
+
+  & > svg {
+    color: var(--mantine-color-mata-8);
+  }
+}
+
+.tileMainText {
+  color: var(--app-ink-soft);
+  max-width: 34ch;
+}
+
+.tileCta {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: var(--mantine-font-size-sm);
+  background: var(--app-accent);
+  color: #2b1f00;
+  transition: gap var(--duration-fast) var(--ease-out-expo);
+
+  .tileMain:hover & {
+    gap: 10px;
+  }
+}
+
+.tileOmbudsman > svg {
+  color: var(--mantine-color-ipe-8);
+}
+
+.tilePharmacy > svg {
+  color: var(--mantine-color-barro-6);
+}
+
+.live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--app-ink-soft);
+}
+
+.liveDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--mantine-color-mata-5);
+  box-shadow: 0 0 0 0 rgba(49, 163, 102, 0.6);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  70% {
+    box-shadow: 0 0 0 8px rgba(49, 163, 102, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(49, 163, 102, 0);
+  }
+}
+
+.tileNotice {
+  grid-column: 1 / -1;
+  flex-direction: row;
+  align-items: center;
+  min-height: auto;
+
+  @media (min-width: $mantine-breakpoint-sm) {
+    grid-column: 2 / span 2;
+  }
+
+  & > svg:first-child {
+    flex-shrink: 0;
+    color: var(--mantine-color-slate-6);
+  }
+
+  & > div {
+    flex: 1;
+  }
+}
+
+.tileArrow {
+  flex-shrink: 0;
+  color: var(--app-ink-soft);
+}
+
+.signinCard {
+  padding: 18px;
+  border-radius: var(--mantine-radius-lg);
+  border: 1px dashed var(--mantine-color-mata-4);
+  background: var(--mantine-color-mata-light);
+}
+
+.footer {
+  padding-top: 8px;
+  border-top: 1px solid var(--app-line);
+}

@@ -1,0 +1,34 @@
+import { Skeleton } from "@mantine/core";
+import { lazy, Suspense } from "react";
+import type { MapPickerProps, MapViewProps } from "./LeafletMaps";
+
+export type { MapMarker } from "./LeafletMaps";
+
+const LazyPicker = lazy(() => import("./LeafletMaps").then((m) => ({ default: m.MapPicker })));
+const LazyView = lazy(() => import("./LeafletMaps").then((m) => ({ default: m.MapView })));
+
+export function MapPicker(props: MapPickerProps) {
+  return (
+    <Suspense fallback={<Skeleton h={props.height ?? 320} radius="lg" />}>
+      <LazyPicker {...props} />
+    </Suspense>
+  );
+}
+
+export function MapView(props: MapViewProps) {
+  return (
+    <Suspense fallback={<Skeleton h={props.height ?? 300} radius="lg" />}>
+      <LazyView {...props} />
+    </Suspense>
+  );
+}
+
+/** Cor (hex) de cada status para marcadores de mapa. */
+export const STATUS_HEX: Record<string, string> = {
+  RECEIVED: "#597a99",
+  UNDER_ANALYSIS: "#e39500",
+  IN_PROGRESS: "#1c7ed6",
+  RESOLVED: "#14874c",
+  REJECTED: "#cf4623",
+  CANCELED: "#868e96",
+};

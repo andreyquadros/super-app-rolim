@@ -257,7 +257,7 @@ service cloud.firestore {
       return d.keys().hasOnly(['protocol', 'title', 'description', 'type', 'buildingId', 'buildingName', 'occurrenceDate', 'occurrenceTime', 'status', 'citizenId', 'citizenName', 'lastResponse', 'createdAt', 'updatedAt', 'statusChangedAt'])
         && d.keys().hasAll(['protocol', 'title', 'description', 'type', 'buildingId', 'buildingName', 'occurrenceDate', 'occurrenceTime', 'status', 'citizenId', 'citizenName', 'lastResponse', 'createdAt', 'updatedAt', 'statusChangedAt'])
         && d.protocol.matches('^OUV-[0-9]{4}-[A-Z0-9]{8}$')
-        && d.type in ['employee_conduct', 'service_delay', 'poor_service', 'infrastructure', 'administrative', 'accessibility', 'others']
+        && d.type in ['compliment', 'suggestion', 'employee_conduct', 'service_delay', 'poor_service', 'infrastructure', 'administrative', 'accessibility', 'others']
         && d.buildingId is string
         && building.type == 'PUBLIC'
         && building.active == true
