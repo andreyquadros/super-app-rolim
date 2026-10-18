@@ -4,6 +4,7 @@ import {
   doc,
   getDoc,
   getDocs,
+  limit,
   query,
   serverTimestamp,
   setDoc,
@@ -60,6 +61,7 @@ describe("cadastro do cidadão", () => {
     cpf,
     phone: "69988887777",
     email: `${uid}@rolim.test`,
+    emailVerified: false,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
@@ -89,9 +91,28 @@ describe("cadastro do cidadão", () => {
     await assertFails(batch.commit());
   });
 
-  it("cidadão não lê perfil de outro; servidor lê", async () => {
+  it("não aceita declarar e-mail verificado sem o token confirmar", async () => {
+    const firestore = db("novo-1");
+    const batch = writeBatch(firestore);
+    batch.set(doc(firestore, "users", "novo-1"), { ...profile("novo-1", "15350946056"), emailVerified: true });
+    batch.set(doc(firestore, "cpfs", "15350946056"), { uid: "novo-1" });
+    await assertFails(batch.commit());
+  });
+
+  it("cidadão não lê perfil de outro; servidor lê um por vez, sem listar a base", async () => {
     await assertFails(getDoc(doc(db(UIDS.citizen), "users", UIDS.otherCitizen)));
     await assertSucceeds(getDoc(doc(db(UIDS.servant), "users", UIDS.otherCitizen)));
+    await assertFails(getDocs(collection(db(UIDS.servant), "users")));
+    await assertSucceeds(
+      getDocs(query(collection(db(UIDS.servant), "users"), where("email", "==", "x@y.com"), limit(1))),
+    );
+    await assertSucceeds(getDoc(doc(db(UIDS.servant), "cpfs", "52998224725")));
+    await assertFails(getDocs(collection(db(UIDS.servant), "cpfs")));
+  });
+
+  it("atualiza o próprio nome mantendo e-mail e verificação coerentes", async () => {
+    const firestore = asUser(env, UIDS.citizen, true) as unknown as Firestore;
+    await assertSucceeds(updateDoc(doc(firestore, "users", UIDS.citizen), { fullName: "Maria C. Souza", updatedAt: serverTimestamp() }));
   });
 
   it("não permite alterar o CPF", async () => {
@@ -118,26 +139,40 @@ describe("equipe", () => {
     await assertFails(setDoc(doc(db(UIDS.citizen), "staff", UIDS.citizen), staffDoc(UIDS.citizen, ["ROOT"], [])));
   });
 
-  it("admin cadastra servidor", async () => {
+  it("admin cadastra servidor com e-mail confirmado", async () => {
     await assertSucceeds(
       setDoc(doc(db(UIDS.root), "staff", UIDS.otherCitizen), staffDoc(UIDS.root, ["CIVIL_SERVANT"], [BUILDINGS.hospital])),
     );
   });
 
-  it("servidor cadastra colega apenas nas próprias unidades", async () => {
+  it("admin não ativa conta com e-mail não confirmado, mas pode desativar", async () => {
+    await seedDoc("users/sem-confirmar", {
+      fullName: "Sem Confirmar",
+      cpf: "15350946056",
+      phone: "69999990000",
+      email: "x@rolim.test",
+      emailVerified: false,
+    });
+    await assertFails(setDoc(doc(db(UIDS.root), "staff", "sem-confirmar"), staffDoc(UIDS.root, ["CIVIL_SERVANT"], [])));
     await assertSucceeds(
-      setDoc(doc(db(UIDS.servant), "staff", UIDS.otherCitizen), staffDoc(UIDS.servant, ["CIVIL_SERVANT"], [BUILDINGS.ubs])),
+      setDoc(doc(db(UIDS.root), "staff", "sem-confirmar"), { ...staffDoc(UIDS.root, ["CIVIL_SERVANT"], []), active: false }),
     );
-    await assertFails(
-      setDoc(doc(db(UIDS.servant), "staff", UIDS.otherCitizen), staffDoc(UIDS.servant, ["CIVIL_SERVANT"], [BUILDINGS.hospital])),
-    );
-    await assertFails(setDoc(doc(db(UIDS.servant), "staff", UIDS.otherCitizen), staffDoc(UIDS.servant, ["ROOT"], [])));
   });
 
-  it("servidor não altera o próprio acesso", async () => {
+  it("servidor não concede, altera nem reativa acessos", async () => {
+    await assertFails(
+      setDoc(doc(db(UIDS.servant), "staff", UIDS.otherCitizen), staffDoc(UIDS.servant, ["CIVIL_SERVANT"], [BUILDINGS.ubs])),
+    );
+    await assertFails(setDoc(doc(db(UIDS.servant), "staff", UIDS.otherCitizen), staffDoc(UIDS.servant, ["CIVIL_SERVANT"], [])));
     await assertFails(
       setDoc(doc(db(UIDS.servant), "staff", UIDS.servant), staffDoc(UIDS.servant, ["CIVIL_SERVANT"], [BUILDINGS.ubs])),
     );
+  });
+
+  it("só o admin lista a equipe", async () => {
+    await assertFails(getDocs(collection(db(UIDS.servant), "staff")));
+    await assertSucceeds(getDoc(doc(db(UIDS.servant), "staff", UIDS.servant)));
+    await assertSucceeds(getDocs(collection(db(UIDS.root), "staff")));
   });
 });
 
@@ -192,6 +227,7 @@ describe("zeladoria", () => {
     await assertFails(setDoc(ref, { ...base, status: "RESOLVED" }));
     await assertFails(setDoc(ref, { ...base, citizenId: UIDS.otherCitizen }));
     await assertFails(setDoc(ref, { ...base, photoPath: `issues/${UIDS.otherCitizen}/issue-1/foto.jpg` }));
+    await assertFails(setDoc(ref, { ...base, department: "Gabinete do Prefeito" }));
   });
 
   it("exige cadastro completo", async () => {
@@ -228,6 +264,43 @@ describe("zeladoria", () => {
     await assertSucceeds(
       statusChange(db(UIDS.servant), "issues", "issue-1", "RECEIVED", "REJECTED", "Solicitação duplicada do protocolo ZEL-2026-AAAA2222").commit(),
     );
+  });
+
+  it("indeferir exige justificativa nova mesmo havendo resposta anterior", async () => {
+    await seedDoc("issues/issue-1", { ...newIssue(UIDS.citizen, "Maria Cidadã"), status: "UNDER_ANALYSIS", lastResponse: "Equipe vai vistoriar o local." });
+    const firestore = db(UIDS.servant);
+    const batch = writeBatch(firestore);
+    batch.update(doc(firestore, "issues", "issue-1"), { status: "REJECTED", updatedAt: serverTimestamp(), statusChangedAt: serverTimestamp() });
+    batch.set(doc(firestore, "issues", "issue-1", "history", "REJECTED"), {
+      from: "UNDER_ANALYSIS",
+      to: "REJECTED",
+      officialResponse: null,
+      byUid: UIDS.servant,
+      byName: "Servidora Ana",
+      at: serverTimestamp(),
+    });
+    await assertFails(batch.commit());
+  });
+
+  it("histórico não pode ser assinado com o nome de outra pessoa", async () => {
+    await seedDoc("issues/issue-1", newIssue(UIDS.citizen, "Maria Cidadã"));
+    const firestore = db(UIDS.servant);
+    const batch = writeBatch(firestore);
+    batch.update(doc(firestore, "issues", "issue-1"), {
+      status: "UNDER_ANALYSIS",
+      lastResponse: null,
+      updatedAt: serverTimestamp(),
+      statusChangedAt: serverTimestamp(),
+    });
+    batch.set(doc(firestore, "issues", "issue-1", "history", "UNDER_ANALYSIS"), {
+      from: "RECEIVED",
+      to: "UNDER_ANALYSIS",
+      officialResponse: null,
+      byUid: UIDS.servant,
+      byName: "Prefeito",
+      at: serverTimestamp(),
+    });
+    await assertFails(batch.commit());
   });
 
   it("cidadão não muda status, mas pode cancelar enquanto recebida", async () => {
@@ -297,6 +370,13 @@ describe("comunicados", () => {
     await assertFails(setDoc(doc(db(UIDS.servant), "notifications", "n2"), draft(BUILDINGS.hospital, "Hospital Municipal")));
   });
 
+  it("comunicado não pode se passar por outra unidade ou pessoa", async () => {
+    await assertFails(setDoc(doc(db(UIDS.servant), "notifications", "n1"), draft(BUILDINGS.ubs, "Gabinete do Prefeito")));
+    await assertFails(
+      setDoc(doc(db(UIDS.servant), "notifications", "n1"), { ...draft(BUILDINGS.ubs, "UBS Centro"), createdByName: "Prefeito" }),
+    );
+  });
+
   it("servidor coloca na fila, mas não marca como enviado", async () => {
     await seedDoc("notifications/n1", { ...draft(BUILDINGS.ubs, "UBS Centro"), createdAt: new Date(), updatedAt: new Date() });
     const ref = doc(db(UIDS.servant), "notifications", "n1");
@@ -319,6 +399,13 @@ describe("dispositivos e coleções internas", () => {
     const device = (uid: string) => ({ uid, token: "tok-1", userAgent: "teste", updatedAt: serverTimestamp() });
     await assertSucceeds(setDoc(doc(db(UIDS.citizen), "devices", "tok-1"), device(UIDS.citizen)));
     await assertFails(setDoc(doc(db(UIDS.citizen), "devices", "tok-2"), { ...device(UIDS.otherCitizen), token: "tok-2" }));
+  });
+
+  it("não toma o aparelho registrado por outra pessoa", async () => {
+    await seedDoc("devices/tok-3", { uid: UIDS.otherCitizen, token: "tok-3", userAgent: "x", updatedAt: new Date() });
+    await assertFails(
+      setDoc(doc(db(UIDS.citizen), "devices", "tok-3"), { uid: UIDS.citizen, token: "tok-3", userAgent: "x", updatedAt: serverTimestamp() }),
+    );
   });
 
   it("e-mails e auditoria não são acessíveis pelo app", async () => {

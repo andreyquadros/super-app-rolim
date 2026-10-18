@@ -18,11 +18,20 @@ export function AuthFrame({ title, subtitle, children }: { title: string; subtit
   );
 }
 
-/** Destino seguro após login (somente caminhos internos). */
+/** Destino seguro após login: somente caminhos do próprio app. */
+export function safeNextPath(next: string | null, origin: string, fallback = "/"): string {
+  if (!next || !next.startsWith("/")) return fallback;
+  try {
+    const url = new URL(next, origin);
+    return url.origin === origin ? `${url.pathname}${url.search}${url.hash}` : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 export function useNextPath(fallback = "/"): string {
   const [params] = useSearchParams();
-  const next = params.get("next");
-  return next && next.startsWith("/") && !next.startsWith("//") ? next : fallback;
+  return safeNextPath(params.get("next"), window.location.origin, fallback);
 }
 
 export function GoogleIcon() {

@@ -27,6 +27,9 @@ export interface AuthValue {
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  resendVerification: () => Promise<void>;
+  /** Recarrega a conta; true se o e-mail já foi confirmado */
+  refreshVerification: () => Promise<boolean>;
   deleteAccount: () => Promise<void>;
 }
 

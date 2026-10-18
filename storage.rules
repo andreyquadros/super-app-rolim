@@ -16,10 +16,12 @@ service firebase.storage {
     match /issues/{userId}/{issueId}/{fileName} {
       allow read: if request.auth != null
         && (request.auth.uid == userId || isManager());
+      // Sem sobrescrever (resource == null) e só formatos de foto comuns
       allow create: if request.auth != null
         && request.auth.uid == userId
+        && resource == null
         && request.resource.size < 10 * 1024 * 1024
-        && request.resource.contentType.matches('image/.*');
+        && request.resource.contentType.matches('image/(jpeg|png|webp)');
       allow update, delete: if false;
     }
 

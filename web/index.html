@@ -16,12 +16,26 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />
     <style>
       /* Fundo imediato antes do CSS carregar (evita flash branco no modo escuro) */
-      html { background: #f6f4ee; }
-      @media (prefers-color-scheme: dark) { html { background: #141a17; } }
+      html { background: #f6f4ee; color: #17241c; }
+      @media (prefers-color-scheme: dark) { html { background: #141a17; color: #e8eee9; } }
+      .boot { min-height: 100dvh; display: grid; place-content: center; justify-items: center; gap: 4px; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; text-align: center; }
+      .boot img { margin-bottom: 12px; }
+      .boot p { margin: 0; }
+      .boot-eyebrow { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; font-weight: 700; opacity: .75; }
+      .boot-title { font-family: Georgia, "Times New Roman", serif; font-size: 28px; font-weight: 600; }
+      .boot-text { margin-top: 12px !important; font-size: 14px; opacity: .7; }
     </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Abertura leve exibida enquanto o app carrega (substituída pelo React) -->
+      <div class="boot" role="status" aria-live="polite">
+        <img src="/logo.svg" alt="" width="72" height="72" />
+        <p class="boot-eyebrow">Prefeitura de</p>
+        <p class="boot-title">Rolim de Moura</p>
+        <p class="boot-text">Carregando…</p>
+      </div>
+    </div>
     <noscript>Ative o JavaScript para usar o aplicativo da Prefeitura de Rolim de Moura.</noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>

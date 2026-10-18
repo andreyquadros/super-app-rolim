@@ -1,8 +1,9 @@
-import { FieldValue } from "firebase-admin/firestore";
+import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { onDocumentUpdated } from "firebase-functions/v2/firestore";
+import { onSchedule } from "firebase-functions/v2/scheduler";
 import { logger } from "firebase-functions";
 import { db, messaging } from "../admin";
-import { APP_URL } from "../config";
+import { appUrl } from "../config";
 import { sendBroadcast } from "../push";
 
 /**
@@ -28,7 +29,7 @@ export const onNotificationQueued = onDocumentUpdated("notifications/{id}", asyn
     await sendBroadcast(messaging(), {
       title: String(after.title),
       body: String(after.body),
-      link: `${APP_URL.value().replace(/\/+$/, "")}/comunicados`,
+      link: `${appUrl()}/comunicados`,
     });
     await ref.update({
       status: "SENT",
@@ -45,4 +46,26 @@ export const onNotificationQueued = onDocumentUpdated("notifications/{id}", asyn
       updatedAt: FieldValue.serverTimestamp(),
     });
   }
+});
+
+const STUCK_AFTER_MINUTES = 15;
+
+/**
+ * Se a função cair no meio do envio, o comunicado ficaria "Enviando" para
+ * sempre. A cada 30 minutos, marcamos como "Falhou" para a equipe conferir
+ * se o aviso chegou e, se preciso, reenviar.
+ */
+export const sweepStuckNotifications = onSchedule("every 30 minutes", async () => {
+  const limit = Timestamp.fromMillis(Date.now() - STUCK_AFTER_MINUTES * 60 * 1000);
+  const stuck = await db().collection("notifications").where("status", "==", "SENDING").where("updatedAt", "<", limit).get();
+  await Promise.all(
+    stuck.docs.map((d) =>
+      d.ref.update({
+        status: "FAILED",
+        error: "Envio interrompido. Confira se o aviso chegou antes de reenviar.",
+        updatedAt: FieldValue.serverTimestamp(),
+      }),
+    ),
+  );
+  if (!stuck.empty) logger.warn("comunicados travados marcados como falha", { count: stuck.size });
 });

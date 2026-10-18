@@ -58,7 +58,7 @@ const uids = {};
 for (const person of PEOPLE) {
   const uid = await upsertUser(person);
   uids[person.key] = uid;
-  await db.doc(`users/${uid}`).set({ fullName: person.name, cpf: person.cpf, phone: person.phone, email: person.email, createdAt: ago(60), updatedAt: ago(60) });
+  await db.doc(`users/${uid}`).set({ fullName: person.name, cpf: person.cpf, phone: person.phone, email: person.email, emailVerified: true, createdAt: ago(60), updatedAt: ago(60) });
   await db.doc(`cpfs/${person.cpf}`).set({ uid });
   if (person.staff) {
     await db.doc(`staff/${uid}`).set({

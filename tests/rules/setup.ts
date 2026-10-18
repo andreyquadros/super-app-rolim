@@ -41,8 +41,8 @@ export async function createEnv(): Promise<RulesTestEnvironment> {
   });
 }
 
-export function asUser(env: RulesTestEnvironment, uid: string) {
-  return env.authenticatedContext(uid, { email: `${uid}@rolim.test` }).firestore();
+export function asUser(env: RulesTestEnvironment, uid: string, emailVerified = false) {
+  return env.authenticatedContext(uid, { email: `${uid}@rolim.test`, email_verified: emailVerified }).firestore();
 }
 
 export function asAnonymous(env: RulesTestEnvironment) {
@@ -59,6 +59,7 @@ export async function seedBase(env: RulesTestEnvironment) {
       cpf,
       phone: "69999990000",
       email: `${uid}@rolim.test`,
+      emailVerified: true,
       createdAt: now,
       updatedAt: now,
     });

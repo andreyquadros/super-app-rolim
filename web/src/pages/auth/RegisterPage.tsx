@@ -28,7 +28,7 @@ export default function RegisterPage() {
     },
   });
 
-  if (!loading && user && profile) return <Navigate to={next} replace />;
+  if (!loading && user && profile && !busy) return <Navigate to={next} replace />;
   if (!loading && user && !profile && !busy) return <Navigate to={`/completar-cadastro?next=${encodeURIComponent(next)}`} replace />;
 
   const submit = form.onSubmit(async (values) => {

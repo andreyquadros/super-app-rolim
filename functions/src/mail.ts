@@ -90,14 +90,22 @@ export function buildRequestMail(input: RequestMailInput): MailMessage {
   return { subject, text, html };
 }
 
+const ALREADY_EXISTS = 6;
+
 /**
  * Enfileira o e-mail na coleção "mail", lida pela extensão oficial
  * "Trigger Email from Firestore" (firebase/firestore-send-email).
+ * O id vem do evento que gerou o e-mail: se o gatilho rodar duas vezes,
+ * o segundo create falha e o cidadão não recebe a mensagem repetida.
  */
-export async function queueMail(db: Firestore, to: string, message: MailMessage): Promise<void> {
-  await db.collection("mail").add({
-    to,
-    message,
-    createdAt: FieldValue.serverTimestamp(),
-  });
+export async function queueMail(db: Firestore, id: string, to: string, message: MailMessage): Promise<void> {
+  try {
+    await db.collection("mail").doc(id).create({
+      to,
+      message,
+      createdAt: FieldValue.serverTimestamp(),
+    });
+  } catch (error) {
+    if ((error as { code?: number }).code !== ALREADY_EXISTS) throw error;
+  }
 }

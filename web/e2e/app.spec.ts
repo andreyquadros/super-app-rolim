@@ -74,3 +74,23 @@ test("servidora vê só a ouvidoria das unidades atribuídas", async ({ page }) 
   await expect(page.getByText("Atendimento excelente na recepção")).toBeVisible();
   await expect(page.getByText("Demora para marcar consulta")).toHaveCount(0);
 });
+
+test("servidora responde a zeladoria e a cidadã vê a resposta", async ({ page }) => {
+  const response = `Equipe agendada (teste ${Date.now()})`;
+  await signIn(page, "servidor@rolim.test", "/painel/zeladoria");
+  await page.getByText("Buraco grande no asfalto").first().click();
+  await page.getByLabel("Resposta ao cidadão").fill(response);
+  await page.getByLabel("Observação interna").fill("Prioridade média");
+  await page.getByRole("button", { name: "Confirmar: Em análise" }).click();
+  await expect(page.getByText(/Situação alterada para/)).toBeVisible();
+  await page.keyboard.press("Escape");
+
+  await page.getByRole("button", { name: "Menu do usuário" }).click();
+  await page.getByRole("menuitem", { name: "Sair" }).click();
+  await page.waitForURL((url) => url.pathname === "/");
+
+  await signIn(page, "cidadao@rolim.test", "/protocolos");
+  await page.getByText("Buraco grande no asfalto").click();
+  await expect(page.getByText(response)).toBeVisible();
+  await expect(page.getByText("Prioridade média")).toHaveCount(0);
+});

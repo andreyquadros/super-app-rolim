@@ -33,7 +33,9 @@ export default function CompleteProfilePage() {
     validate: { ...profileValidators, accepted: (v) => (v ? null : "É preciso concordar para continuar") },
   });
 
-  if (profile) return <Navigate to={next} replace />;
+  // Durante o envio o cadastro aparece localmente antes da confirmação do
+  // servidor; só redirecionamos depois, para não esconder um erro de CPF
+  if (profile && !busy) return <Navigate to={next} replace />;
   if (!user) return <Navigate to="/entrar" replace />;
 
   const submit = form.onSubmit(async (values) => {

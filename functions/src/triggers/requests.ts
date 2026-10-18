@@ -1,7 +1,8 @@
+import { getAuth } from "firebase-admin/auth";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { logger } from "firebase-functions";
 import { db, messaging } from "../admin";
-import { APP_URL } from "../config";
+import { appUrl } from "../config";
 import { KIND_LABEL, STATUS_LABEL, requestLink, type RequestKind, type RequestStatus } from "../domain";
 import { buildRequestMail, queueMail } from "../mail";
 import { sendToUser } from "../push";
@@ -18,15 +19,22 @@ interface HistoryDoc {
   officialResponse: string | null;
 }
 
-async function citizenEmail(uid: string): Promise<string | null> {
-  const profile = await db().doc(`users/${uid}`).get();
-  const email = profile.get("email");
-  return typeof email === "string" && email.includes("@") ? email : null;
+/**
+ * E-mail só para contas com endereço confirmado: impede que alguém use o
+ * e-mail de outra pessoa no cadastro para fazer a prefeitura enviar mensagens.
+ */
+async function verifiedEmail(uid: string): Promise<string | null> {
+  try {
+    const user = await getAuth().getUser(uid);
+    return user.emailVerified && user.email ? user.email : null;
+  } catch {
+    return null; // conta excluída
+  }
 }
 
-async function notifyCitizen(kind: RequestKind, id: string, request: RequestDoc, status: RequestStatus, response: string | null) {
-  const link = requestLink(APP_URL.value(), kind, id);
-  const email = await citizenEmail(request.citizenId);
+async function notifyCitizen(eventId: string, kind: RequestKind, id: string, request: RequestDoc, status: RequestStatus, response: string | null) {
+  const link = requestLink(appUrl(), kind, id);
+  const email = await verifiedEmail(request.citizenId);
 
   const tasks: Promise<unknown>[] = [];
   if (email) {
@@ -39,9 +47,9 @@ async function notifyCitizen(kind: RequestKind, id: string, request: RequestDoc,
       officialResponse: response,
       link,
     });
-    tasks.push(queueMail(db(), email, mail));
+    tasks.push(queueMail(db(), eventId, email, mail));
   } else {
-    logger.warn("cidadão sem e-mail cadastrado", { kind, id });
+    logger.info("e-mail não enviado: endereço não confirmado", { kind, id });
   }
 
   if (status !== "RECEIVED") {
@@ -64,7 +72,7 @@ function onRequestCreated(kind: RequestKind) {
   return onDocumentCreated(`${kind}/{id}`, async (event) => {
     const data = event.data?.data() as RequestDoc | undefined;
     if (!data) return;
-    await notifyCitizen(kind, event.params.id, data, "RECEIVED", null);
+    await notifyCitizen(event.id, kind, event.params.id, data, "RECEIVED", null);
   });
 }
 
@@ -74,7 +82,7 @@ function onStatusChanged(kind: RequestKind) {
     if (!entry) return;
     const parent = await db().doc(`${kind}/${event.params.id}`).get();
     if (!parent.exists) return;
-    await notifyCitizen(kind, event.params.id, parent.data() as RequestDoc, entry.to, entry.officialResponse);
+    await notifyCitizen(event.id, kind, event.params.id, parent.data() as RequestDoc, entry.to, entry.officialResponse);
   });
 }
 

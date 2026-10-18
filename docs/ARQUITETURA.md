@@ -21,16 +21,16 @@ Resultado: **nenhum servidor para instalar, atualizar ou proteger** via RDP/Linu
 ## Componentes
 
 - **PWA (`web/`)** — React 19 + Vite + Mantine. Uma só base de código para o cidadão e o painel; telas carregadas sob demanda. O *service worker* (`web/src/sw.ts`) guarda o app para uso offline e recebe os avisos push. O Firestore usa cache persistente: protocolos ficam disponíveis sem internet e solicitações sem foto são enviadas quando a conexão volta.
-- **Regras (`firestore.rules`, `storage.rules`)** — são o "backend" de autorização. Validam quem escreve, quais campos, formatos (CPF, protocolo, datas), se o local está dentro do município e o fluxo de status. Têm 31 testes automatizados.
+- **Regras (`firestore.rules`, `storage.rules`)** — são o "backend" de autorização. Validam quem escreve, quais campos, formatos (CPF, protocolo, datas), se o local está dentro do município e o fluxo de status. Têm 39 testes automatizados, incluindo tentativas de ataque.
 - **Cloud Functions (`functions/`)** — reagem a mudanças no banco: e-mail ao abrir e a cada mudança de status, aviso push ao cidadão, envio de comunicados para todos, auditoria de equipe/unidades e limpeza de dados ao excluir conta.
 
 ## Modelo de dados (Firestore)
 
 | Coleção | Conteúdo | Quem lê / escreve |
 | --- | --- | --- |
-| `users/{uid}` | nome, CPF, celular, e-mail | a própria pessoa; equipe lê |
-| `cpfs/{cpf}` | `{ uid }` — garante 1 CPF por conta | criado no cadastro; equipe lê (busca por CPF) |
-| `staff/{uid}` | perfis (`ROOT`, `CIVIL_SERVANT`, `PHARMACY_MANAGER`), unidades, ativo | admin; servidor só concede nas próprias unidades |
+| `users/{uid}` | nome, CPF, celular, e-mail, e-mail confirmado | a própria pessoa; equipe abre um cadastro por vez (sem listar a base) |
+| `cpfs/{cpf}` | `{ uid }` — garante 1 CPF por conta | criado no cadastro; equipe consulta um CPF por vez |
+| `staff/{uid}` | perfis (`ROOT`, `CIVIL_SERVANT`, `PHARMACY_MANAGER`), unidades, ativo | somente admin; só ativa contas com e-mail confirmado |
 | `buildings/{id}` | unidades públicas e farmácias, local, telefones, aberta/plantão | público lê; admin edita; farmácia altera só aberta/plantão |
 | `issues/{id}` | zeladoria: categoria, local, endereço, foto, status, protocolo `ZEL-AAAA-XXXXXXXX` | autor e equipe |
 | `issues/{id}/history/{status}` | cada mudança de status com resposta oficial | autor e equipe; equipe cria |
@@ -63,6 +63,9 @@ Cada mudança feita pela equipe grava, no mesmo lote, o documento `history/{novo
 - **Ouvidoria:** ganhou os assuntos *Elogio* e *Sugestão*.
 - **Mapas:** OpenStreetMap (gratuito) em vez de Google Maps (pago). O endereço é sugerido pelo serviço Nominatim; como o OpenStreetMap não tem os bairros de Rolim de Moura, o bairro é digitado — preencha `NEIGHBORHOODS` em `web/src/config/city.ts` para oferecer sugestões padronizadas.
 - **Limite do município:** polígono oficial do IBGE (código 1100288) em `web/src/config/city.ts`; as regras conferem o retângulo envolvente.
+- **E-mail confirmado:** o cadastro guarda se o e-mail foi confirmado (conferido contra o token do login). Acesso de equipe e e-mails automáticos só valem para endereços confirmados — evita que alguém registre o e-mail de um futuro servidor ou use o e-mail de terceiros.
+- **Autoria:** histórico, notas e comunicados levam o nome oficial do cadastro de equipe, conferido nas regras; um comunicado só pode sair em nome da unidade que o servidor atende.
+- **Privacidade no aparelho:** ao sair ou excluir a conta, o cache local do app é apagado (computadores e celulares compartilhados).
 - **CPF:** validado pelos dígitos verificadores e único por conta. Como no sistema antigo, o cadastro é autodeclarado; se alguém registrar um CPF que não é seu, o administrador apaga `cpfs/{cpf}` pelo console.
 - **iPhone:** avisos push exigem iOS 16.4+ e o app adicionado à Tela de Início (o app mostra as instruções).
 - **Firebase JS SDK fixado em 12.14.0:** a partir da 12.15 o Firestore inclui a biblioteca `re2js` (+59 KB gzip no carregamento inicial) sem benefício para este app. Ao atualizar, compare o tamanho do build.

@@ -1,3 +1,4 @@
+import { FirebaseError } from "firebase/app";
 import { deleteDoc, doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { isPushConfigured, vapidKey } from "@/config/env";
 import { app, db } from "./firebase";
@@ -36,16 +37,28 @@ export async function enablePush(uid: string): Promise<PushState> {
   const permission = await Notification.requestPermission();
   if (permission !== "granted") return permission === "denied" ? "denied" : "disabled";
 
-  const { getToken } = await import("firebase/messaging");
+  const { deleteToken, getToken } = await import("firebase/messaging");
   const registration = await navigator.serviceWorker.ready;
-  const token = await getToken(messaging, { vapidKey, serviceWorkerRegistration: registration });
+  const register = async () => {
+    const token = await getToken(messaging, { vapidKey, serviceWorkerRegistration: registration });
+    await setDoc(doc(db, "devices", token), {
+      uid,
+      token,
+      userAgent: navigator.userAgent.slice(0, 300),
+      updatedAt: serverTimestamp(),
+    });
+    return token;
+  };
 
-  await setDoc(doc(db, "devices", token), {
-    uid,
-    token,
-    userAgent: navigator.userAgent.slice(0, 300),
-    updatedAt: serverTimestamp(),
-  });
+  let token: string;
+  try {
+    token = await register();
+  } catch (error: unknown) {
+    // Aparelho ainda registrado em nome de outra conta: gera um token novo
+    if (!(error instanceof FirebaseError && error.code === "permission-denied")) throw error;
+    await deleteToken(messaging);
+    token = await register();
+  }
   storageSet(TOKEN_KEY, token);
   return "enabled";
 }

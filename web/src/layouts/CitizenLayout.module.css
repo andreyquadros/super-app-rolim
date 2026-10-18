@@ -60,7 +60,7 @@
   }
 
   &[aria-current="page"] {
-    color: var(--mantine-color-mata-8);
+    color: light-dark(var(--mantine-color-mata-8), var(--mantine-color-mata-3));
     background: var(--mantine-color-mata-light);
   }
 }
@@ -108,7 +108,7 @@
   transition: color var(--duration-fast);
 
   &[aria-current="page"] {
-    color: var(--mantine-color-mata-8);
+    color: light-dark(var(--mantine-color-mata-8), var(--mantine-color-mata-3));
   }
 
   &[aria-current="page"] svg {

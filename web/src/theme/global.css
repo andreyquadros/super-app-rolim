@@ -54,6 +54,11 @@ body::before {
   z-index: 1;
 }
 
+/* Avisos flutuantes acima da barra de navegação inferior */
+.mantine-Notifications-root[data-position^="bottom"] {
+  bottom: calc(var(--app-tabbar-h) + 12px + env(safe-area-inset-bottom)) !important;
+}
+
 .protocol {
   font-family: var(--mantine-font-family-monospace);
   letter-spacing: 0.04em;

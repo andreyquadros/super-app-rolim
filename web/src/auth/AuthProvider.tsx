@@ -11,10 +11,12 @@ import {
   updateProfile as updateAuthProfile,
   type User,
 } from "firebase/auth";
+import { clearIndexedDbPersistence, terminate } from "firebase/firestore";
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import { createProfile, watchProfile, watchStaffMember } from "@/data/people";
+import { useEmulators } from "@/config/env";
+import { createProfile, updateProfile, watchProfile, watchStaffMember } from "@/data/people";
 import type { Profile, StaffMember } from "@/domain/types";
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import { disablePush } from "@/lib/push";
 import { AuthContext, type AuthValue, type SignUpInput } from "./AuthContext";
 
@@ -26,6 +28,19 @@ interface Session {
 }
 
 const INITIAL: Session = { user: null, profile: null, staff: null, ready: { auth: false, profile: false, staff: false } };
+
+/**
+ * Ao sair, apaga o cache local do Firestore (CPFs, telefones e solicitações)
+ * para não deixar dados pessoais em computadores e celulares compartilhados.
+ * Recarrega a página porque a instância do banco é encerrada.
+ */
+async function wipeLocalDataAndReload(): Promise<void> {
+  if (!useEmulators) {
+    await terminate(db).catch(() => undefined);
+    await clearIndexedDbPersistence(db).catch(() => undefined);
+  }
+  window.location.replace("/");
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session>(INITIAL);
@@ -45,20 +60,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!uid) return undefined;
-    const markReady = (key: "profile" | "staff") => (s: Session) => ({ ...s, ready: { ...s.ready, [key]: true } });
+    // Ignora eventos atrasados de uma sessão anterior (troca de usuário)
+    const forThisUser = (update: (s: Session) => Session) => (s: Session) => (s.user?.uid === uid ? update(s) : s);
+    const ready = (key: "profile" | "staff") => (s: Session) => ({ ...s, ready: { ...s.ready, [key]: true } });
     const stopProfile = watchProfile(uid)(
-      (profile) => setSession((s) => ({ ...markReady("profile")(s), profile })),
-      () => setSession(markReady("profile")),
+      (profile) => setSession(forThisUser((s) => ({ ...ready("profile")(s), profile }))),
+      () => setSession(forThisUser(ready("profile"))),
     );
     const stopStaff = watchStaffMember(uid)(
-      (staff) => setSession((s) => ({ ...markReady("staff")(s), staff: staff?.active ? staff : null })),
-      () => setSession(markReady("staff")),
+      (staff) => setSession(forThisUser((s) => ({ ...ready("staff")(s), staff: staff?.active ? staff : null }))),
+      () => setSession(forThisUser(ready("staff"))),
     );
     return () => {
       stopProfile();
       stopStaff();
     };
   }, [uid]);
+
+  // Mantém o cadastro alinhado quando a pessoa confirma o e-mail
+  const { user, profile } = session;
+  useEffect(() => {
+    if (!user || !profile || profile.emailVerified === user.emailVerified) return;
+    user
+      .getIdToken(true)
+      .then(() => updateProfile(user.uid, { fullName: profile.fullName, phone: profile.phone, email: profile.email }))
+      .catch(() => undefined);
+  }, [user, profile]);
 
   const signIn = useCallback(async (email: string, password: string) => {
     await signInWithEmailAndPassword(auth, email.trim(), password);
@@ -85,24 +112,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     await disablePush();
     await firebaseSignOut(auth);
+    await wipeLocalDataAndReload();
   }, []);
 
   const resetPassword = useCallback(async (email: string) => {
     await sendPasswordResetEmail(auth, email.trim());
   }, []);
 
+  const resendVerification = useCallback(async () => {
+    if (auth.currentUser) await sendEmailVerification(auth.currentUser);
+  }, []);
+
+  /** Depois de clicar no link do e-mail: atualiza o token e o cadastro. */
+  const refreshVerification = useCallback(async () => {
+    const current = auth.currentUser;
+    if (!current) return false;
+    await current.reload();
+    await current.getIdToken(true);
+    if (current.emailVerified && profile && !profile.emailVerified) {
+      await updateProfile(current.uid, { fullName: profile.fullName, phone: profile.phone, email: profile.email });
+    }
+    return current.emailVerified;
+  }, [profile]);
+
   const deleteAccount = useCallback(async () => {
     const current = auth.currentUser;
     if (!current) return;
     await disablePush();
     await deleteUser(current);
+    await wipeLocalDataAndReload();
   }, []);
 
   const value = useMemo<AuthValue>(() => {
-    const { user, profile, staff, ready } = session;
+    const { staff, ready } = session;
     const roles = staff?.roles ?? [];
     const isRoot = roles.includes("ROOT");
     const isManager = isRoot || roles.includes("CIVIL_SERVANT");
+    // Ações da equipe usam o nome oficial do cadastro de equipe (conferido nas regras)
+    const name = staff?.fullName || profile?.fullName || user?.displayName || user?.email || "Usuário";
     return {
       user,
       profile,
@@ -112,15 +159,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isManager,
       isPharmacist: roles.includes("PHARMACY_MANAGER"),
       buildingScope: isRoot ? null : (staff?.buildingIds ?? []),
-      actor: user ? { uid: user.uid, name: profile?.fullName || staff?.fullName || user.displayName || user.email || "Usuário" } : null,
+      actor: user ? { uid: user.uid, name } : null,
       signIn,
       signUp,
       signInWithGoogle,
       signOut,
       resetPassword,
+      resendVerification,
+      refreshVerification,
       deleteAccount,
     };
-  }, [session, signIn, signUp, signInWithGoogle, signOut, resetPassword, deleteAccount]);
+  }, [session, user, profile, signIn, signUp, signInWithGoogle, signOut, resetPassword, resendVerification, refreshVerification, deleteAccount]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

@@ -21,6 +21,8 @@ interface Person {
   fullName: string;
   email: string;
   cpf: string;
+  /** undefined = não verificado nesta tela (edição de acesso existente) */
+  emailVerified?: boolean;
 }
 
 interface StaffEditorProps {
@@ -29,7 +31,7 @@ interface StaffEditorProps {
 }
 
 export function StaffEditor({ editing, onClose }: StaffEditorProps) {
-  const { actor, isRoot } = useAuth();
+  const { actor } = useAuth();
   const { units } = useManagedUnits();
   const existing = editing === "new" ? null : editing;
   const [person, setPerson] = useState<Person | null>(existing ? { uid: existing.id, fullName: existing.fullName, email: existing.email, cpf: existing.cpf } : null);
@@ -41,7 +43,7 @@ export function StaffEditor({ editing, onClose }: StaffEditorProps) {
   const [active, setActive] = useState(existing?.active ?? true);
   const [busy, setBusy] = useState(false);
 
-  const grantable: Role[] = isRoot ? ["ROOT", "CIVIL_SERVANT", "PHARMACY_MANAGER"] : ["CIVIL_SERVANT", "PHARMACY_MANAGER"];
+  const grantable: Role[] = ["ROOT", "CIVIL_SERVANT", "PHARMACY_MANAGER"];
 
   const search = async () => {
     setSearching(true);
@@ -49,7 +51,7 @@ export function StaffEditor({ editing, onClose }: StaffEditorProps) {
     try {
       const found: FoundCitizen | null = await findCitizen(term);
       if (!found) setSearchError("Nenhum cadastro encontrado. A pessoa precisa criar a conta no app antes.");
-      else setPerson({ uid: found.uid, fullName: found.fullName, email: found.email, cpf: found.cpf });
+      else setPerson({ uid: found.uid, fullName: found.fullName, email: found.email, cpf: found.cpf, emailVerified: found.emailVerified });
     } catch (e: unknown) {
       setSearchError(errorMessage(e));
     } finally {
@@ -72,6 +74,7 @@ export function StaffEditor({ editing, onClose }: StaffEditorProps) {
   };
 
   const isSelf = person?.uid === actor?.uid;
+  const unverified = person?.emailVerified === false && active;
 
   return (
     <Modal opened={editing !== null} onClose={onClose} title={existing ? "Editar acesso" : "Adicionar pessoa à equipe"} size="lg">
@@ -79,7 +82,7 @@ export function StaffEditor({ editing, onClose }: StaffEditorProps) {
         {!person && (
           <>
             <Text size="sm" c="dimmed">
-              Busque pelo CPF ou e-mail de quem já tem conta no app.
+              Busque pelo CPF ou e-mail de quem já tem conta no app. O e-mail precisa estar confirmado.
             </Text>
             <Group align="flex-end" wrap="nowrap">
               <TextInput style={{ flex: 1 }} label="CPF ou e-mail" value={term} onChange={(e) => setTerm(e.currentTarget.value)} onKeyDown={(e) => e.key === "Enter" && search()} />
@@ -99,6 +102,12 @@ export function StaffEditor({ editing, onClose }: StaffEditorProps) {
               </Text>
             </Paper>
             {isSelf && <Alert color="ipe">Você não pode alterar o próprio acesso. Peça a outro administrador.</Alert>}
+            {unverified && (
+              <Alert color="ipe" title="E-mail ainda não confirmado">
+                Por segurança, o acesso só pode ser liberado depois que a pessoa confirmar o e-mail ({person?.email}) pelo link
+                enviado no cadastro (Perfil → Reenviar e-mail).
+              </Alert>
+            )}
             <Checkbox.Group label="Perfis de acesso" value={roles} onChange={(v) => setRoles(v as Role[])}>
               <Stack gap="xs" mt="xs">
                 {grantable.map((r) => (
@@ -123,7 +132,7 @@ export function StaffEditor({ editing, onClose }: StaffEditorProps) {
               <Button variant="default" onClick={onClose}>
                 Cancelar
               </Button>
-              <Button onClick={save} loading={busy} disabled={isSelf || roles.length === 0}>
+              <Button onClick={save} loading={busy} disabled={isSelf || unverified || roles.length === 0}>
                 Salvar acesso
               </Button>
             </Group>

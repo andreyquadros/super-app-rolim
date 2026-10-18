@@ -11,6 +11,7 @@ rules_version = '2';
 //   - ROOT: administrador geral da prefeitura
 //   - CIVIL_SERVANT: servidor; vê toda a zeladoria e a ouvidoria/comunicados
 //     apenas das unidades (buildingIds) que lhe foram atribuídas
+//   - somente ROOT concede ou retira acessos da equipe
 //   - PHARMACY_MANAGER: atualiza "aberta/plantão" das farmácias que gerencia
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -65,9 +66,15 @@ service cloud.firestore {
       return onlyChanged(['status', 'lastResponse', 'updatedAt', 'statusChangedAt'])
         && validTransition(resource.data.status, d.status)
         && optStr(d.lastResponse, 2000)
-        && (d.status != 'REJECTED' || isStr(d.lastResponse, 10, 2000))
+        && (d.status != 'REJECTED' || rejectionExplained(collection, id, d.lastResponse))
         && stampedNow(d) && d.statusChangedAt == request.time
         && existsAfter(/databases/$(database)/documents/$(collection)/$(id)/history/$(d.status));
+    }
+
+    // Indeferir exige justificativa nova, gravada no histórico deste lote
+    function rejectionExplained(collection, id, response) {
+      return isStr(response, 10, 2000)
+        && getAfter(/databases/$(database)/documents/$(collection)/$(id)/history/REJECTED).data.officialResponse == response;
     }
 
     // Cidadão só pode cancelar enquanto a solicitação está "Recebida"
@@ -88,7 +95,7 @@ service cloud.firestore {
         && validTransition(d.from, d.to)
         && optStr(d.officialResponse, 2000)
         && d.byUid == uid()
-        && isStr(d.byName, 1, 120)
+        && d.byName == staff().fullName
         && d.at == request.time;
     }
 
@@ -96,36 +103,42 @@ service cloud.firestore {
       return d.keys().hasOnly(['text', 'byUid', 'byName', 'at'])
         && isStr(d.text, 1, 1000)
         && d.byUid == uid()
-        && isStr(d.byName, 1, 120)
+        && d.byName == staff().fullName
         && d.at == request.time;
     }
 
     // ---------- Cadastro do cidadão ----------
+    // emailVerified espelha o token: só vira true depois que a pessoa confirma
+    // o e-mail. Acesso de equipe e e-mails automáticos dependem disso.
     function validProfile(d) {
-      return d.keys().hasOnly(['fullName', 'cpf', 'phone', 'email', 'createdAt', 'updatedAt'])
-        && d.keys().hasAll(['fullName', 'cpf', 'phone', 'email', 'createdAt', 'updatedAt'])
+      return d.keys().hasOnly(['fullName', 'cpf', 'phone', 'email', 'emailVerified', 'createdAt', 'updatedAt'])
+        && d.keys().hasAll(['fullName', 'cpf', 'phone', 'email', 'emailVerified', 'createdAt', 'updatedAt'])
         && isStr(d.fullName, 3, 120)
         && d.cpf is string && d.cpf.matches('^[0-9]{11}$')
         && d.phone is string && d.phone.matches('^[0-9]{10,11}$')
         && d.email == request.auth.token.email
+        && d.emailVerified == (request.auth.token.get('email_verified', false) == true)
         && stampedNow(d);
     }
 
     match /users/{userId} {
-      allow read: if signedIn() && (uid() == userId || isManager());
+      // A equipe abre o cadastro de quem fez a solicitação, mas não pode
+      // listar a base inteira (apenas buscas pontuais, limit 1)
+      allow get: if signedIn() && (uid() == userId || isManager());
+      allow list: if isManager() && request.query.limit <= 1;
       allow create: if signedIn() && uid() == userId
         && validProfile(request.resource.data)
         && request.resource.data.createdAt == request.time
         && getAfter(docPath('cpfs', request.resource.data.cpf)).data.uid == userId;
       allow update: if signedIn() && uid() == userId
         && validProfile(request.resource.data)
-        && onlyChanged(['fullName', 'phone', 'email', 'updatedAt']);
+        && onlyChanged(['fullName', 'phone', 'email', 'emailVerified', 'updatedAt']);
       allow delete: if false;
     }
 
     // Índice de unicidade de CPF (um CPF = uma conta)
     match /cpfs/{cpf} {
-      allow read: if isManager();
+      allow get: if isManager();
       allow create: if signedIn()
         && cpf.matches('^[0-9]{11}$')
         && request.resource.data.keys().hasOnly(['uid'])
@@ -146,20 +159,14 @@ service cloud.firestore {
         && stampedNow(d);
     }
 
-    // Servidor pode cadastrar colegas apenas nas unidades que ele mesmo gerencia
-    function servantCanGrant(staffId) {
-      let mine = staff().buildingIds;
-      return hasRole('CIVIL_SERVANT')
-        && staffId != uid()
-        && !('ROOT' in request.resource.data.roles)
-        && request.resource.data.buildingIds.hasOnly(mine)
-        && (resource == null || (!('ROOT' in resource.data.roles) && resource.data.buildingIds.hasOnly(mine)));
-    }
-
+    // Somente o administrador concede acessos, e só ativa contas com e-mail
+    // confirmado (evita que alguém cadastre o e-mail de um futuro servidor)
     match /staff/{staffId} {
-      allow read: if signedIn() && (uid() == staffId || isManager());
-      allow create, update: if validStaff(request.resource.data)
-        && (isRoot() || servantCanGrant(staffId));
+      allow read: if signedIn() && (uid() == staffId || isRoot());
+      allow create, update: if isRoot()
+        && validStaff(request.resource.data)
+        && (request.resource.data.active == false
+            || get(docPath('users', staffId)).data.emailVerified == true);
       allow delete: if false; // desative com active=false
     }
 
@@ -214,12 +221,24 @@ service cloud.firestore {
         && isStr(d.description, 10, 2000);
     }
 
+    // Setor responsável derivado da categoria (espelha web/src/domain/catalog.ts)
+    function departmentOf(category) {
+      return {
+        'lighting': 'Iluminação Pública',
+        'pavement': 'Secretaria de Obras',
+        'sanitation': 'Limpeza Urbana e Saneamento',
+        'vegetation': 'Parques e Jardins',
+        'signage': 'Trânsito',
+        'others': 'Secretaria de Administração'
+      }[category];
+    }
+
     function validIssueCreate(d, issueId) {
       return d.keys().hasOnly(['protocol', 'title', 'description', 'category', 'department', 'lat', 'lng', 'address', 'photoPath', 'status', 'citizenId', 'citizenName', 'lastResponse', 'createdAt', 'updatedAt', 'statusChangedAt'])
         && d.keys().hasAll(['protocol', 'title', 'description', 'category', 'department', 'lat', 'lng', 'address', 'photoPath', 'status', 'citizenId', 'citizenName', 'lastResponse', 'createdAt', 'updatedAt', 'statusChangedAt'])
         && d.protocol.matches('^ZEL-[0-9]{4}-[A-Z0-9]{8}$')
         && d.category in ['lighting', 'pavement', 'sanitation', 'vegetation', 'signage', 'others']
-        && isStr(d.department, 2, 120)
+        && d.department == departmentOf(d.category)
         && inMunicipality(d.lat, d.lng)
         && validAddress(d.address)
         && (d.photoPath == null || (d.photoPath is string && d.photoPath.matches('^issues/' + uid() + '/' + issueId + '/[^/]+$')))
@@ -302,7 +321,7 @@ service cloud.firestore {
         && isStr(d.title, 3, 120)
         && isStr(d.body, 3, 2000)
         && d.buildingId is string
-        && isStr(d.buildingName, 1, 200)
+        && d.buildingName == get(docPath('buildings', d.buildingId)).data.name
         && stampedNow(d);
     }
 
@@ -312,6 +331,7 @@ service cloud.firestore {
         && validNotification(request.resource.data)
         && request.resource.data.status == 'DRAFT'
         && request.resource.data.createdBy == uid()
+        && request.resource.data.createdByName == staff().fullName
         && request.resource.data.createdAt == request.time;
       allow update: if managesBuilding(resource.data.buildingId)
         && managesBuilding(request.resource.data.buildingId)
@@ -324,14 +344,19 @@ service cloud.firestore {
     }
 
     // ---------- Dispositivos para push ----------
+    function validDevice(token) {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['uid', 'token', 'userAgent', 'updatedAt'])
+        && d.uid == uid()
+        && d.token == token
+        && optStr(d.userAgent, 300)
+        && stampedNow(d);
+    }
+
     match /devices/{token} {
       allow read, delete: if signedIn() && resource.data.uid == uid();
-      allow create, update: if signedIn()
-        && request.resource.data.keys().hasOnly(['uid', 'token', 'userAgent', 'updatedAt'])
-        && request.resource.data.uid == uid()
-        && request.resource.data.token == token
-        && optStr(request.resource.data.userAgent, 300)
-        && stampedNow(request.resource.data);
+      allow create: if signedIn() && validDevice(token);
+      allow update: if signedIn() && resource.data.uid == uid() && validDevice(token);
     }
 
     // ---------- Somente servidor (Cloud Functions) ----------

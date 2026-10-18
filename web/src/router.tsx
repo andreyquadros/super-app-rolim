@@ -105,8 +105,16 @@ export const router = createBrowserRouter([
               { path: "zeladoria", ...page(() => import("@/pages/admin/IssuesAdminPage")) },
               { path: "ouvidoria", ...page(() => import("@/pages/admin/OmbudsmanAdminPage")) },
               { path: "comunicados", ...page(() => import("@/pages/admin/NotificationsAdminPage")) },
-              { path: "equipe", ...page(() => import("@/pages/admin/StaffAdminPage")) },
             ],
+          },
+          {
+            path: "equipe",
+            element: (
+              <RequireStaff access="root">
+                <Outlet />
+              </RequireStaff>
+            ),
+            children: [{ index: true, ...page(() => import("@/pages/admin/StaffAdminPage")) }],
           },
           {
             path: "unidades",

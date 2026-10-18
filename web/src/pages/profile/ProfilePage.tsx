@@ -2,9 +2,9 @@ import { Alert, Anchor, Avatar, Button, Divider, Group, Modal, Paper, Stack, Tex
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import { IconLayoutDashboard, IconLogout, IconTrash } from "@tabler/icons-react";
+import { IconLayoutDashboard, IconLogout, IconMailCheck, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router";
+import { Link, Navigate } from "react-router";
 import { useAuth } from "@/auth/AuthContext";
 import { InstallCard } from "@/components/InstallCard";
 import { PushToggle } from "@/components/PushToggle";
@@ -12,9 +12,48 @@ import { updateProfile } from "@/data/people";
 import { formatPhone, isValidPhone, maskCpf } from "@/domain/documents";
 import { errorMessage } from "@/lib/errors";
 
+function EmailVerification() {
+  const { user, resendVerification, refreshVerification } = useAuth();
+  const [busy, setBusy] = useState<"send" | "check" | null>(null);
+  if (!user || user.emailVerified) return null;
+
+  const run = async (kind: "send" | "check") => {
+    setBusy(kind);
+    try {
+      if (kind === "send") {
+        await resendVerification();
+        notifications.show({ message: `Enviamos o link para ${user.email}.`, color: "mata" });
+      } else {
+        const ok = await refreshVerification();
+        notifications.show({
+          message: ok ? "E-mail confirmado. Obrigado!" : "Ainda não identificamos a confirmação. Abra o link do e-mail e tente de novo.",
+          color: ok ? "mata" : "ipe",
+        });
+      }
+    } catch (e: unknown) {
+      notifications.show({ message: errorMessage(e), color: "barro" });
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  return (
+    <Alert color="ipe" icon={<IconMailCheck size={18} />} title="Confirme seu e-mail">
+      <Text size="sm">Assim você recebe por e-mail o andamento das solicitações. Procure a mensagem da prefeitura (veja também o spam).</Text>
+      <Group mt="sm" gap="xs">
+        <Button size="xs" variant="white" color="dark" loading={busy === "send"} onClick={() => run("send")}>
+          Reenviar e-mail
+        </Button>
+        <Button size="xs" variant="subtle" color="dark" loading={busy === "check"} onClick={() => run("check")}>
+          Já confirmei
+        </Button>
+      </Group>
+    </Alert>
+  );
+}
+
 function DeleteAccount() {
   const { deleteAccount } = useAuth();
-  const navigate = useNavigate();
   const [opened, { open, close }] = useDisclosure(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,8 +63,6 @@ function DeleteAccount() {
     setError(null);
     try {
       await deleteAccount();
-      navigate("/", { replace: true });
-      notifications.show({ message: "Sua conta foi excluída.", color: "gray" });
     } catch (e: unknown) {
       setError(errorMessage(e));
     } finally {
@@ -61,7 +98,6 @@ function DeleteAccount() {
 
 export default function ProfilePage() {
   const { user, profile, staff, signOut } = useAuth();
-  const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const form = useForm({
     initialValues: { fullName: profile?.fullName ?? "", phone: formatPhone(profile?.phone ?? "") },
@@ -100,6 +136,8 @@ export default function ProfilePage() {
           </Text>
         </div>
       </Group>
+
+      <EmailVerification />
 
       {staff && (
         <Button component={Link} to="/painel" variant="light" leftSection={<IconLayoutDashboard size={18} />} size="md">
@@ -140,7 +178,7 @@ export default function ProfilePage() {
 
       <Divider />
       <Group justify="space-between">
-        <Button variant="default" leftSection={<IconLogout size={16} />} onClick={() => { navigate("/", { replace: true }); void signOut(); }}>
+        <Button variant="default" leftSection={<IconLogout size={16} />} onClick={() => void signOut()}>
           Sair
         </Button>
         <DeleteAccount />

@@ -27,6 +27,16 @@ describe("fotos da zeladoria", () => {
     await assertSucceeds(uploadBytes(ref(storageOf(UIDS.citizen), path), JPEG, { contentType: "image/jpeg" }));
   });
 
+  it("não permite trocar a foto depois de enviada nem enviar SVG", async () => {
+    const storage = storageOf(UIDS.citizen);
+    const own = `issues/${UIDS.citizen}/issue-2/foto-1.jpg`;
+    await assertSucceeds(uploadBytes(ref(storage, own), JPEG, { contentType: "image/jpeg" }));
+    await assertFails(uploadBytes(ref(storage, own), JPEG, { contentType: "image/jpeg" }));
+    await assertFails(
+      uploadBytes(ref(storage, `issues/${UIDS.citizen}/issue-1/x.svg`), JPEG, { contentType: "image/svg+xml" }),
+    );
+  });
+
   it("recusa pasta de outra pessoa e arquivos que não são imagem", async () => {
     await assertFails(uploadBytes(ref(storageOf(UIDS.otherCitizen), path), JPEG, { contentType: "image/jpeg" }));
     await assertFails(

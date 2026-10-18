@@ -12,7 +12,7 @@ import {
   IconUsersGroup,
   type Icon,
 } from "@tabler/icons-react";
-import { Link, Outlet, useLocation, useNavigate } from "react-router";
+import { Link, Outlet, useLocation } from "react-router";
 import { useAuth } from "@/auth/AuthContext";
 import { ROLE_COLOR, ROLE_LABEL } from "@/domain/roles";
 
@@ -30,13 +30,12 @@ const ITEMS: Item[] = [
   { to: "/painel/comunicados", label: "Comunicados", icon: IconBell, show: (a) => a.isManager },
   { to: "/painel/minhas-farmacias", label: "Minhas farmácias", icon: IconPill, show: (a) => a.isPharmacist },
   { to: "/painel/unidades", label: "Unidades e farmácias", icon: IconBuildingCommunity, show: (a) => a.isRoot },
-  { to: "/painel/equipe", label: "Equipe e acessos", icon: IconUsersGroup, show: (a) => a.isManager },
+  { to: "/painel/equipe", label: "Equipe e acessos", icon: IconUsersGroup, show: (a) => a.isRoot },
 ];
 
 export function AdminLayout() {
   const [opened, { toggle, close }] = useDisclosure(false);
   const { pathname } = useLocation();
-  const navigate = useNavigate();
   const { actor, staff, isRoot, isManager, isPharmacist, signOut } = useAuth();
   const items = ITEMS.filter((i) => i.show({ isRoot, isManager, isPharmacist }));
 
@@ -72,7 +71,7 @@ export function AdminLayout() {
               <Menu.Item component={Link} to="/" leftSection={<IconSmartHome size={16} />}>
                 App do cidadão
               </Menu.Item>
-              <Menu.Item color="red" leftSection={<IconLogout size={16} />} onClick={() => { navigate("/", { replace: true }); void signOut(); }}>
+              <Menu.Item color="red" leftSection={<IconLogout size={16} />} onClick={() => void signOut()}>
                 Sair
               </Menu.Item>
             </Menu.Dropdown>

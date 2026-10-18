@@ -77,7 +77,7 @@ O comando publica regras, índices, Cloud Functions e o app. Na primeira vez, o 
 
 ## 7. Primeiro administrador
 
-1. A pessoa responsável abre o app, cria a conta e completa o cadastro (CPF e celular).
+1. A pessoa responsável abre o app, cria a conta, completa o cadastro (CPF e celular) e **confirma o e-mail** pelo link recebido.
 2. Conceda o perfil de administrador por **um** destes caminhos:
    - **Pelo console (sem programação):** Authentication → copie o *UID* da pessoa. Firestore → coleção `staff` → **Adicionar documento** com ID = UID e os campos:
      `roles` (array) = `ROOT` · `buildingIds` (array) vazio · `fullName`, `email`, `cpf` (string) · `active` (boolean) = `true` · `updatedBy` (string) = `console` · `createdAt` e `updatedAt` (timestamp).
@@ -105,7 +105,7 @@ A cada envio para o GitHub, o fluxo **CI** roda todos os testes (unitários, reg
 
 - [ ] App abre em `https://app.rolimdemoura.ro.gov.br` e oferece "Instalar"
 - [ ] Cadastro com CPF funciona e o e-mail de confirmação chega
-- [ ] Uma zeladoria de teste gera e-mail "Recebida"
+- [ ] Uma zeladoria de teste (com e-mail confirmado) gera e-mail "Recebida"
 - [ ] Mudar o status no painel gera e-mail e aviso push no celular
 - [ ] Comunicado de teste chega como aviso em um Android e em um iPhone com o app instalado
 - [ ] Alerta de orçamento configurado

@@ -10,7 +10,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { RouterProvider } from "react-router";
 import { isFirebaseConfigured } from "./config/env";
-import { theme } from "./theme/theme";
+import { cssVariablesResolver, theme } from "./theme/theme";
 
 function MissingConfig() {
   return (
@@ -40,8 +40,9 @@ async function start() {
   const [{ router }, { AuthProvider }] = await Promise.all([import("./router"), import("./auth/AuthProvider")]);
   root.render(
     <StrictMode>
-      <MantineProvider theme={theme} defaultColorScheme="auto">
-        <Notifications position="top-center" zIndex={1000} />
+      <MantineProvider theme={theme} defaultColorScheme="auto" cssVariablesResolver={cssVariablesResolver}>
+        {/* Embaixo, acima da barra de navegação: não cobre o cabeçalho no celular */}
+        <Notifications position="bottom-center" zIndex={1000} />
         <AuthProvider>
           <RouterProvider router={router} />
         </AuthProvider>

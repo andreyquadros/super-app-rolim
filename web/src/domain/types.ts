@@ -8,6 +8,8 @@ export interface Profile {
   cpf: string;
   phone: string;
   email: string;
+  /** Espelha o token do Auth: true depois que a pessoa confirma o e-mail */
+  emailVerified: boolean;
   createdAt: Date | null;
 }
 

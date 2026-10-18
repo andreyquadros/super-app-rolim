@@ -16,6 +16,7 @@ Aplicativo da **Prefeitura Municipal de Rolim de Moura (RO)** para o cidadão re
 | Farmácias de plantão ordenadas pela distância | Cadastro de unidades públicas e farmácias |
 | Avisos push e e-mail a cada mudança de situação | Equipe e acessos por perfil (Administrador, Servidor, Farmácia) |
 | Funciona offline; exclusão de conta (LGPD) | Farmácias atualizam o próprio plantão |
+| Confirmação de e-mail para receber avisos por e-mail | Acesso de equipe só para e-mails confirmados |
 
 ## Arquitetura em uma imagem
 
@@ -100,8 +101,8 @@ npm run test:e2e
 | --- | --- |
 | `web` (Vitest) | status, protocolo, CPF/telefone, limite do município, indicadores, endereço |
 | `functions` (Vitest) | conteúdo e segurança dos e-mails |
-| `test:rules` | 31 cenários de permissão: cidadão, servidor por unidade, farmácia, admin, fotos |
-| `test:e2e` (Playwright) | PWA instalável, service worker, abertura offline, login, escopos e bloqueios |
+| `test:rules` | 39 cenários de permissão e de ataque: cidadão, servidor por unidade, farmácia, admin, fotos |
+| `test:e2e` (Playwright) | PWA instalável, service worker, abertura offline, login, escopos, bloqueios e atendimento completo |
 
 ## Publicar
 

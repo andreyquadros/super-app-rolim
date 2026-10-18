@@ -1,7 +1,7 @@
 import { collection, doc, getDoc, getDocs, limit, query, serverTimestamp, setDoc, updateDoc, where, writeBatch, type DocumentData } from "firebase/firestore";
 import { onlyDigits } from "@/domain/documents";
 import type { Actor, Profile, Role, StaffMember } from "@/domain/types";
-import { db } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import { bool, str, strList, toDate } from "./convert";
 import { watchDoc, watchQuery, type Watcher } from "./watch";
 
@@ -13,8 +13,14 @@ export function parseProfile(_id: string, d: DocumentData): Profile {
     cpf: str(d.cpf),
     phone: str(d.phone),
     email: str(d.email),
+    emailVerified: bool(d.emailVerified),
     createdAt: toDate(d.createdAt),
   };
+}
+
+/** O valor precisa coincidir com o token (validado em firestore.rules). */
+function tokenEmailVerified(): boolean {
+  return auth.currentUser?.emailVerified ?? false;
 }
 
 export function watchProfile(uid: string): Watcher<Profile | null> {
@@ -37,6 +43,7 @@ export async function createProfile(uid: string, input: ProfileInput): Promise<v
     cpf,
     phone: onlyDigits(input.phone),
     email: input.email,
+    emailVerified: tokenEmailVerified(),
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
@@ -49,6 +56,7 @@ export async function updateProfile(uid: string, input: { fullName: string; phon
     fullName: input.fullName.trim(),
     phone: onlyDigits(input.phone),
     email: input.email,
+    emailVerified: tokenEmailVerified(),
     updatedAt: serverTimestamp(),
   });
 }

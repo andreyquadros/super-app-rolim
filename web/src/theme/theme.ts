@@ -1,5 +1,6 @@
 import {
   ActionIcon,
+  type CSSVariablesResolver,
   Badge,
   Button,
   Card,
@@ -29,9 +30,16 @@ const slate: MantineColorsTuple = [
   "#eef3f7", "#dfe5ea", "#bcc9d4", "#97abbd", "#7892aa", "#64829e", "#597a99", "#486885", "#3d5c78", "#2d4f6b",
 ];
 
+/** Texto secundário ("dimmed") com contraste AA nos dois temas. */
+export const cssVariablesResolver: CSSVariablesResolver = () => ({
+  variables: {},
+  light: { "--mantine-color-dimmed": "#56655c" },
+  dark: { "--mantine-color-dimmed": "#a7b5ac" },
+});
+
 export const theme = createTheme({
   primaryColor: "mata",
-  primaryShade: { light: 8, dark: 6 },
+  primaryShade: { light: 8, dark: 8 },
   colors: { mata, ipe, barro, slate },
   fontFamily: "'Public Sans Variable', system-ui, -apple-system, 'Segoe UI', sans-serif",
   fontFamilyMonospace: "ui-monospace, 'SF Mono', 'Roboto Mono', monospace",

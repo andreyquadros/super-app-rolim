@@ -10,10 +10,11 @@ export interface PushPayload {
 }
 
 const ICON = "/pwa-192x192.png";
+// Só estes códigos indicam token morto. "invalid-argument" pode ser erro da
+// própria mensagem (ex.: link sem HTTPS) e não deve apagar aparelhos válidos.
 const INVALID_TOKEN_CODES = new Set([
   "messaging/registration-token-not-registered",
   "messaging/invalid-registration-token",
-  "messaging/invalid-argument",
 ]);
 
 function webpush(payload: PushPayload) {
