@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "demo-rolim"
-  }
+    "default": "demo-rolim",
+    "producao": "superapp-rolim"
+  },
+  "targets": {},
+  "etags": {}
 }
