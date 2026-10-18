@@ -1,4 +1,4 @@
-import { Anchor, Button, Divider, Drawer, Group, Paper, Stack, Text, Textarea, Title } from "@mantine/core";
+import { Anchor, Button, Divider, Drawer, Group, Paper, Skeleton, Stack, Text, Textarea, Title } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconBrandWhatsapp, IconMail } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
@@ -17,12 +17,14 @@ import { StatusChangeForm } from "./StatusChangeForm";
 
 function CitizenContact({ uid, name }: { uid: string; name: string }) {
   const watcher = useMemo(() => watchProfile(uid), [uid]);
-  const { data: profile } = useWatch(watcher);
+  const { data: profile, loading } = useWatch(watcher);
   return (
     <Paper withBorder p="sm">
       <span className="eyebrow">Cidadão</span>
       <Text fw={600}>{profile?.fullName ?? name}</Text>
-      {profile ? (
+      {loading ? (
+        <Skeleton h={16} w={260} mt={6} />
+      ) : profile ? (
         <Group gap="md" mt={4}>
           <Anchor href={`mailto:${profile.email}`} size="sm">
             <IconMail size={14} style={{ verticalAlign: "-2px" }} /> {profile.email}

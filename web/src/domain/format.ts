@@ -37,8 +37,8 @@ export function relativeTime(date: Date | null | undefined, now: Date = new Date
 /** "Bom dia" / "Boa tarde" / "Boa noite" */
 export function greeting(now: Date = new Date()): string {
   const hour = now.getHours();
-  if (hour < 12) return "Bom dia";
-  if (hour < 18) return "Boa tarde";
+  if (hour >= 5 && hour < 12) return "Bom dia";
+  if (hour >= 12 && hour < 18) return "Boa tarde";
   return "Boa noite";
 }
 

@@ -61,6 +61,7 @@ function DeleteAccount() {
 
 export default function ProfilePage() {
   const { user, profile, staff, signOut } = useAuth();
+  const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const form = useForm({
     initialValues: { fullName: profile?.fullName ?? "", phone: formatPhone(profile?.phone ?? "") },
@@ -139,7 +140,7 @@ export default function ProfilePage() {
 
       <Divider />
       <Group justify="space-between">
-        <Button variant="default" leftSection={<IconLogout size={16} />} onClick={() => signOut()}>
+        <Button variant="default" leftSection={<IconLogout size={16} />} onClick={() => { navigate("/", { replace: true }); void signOut(); }}>
           Sair
         </Button>
         <DeleteAccount />

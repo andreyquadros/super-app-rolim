@@ -1,9 +1,9 @@
-import { Alert, Button, Grid, Group, Select, Stack, Text, TextInput } from "@mantine/core";
+import { Alert, Autocomplete, Button, Grid, Group, Select, Stack, Text, TextInput } from "@mantine/core";
 import type { UseFormReturnType } from "@mantine/form";
 import { IconCurrentLocation, IconMapPinExclamation } from "@tabler/icons-react";
 import { useEffect, useRef } from "react";
 import { MapPicker } from "@/components/map";
-import { CITY_NAME } from "@/config/city";
+import { CITY_NAME, NEIGHBORHOODS } from "@/config/city";
 import { reverseGeocode } from "@/data/geocoding";
 import { STREET_TYPES } from "@/domain/catalog";
 import { isInsideMunicipality, type LatLng } from "@/domain/geo";
@@ -100,7 +100,7 @@ export function LocationStep({ form }: LocationStepProps) {
           <TextInput label="Número" placeholder="S/N" {...form.getInputProps("number")} />
         </Grid.Col>
         <Grid.Col span={{ base: 8, sm: 6 }}>
-          <TextInput label="Bairro" {...form.getInputProps("neighborhood")} />
+          <Autocomplete label="Bairro" data={[...NEIGHBORHOODS]} limit={8} {...form.getInputProps("neighborhood")} />
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 6 }}>
           <TextInput label="Ponto de referência" placeholder="Opcional" {...form.getInputProps("complement")} />

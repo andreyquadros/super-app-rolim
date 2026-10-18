@@ -19,8 +19,16 @@ pubsub-debug.log
 web/.env
 functions/.env.*
 !functions/.env.example
+!functions/.env.demo-rolim
 service-account*.json
 *-firebase-adminsdk-*.json
 
 # Arquivos do sistema legado (Keycloak/FastAPI) não devem vir para este repositório
 legacy-src/
+
+# Configuração local do Claude Code
+.claude/
+
+# Playwright
+web/test-results/
+web/playwright-report/

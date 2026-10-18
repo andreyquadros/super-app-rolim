@@ -1,3 +1,4 @@
+import { CITY_NAME } from "@/config/city";
 import { splitStreet } from "@/domain/catalog";
 import type { LatLng } from "@/domain/geo";
 import type { Address } from "@/domain/types";
@@ -13,15 +14,20 @@ interface NominatimAddress {
   neighbourhood?: string;
   quarter?: string;
   city_district?: string;
-  hamlet?: string;
-  village?: string;
 }
 
-/** Converte a resposta do OpenStreetMap em campos do formulário. */
-export function addressFromNominatim(a: NominatimAddress): Partial<Address> {
+const normalize = (v: string) => v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
+
+/**
+ * Converte a resposta do OpenStreetMap em campos do formulário.
+ * Em Rolim de Moura o OSM costuma não ter bairros e devolve o nome da
+ * cidade como "distrito": nesse caso o bairro fica para o cidadão digitar.
+ */
+export function addressFromNominatim(a: NominatimAddress, cityName: string = CITY_NAME): Partial<Address> {
   const road = a.road ?? a.pedestrian ?? a.footway;
   const street = road ? splitStreet(road) : null;
-  const neighborhood = a.suburb ?? a.neighbourhood ?? a.quarter ?? a.city_district ?? a.hamlet ?? a.village;
+  const candidates = [a.suburb, a.neighbourhood, a.quarter, a.city_district];
+  const neighborhood = candidates.find((v) => v && normalize(v) !== normalize(cityName));
   return {
     ...(street ?? {}),
     ...(a.house_number ? { number: a.house_number } : {}),

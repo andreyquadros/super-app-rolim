@@ -15,6 +15,7 @@ import { Link, NavLink, Outlet, useNavigate } from "react-router";
 import { useAuth } from "@/auth/AuthContext";
 import { CITY_NAME } from "@/config/city";
 import classes from "./CitizenLayout.module.css";
+import { NewRequestSheetContext } from "./newRequestSheet";
 
 const TABS = [
   { to: "/", label: "Início", icon: IconHome, end: true },
@@ -116,7 +117,9 @@ export function CitizenLayout() {
       </header>
 
       <main className={classes.main}>
-        <Outlet context={{ openNewRequest: sheet.open }} />
+        <NewRequestSheetContext.Provider value={sheet.open}>
+          <Outlet />
+        </NewRequestSheetContext.Provider>
       </main>
 
       <nav className={classes.tabbar} aria-label="Navegação principal">

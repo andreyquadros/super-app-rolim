@@ -1,9 +1,10 @@
 import { Alert, Button, Group, Paper, SimpleGrid, Stack, Stepper, Text, Textarea, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { useNetwork } from "@mantine/hooks";
+import { useMediaQuery } from "@mantine/hooks";
 import { IconArrowLeft, IconArrowRight, IconSend } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import { useAuth } from "@/auth/AuthContext";
+import { useOnline } from "@/hooks/useOnline";
 import { PageHeader } from "@/components/PageHeader";
 import { PhotoPicker } from "@/components/PhotoPicker";
 import { SubmittedPanel } from "@/components/SubmittedPanel";
@@ -15,6 +16,8 @@ import { CategoryStep } from "./CategoryStep";
 import { INITIAL_ISSUE, issueValidators, STEP_FIELDS, type IssueFormValues } from "./issueForm";
 import { LocationStep } from "./LocationStep";
 import classes from "./NewIssue.module.css";
+
+const STEP_LABELS = ["O quê", "Onde", "Detalhes", "Enviar"] as const;
 
 interface Result {
   id: string;
@@ -51,7 +54,8 @@ function Summary({ values, hasPhoto }: { values: IssueFormValues; hasPhoto: bool
 
 export default function NewIssuePage() {
   const { user, profile } = useAuth();
-  const { online } = useNetwork();
+  const online = useOnline();
+  const compact = useMediaQuery("(max-width: 36em)") ?? false;
   const issueId = useMemo(() => newIssueId(), []);
   const [step, setStep] = useState(0);
   const [photo, setPhoto] = useState<Blob | null>(null);
@@ -117,9 +121,14 @@ export default function NewIssuePage() {
 
   return (
     <Stack gap="lg">
-      <PageHeader eyebrow="Zeladoria" title="Nova solicitação" back="/" />
+      <PageHeader
+        eyebrow="Zeladoria"
+        title="Nova solicitação"
+        back="/"
+        description={compact && step < STEP_LABELS.length ? `Passo ${step + 1} de ${STEP_LABELS.length} · ${STEP_LABELS[step]}` : undefined}
+      />
       <Stepper active={step} onStepClick={(s) => s < step && setStep(s)} size="sm" allowNextStepsSelect={false}>
-        <Stepper.Step label="O quê">
+        <Stepper.Step label={compact ? undefined : STEP_LABELS[0]} aria-label={STEP_LABELS[0]}>
           <Text mb="md" fw={600}>
             Qual é o problema?
           </Text>
@@ -136,10 +145,10 @@ export default function NewIssuePage() {
             </Text>
           )}
         </Stepper.Step>
-        <Stepper.Step label="Onde">
+        <Stepper.Step label={compact ? undefined : STEP_LABELS[1]} aria-label={STEP_LABELS[1]}>
           <LocationStep form={form} />
         </Stepper.Step>
-        <Stepper.Step label="Detalhes">
+        <Stepper.Step label={compact ? undefined : STEP_LABELS[2]} aria-label={STEP_LABELS[2]}>
           <Stack>
             <TextInput label="Título" placeholder="Ex.: Poste apagado em frente à escola" maxLength={120} {...form.getInputProps("title")} />
             <Textarea
@@ -153,7 +162,7 @@ export default function NewIssuePage() {
             <PhotoPicker value={photo} onChange={setPhoto} onError={setError} />
           </Stack>
         </Stepper.Step>
-        <Stepper.Step label="Enviar">
+        <Stepper.Step label={compact ? undefined : STEP_LABELS[3]} aria-label={STEP_LABELS[3]}>
           <Summary values={form.values} hasPhoto={photo !== null} />
         </Stepper.Step>
       </Stepper>

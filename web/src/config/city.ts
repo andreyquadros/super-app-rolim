@@ -17,6 +17,13 @@ export const CONTACTS = {
   website: "",
 } as const;
 
+/**
+ * Bairros sugeridos no formulário de zeladoria (o OpenStreetMap não tem os
+ * bairros de Rolim de Moura). Preencha com a lista oficial do cadastro
+ * imobiliário para padronizar os relatórios; vazio = campo livre.
+ */
+export const NEIGHBORHOODS: readonly string[] = [];
+
 /** Mapa base (OpenStreetMap, sem custo de API). */
 export const MAP_TILES = {
   url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",

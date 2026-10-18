@@ -1,16 +1,16 @@
 import { Button, Group, Paper, Text } from "@mantine/core";
-import { useNetwork } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconCloudOff, IconRefresh } from "@tabler/icons-react";
 import { useEffect } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
 import { useAuth } from "@/auth/AuthContext";
+import { useOnline } from "@/hooks/useOnline";
 import { listenForegroundPush } from "@/lib/push";
 import classes from "./AppStatus.module.css";
 
 /** Aviso fixo quando o aparelho está sem internet. */
 export function OfflineBanner() {
-  const { online } = useNetwork();
+  const online = useOnline();
   if (online) return null;
   return (
     <div className={classes.offline} role="status">

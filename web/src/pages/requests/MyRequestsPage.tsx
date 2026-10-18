@@ -1,16 +1,17 @@
 import { Alert, Button, SegmentedControl, Skeleton, Stack } from "@mantine/core";
 import { IconListCheck, IconPlus } from "@tabler/icons-react";
-import { useOutletContext, useSearchParams } from "react-router";
+import { useSearchParams } from "react-router";
 import { EmptyState } from "@/components/EmptyState";
 import { PageHeader } from "@/components/PageHeader";
 import { RequestCard } from "@/components/RequestCard";
 import { isOpenStatus } from "@/domain/status";
 import { useMyRequests } from "@/hooks/useCitizenData";
+import { useOpenNewRequest } from "@/layouts/newRequestSheet";
 
 type Filter = "open" | "all" | "issues" | "ombudsman";
 
 export default function MyRequestsPage() {
-  const { openNewRequest } = useOutletContext<{ openNewRequest: () => void }>();
+  const openNewRequest = useOpenNewRequest();
   const [params, setParams] = useSearchParams();
   const filter = (params.get("filtro") as Filter | null) ?? "open";
   const { data, loading, error } = useMyRequests();

@@ -1,9 +1,9 @@
 import { Alert, Button, Chip, Grid, Group, Select, Stack, Text, Textarea, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { useNetwork } from "@mantine/hooks";
 import { IconSend } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import { useAuth } from "@/auth/AuthContext";
+import { useOnline } from "@/hooks/useOnline";
 import { PageHeader } from "@/components/PageHeader";
 import { SubmittedPanel } from "@/components/SubmittedPanel";
 import { CONTACTS } from "@/config/city";
@@ -25,7 +25,7 @@ interface Values {
 
 export default function NewOmbudsmanPage() {
   const { user, profile } = useAuth();
-  const { online } = useNetwork();
+  const online = useOnline();
   const watcher = useMemo(() => watchBuildings("PUBLIC"), []);
   const buildings = useWatch(watcher);
   const units = (buildings.data ?? []).filter((b) => b.active);

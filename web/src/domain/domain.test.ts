@@ -110,6 +110,8 @@ describe("catálogo e formatação", () => {
     expect(relativeTime(new Date(2026, 9, 18, 9, 59, 40), now)).toBe("agora mesmo");
     expect(greeting(now)).toBe("Bom dia");
     expect(greeting(new Date(2026, 9, 18, 19))).toBe("Boa noite");
+    expect(greeting(new Date(2026, 9, 18, 1))).toBe("Boa noite");
+    expect(greeting(new Date(2026, 9, 18, 14))).toBe("Boa tarde");
     expect(firstName(" Maria  Souza")).toBe("Maria");
     expect(toIsoDate(new Date(2026, 0, 5))).toBe("2026-01-05");
   });
