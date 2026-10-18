@@ -1,0 +1,73 @@
+# Arquitetura e decisões
+
+## Por que mudar
+
+A versão 1 funcionava, mas dependia de uma equipe para manter **oito serviços** em servidores próprios:
+
+| Versão 1 (auto-hospedada) | Papel | Versão 2 (gerenciada) |
+| --- | --- | --- |
+| Keycloak + PostgreSQL + tema + validador de CPF em Java | Contas e login | Firebase Authentication + cadastro em `users/` |
+| API FastAPI (Python) + Alembic | Regras de negócio e permissões | `firestore.rules` + Cloud Functions |
+| PostgreSQL | Dados | Cloud Firestore |
+| MinIO (bucket público) | Fotos | Cloud Storage (fotos privadas) |
+| Traefik + certificados | HTTPS e domínio | Firebase Hosting (HTTPS automático) |
+| Jenkins | Publicação | GitHub Actions + `firebase deploy` |
+| Mailer próprio | E-mails | Extensão oficial *Trigger Email* |
+| Loki + Grafana + Alloy | Logs | Cloud Logging (já incluso) |
+| App das lojas + painel Next.js separado | Interface | Um único PWA (cidadão + painel) |
+
+Resultado: **nenhum servidor para instalar, atualizar ou proteger** via RDP/Linux. Backups, escalonamento, certificados e atualizações de segurança ficam com o Google. Os dados ficam no Brasil (São Paulo).
+
+## Componentes
+
+- **PWA (`web/`)** — React 19 + Vite + Mantine. Uma só base de código para o cidadão e o painel; telas carregadas sob demanda. O *service worker* (`web/src/sw.ts`) guarda o app para uso offline e recebe os avisos push. O Firestore usa cache persistente: protocolos ficam disponíveis sem internet e solicitações sem foto são enviadas quando a conexão volta.
+- **Regras (`firestore.rules`, `storage.rules`)** — são o "backend" de autorização. Validam quem escreve, quais campos, formatos (CPF, protocolo, datas), se o local está dentro do município e o fluxo de status. Têm 31 testes automatizados.
+- **Cloud Functions (`functions/`)** — reagem a mudanças no banco: e-mail ao abrir e a cada mudança de status, aviso push ao cidadão, envio de comunicados para todos, auditoria de equipe/unidades e limpeza de dados ao excluir conta.
+
+## Modelo de dados (Firestore)
+
+| Coleção | Conteúdo | Quem lê / escreve |
+| --- | --- | --- |
+| `users/{uid}` | nome, CPF, celular, e-mail | a própria pessoa; equipe lê |
+| `cpfs/{cpf}` | `{ uid }` — garante 1 CPF por conta | criado no cadastro; equipe lê (busca por CPF) |
+| `staff/{uid}` | perfis (`ROOT`, `CIVIL_SERVANT`, `PHARMACY_MANAGER`), unidades, ativo | admin; servidor só concede nas próprias unidades |
+| `buildings/{id}` | unidades públicas e farmácias, local, telefones, aberta/plantão | público lê; admin edita; farmácia altera só aberta/plantão |
+| `issues/{id}` | zeladoria: categoria, local, endereço, foto, status, protocolo `ZEL-AAAA-XXXXXXXX` | autor e equipe |
+| `issues/{id}/history/{status}` | cada mudança de status com resposta oficial | autor e equipe; equipe cria |
+| `issues/{id}/notes/{id}` | observações internas | só equipe |
+| `ombudsman/{id}` (+ `history`, `notes`) | ouvidoria sobre uma unidade pública, protocolo `OUV-…` | autor e equipe **da unidade** |
+| `notifications/{id}` | comunicados (rascunho → fila → enviado) | enviados são públicos; equipe da unidade gerencia |
+| `devices/{token}` | aparelhos para push | o próprio usuário |
+| `mail`, `audit` | fila de e-mails e trilha de auditoria | só Cloud Functions (admin lê `audit`) |
+
+### Fluxo de atendimento
+
+```mermaid
+stateDiagram-v2
+  [*] --> RECEIVED: cidadão abre
+  RECEIVED --> UNDER_ANALYSIS
+  RECEIVED --> REJECTED: com justificativa
+  RECEIVED --> CANCELED: cidadão cancela
+  UNDER_ANALYSIS --> IN_PROGRESS
+  UNDER_ANALYSIS --> REJECTED: com justificativa
+  IN_PROGRESS --> RESOLVED
+```
+
+Cada mudança feita pela equipe grava, no mesmo lote, o documento `history/{novoStatus}`; as regras recusam a mudança sem esse registro. Assim o histórico nunca fica incompleto.
+
+## Decisões e limites conhecidos
+
+- **Firebase em vez de servidor próprio:** a prioridade é operar sem equipe técnica dedicada. O backend antigo já usava Firebase para push, então a conta Google também já era uma dependência.
+- **Um único app:** o painel antigo (Next.js) exigia servidor Node. Agora o painel é uma área do mesmo PWA, protegida por perfil — um deploy só.
+- **Status unificado:** zeladoria e ouvidoria usam o mesmo fluxo (antes eram dois conjuntos de nomes). Foram adicionados *Indeferida* (com justificativa obrigatória) e *Cancelada*.
+- **Ouvidoria:** ganhou os assuntos *Elogio* e *Sugestão*.
+- **Mapas:** OpenStreetMap (gratuito) em vez de Google Maps (pago). O endereço é sugerido pelo serviço Nominatim; como o OpenStreetMap não tem os bairros de Rolim de Moura, o bairro é digitado — preencha `NEIGHBORHOODS` em `web/src/config/city.ts` para oferecer sugestões padronizadas.
+- **Limite do município:** polígono oficial do IBGE (código 1100288) em `web/src/config/city.ts`; as regras conferem o retângulo envolvente.
+- **CPF:** validado pelos dígitos verificadores e único por conta. Como no sistema antigo, o cadastro é autodeclarado; se alguém registrar um CPF que não é seu, o administrador apaga `cpfs/{cpf}` pelo console.
+- **iPhone:** avisos push exigem iOS 16.4+ e o app adicionado à Tela de Início (o app mostra as instruções).
+- **Firebase JS SDK fixado em 12.14.0:** a partir da 12.15 o Firestore inclui a biblioteca `re2js` (+59 KB gzip no carregamento inicial) sem benefício para este app. Ao atualizar, compare o tamanho do build.
+- **Tamanho:** ~304 KB gzip de JavaScript na primeira visita; depois o app abre do cache do aparelho.
+
+## Custos
+
+Estimativa para o porte de Rolim de Moura (~55 mil habitantes), com milhares de solicitações por ano: a maior parte do uso cabe nas cotas gratuitas do plano Blaze (Firestore, Functions, Hosting, Authentication e Cloud Messaging). O Storage em São Paulo custa centavos por GB/mês. **Espere de R$ 0 a algumas dezenas de reais por mês**; configure o alerta de orçamento para ter certeza. Preços mudam: confira https://firebase.google.com/pricing.

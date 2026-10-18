@@ -1,0 +1,66 @@
+name: Publicar no Firebase
+
+# Publicação manual: Actions → "Publicar no Firebase" → Run workflow.
+# Configuração necessária no GitHub (Settings → Secrets and variables → Actions):
+#   Secret   FIREBASE_SERVICE_ACCOUNT  JSON da conta de serviço (veja docs/IMPLANTACAO.md)
+#   Variable FIREBASE_PROJECT_ID       id do projeto (ex.: superapp-rolim)
+#   Variable APP_URL                   https://app.rolimdemoura.ro.gov.br
+#   Variables VITE_FIREBASE_*          valores do app Web (os mesmos de web/.env.example)
+
+on:
+  workflow_dispatch:
+    inputs:
+      alvo:
+        description: "O que publicar"
+        type: choice
+        default: tudo
+        options: [tudo, somente-app, somente-regras]
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: producao
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            web/package-lock.json
+            functions/package-lock.json
+
+      - name: Instalar dependências
+        run: |
+          npm ci --prefix web
+          npm ci --prefix functions
+          npm install -g firebase-tools@15
+
+      - name: Gerar configuração de produção
+        run: |
+          cat > web/.env.production <<EOF
+          VITE_FIREBASE_API_KEY=${{ vars.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN=${{ vars.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID=${{ vars.FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET=${{ vars.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID=${{ vars.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID=${{ vars.VITE_FIREBASE_APP_ID }}
+          VITE_FIREBASE_VAPID_KEY=${{ vars.VITE_FIREBASE_VAPID_KEY }}
+          VITE_USE_EMULATORS=false
+          EOF
+          echo "APP_URL=${{ vars.APP_URL }}" > "functions/.env.${{ vars.FIREBASE_PROJECT_ID }}"
+
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+
+      - name: Publicar
+        run: |
+          case "${{ inputs.alvo }}" in
+            somente-app)    ONLY="--only hosting" ;;
+            somente-regras) ONLY="--only firestore,storage" ;;
+            *)              ONLY="" ;;
+          esac
+          firebase deploy --project "${{ vars.FIREBASE_PROJECT_ID }}" --non-interactive --force $ONLY
