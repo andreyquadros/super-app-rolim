@@ -1,0 +1,346 @@
+rules_version = '2';
+
+// Regras de segurança do Super App Rolim de Moura.
+//
+// Estas regras substituem o middleware de autenticação, as roles e as
+// "policies por prédio" do antigo backend FastAPI. Toda escrita feita pelo
+// aplicativo passa por aqui; as Cloud Functions (Admin SDK) não passam.
+//
+// Perfis:
+//   - cidadão: qualquer usuário autenticado com cadastro em /users/{uid}
+//   - ROOT: administrador geral da prefeitura
+//   - CIVIL_SERVANT: servidor; vê toda a zeladoria e a ouvidoria/comunicados
+//     apenas das unidades (buildingIds) que lhe foram atribuídas
+//   - PHARMACY_MANAGER: atualiza "aberta/plantão" das farmácias que gerencia
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- Identidade ----------
+    function signedIn() { return request.auth != null; }
+    function uid() { return request.auth.uid; }
+    function docPath(collection, id) { return /databases/$(database)/documents/$(collection)/$(id); }
+
+    function isStaff() {
+      return signedIn()
+        && exists(docPath('staff', uid()))
+        && get(docPath('staff', uid())).data.active == true;
+    }
+    function staff() { return get(docPath('staff', uid())).data; }
+    function hasRole(role) { return isStaff() && role in staff().roles; }
+    function isRoot() { return hasRole('ROOT'); }
+    // Gestor = quem atende solicitações (servidor ou administrador)
+    function isManager() { return isRoot() || hasRole('CIVIL_SERVANT'); }
+    function managesBuilding(buildingId) {
+      return isRoot() || (hasRole('CIVIL_SERVANT') && buildingId in staff().buildingIds);
+    }
+    function hasProfile() { return signedIn() && exists(docPath('users', uid())); }
+    function profileName() { return get(docPath('users', uid())).data.fullName; }
+
+    // ---------- Validação ----------
+    function changedKeys() { return request.resource.data.diff(resource.data).affectedKeys(); }
+    function onlyChanged(keys) { return changedKeys().hasOnly(keys); }
+    function isStr(v, min, max) { return v is string && v.size() >= min && v.size() <= max; }
+    function optStr(v, max) { return v == null || (v is string && v.size() <= max); }
+    // Retângulo envolvente do município (IBGE 1100288) com pequena margem.
+    // A checagem fina (polígono) é feita no app.
+    function inMunicipality(lat, lng) {
+      return lat is number && lng is number
+        && lat >= -11.95 && lat <= -11.54
+        && lng >= -62.09 && lng <= -61.48;
+    }
+
+    // Fluxo de atendimento (igual para zeladoria e ouvidoria)
+    function validTransition(from, to) {
+      return (from == 'RECEIVED' && to in ['UNDER_ANALYSIS', 'REJECTED'])
+        || (from == 'UNDER_ANALYSIS' && to in ['IN_PROGRESS', 'REJECTED'])
+        || (from == 'IN_PROGRESS' && to == 'RESOLVED');
+    }
+
+    function stampedNow(d) { return d.updatedAt == request.time; }
+
+    // Mudança de status feita pela equipe: exige o registro de histórico
+    // /{collection}/{id}/history/{novoStatus} no mesmo lote (batch).
+    function staffStatusChange(collection, id) {
+      let d = request.resource.data;
+      return onlyChanged(['status', 'lastResponse', 'updatedAt', 'statusChangedAt'])
+        && validTransition(resource.data.status, d.status)
+        && optStr(d.lastResponse, 2000)
+        && (d.status != 'REJECTED' || isStr(d.lastResponse, 10, 2000))
+        && stampedNow(d) && d.statusChangedAt == request.time
+        && existsAfter(/databases/$(database)/documents/$(collection)/$(id)/history/$(d.status));
+    }
+
+    // Cidadão só pode cancelar enquanto a solicitação está "Recebida"
+    function citizenCancel() {
+      let d = request.resource.data;
+      return resource.data.citizenId == uid()
+        && resource.data.status == 'RECEIVED'
+        && onlyChanged(['status', 'updatedAt', 'statusChangedAt'])
+        && d.status == 'CANCELED'
+        && stampedNow(d) && d.statusChangedAt == request.time;
+    }
+
+    function validHistory(d, status, parentStatusBefore, parentStatusAfter) {
+      return d.keys().hasOnly(['from', 'to', 'officialResponse', 'byUid', 'byName', 'at'])
+        && d.to == status
+        && d.from == parentStatusBefore
+        && parentStatusAfter == status
+        && validTransition(d.from, d.to)
+        && optStr(d.officialResponse, 2000)
+        && d.byUid == uid()
+        && isStr(d.byName, 1, 120)
+        && d.at == request.time;
+    }
+
+    function validNote(d) {
+      return d.keys().hasOnly(['text', 'byUid', 'byName', 'at'])
+        && isStr(d.text, 1, 1000)
+        && d.byUid == uid()
+        && isStr(d.byName, 1, 120)
+        && d.at == request.time;
+    }
+
+    // ---------- Cadastro do cidadão ----------
+    function validProfile(d) {
+      return d.keys().hasOnly(['fullName', 'cpf', 'phone', 'email', 'createdAt', 'updatedAt'])
+        && d.keys().hasAll(['fullName', 'cpf', 'phone', 'email', 'createdAt', 'updatedAt'])
+        && isStr(d.fullName, 3, 120)
+        && d.cpf is string && d.cpf.matches('^[0-9]{11}$')
+        && d.phone is string && d.phone.matches('^[0-9]{10,11}$')
+        && d.email == request.auth.token.email
+        && stampedNow(d);
+    }
+
+    match /users/{userId} {
+      allow read: if signedIn() && (uid() == userId || isManager());
+      allow create: if signedIn() && uid() == userId
+        && validProfile(request.resource.data)
+        && request.resource.data.createdAt == request.time
+        && getAfter(docPath('cpfs', request.resource.data.cpf)).data.uid == userId;
+      allow update: if signedIn() && uid() == userId
+        && validProfile(request.resource.data)
+        && onlyChanged(['fullName', 'phone', 'email', 'updatedAt']);
+      allow delete: if false;
+    }
+
+    // Índice de unicidade de CPF (um CPF = uma conta)
+    match /cpfs/{cpf} {
+      allow read: if isManager();
+      allow create: if signedIn()
+        && cpf.matches('^[0-9]{11}$')
+        && request.resource.data.keys().hasOnly(['uid'])
+        && request.resource.data.uid == uid()
+        && getAfter(docPath('users', uid())).data.cpf == cpf;
+      allow update, delete: if false;
+    }
+
+    // ---------- Equipe da prefeitura ----------
+    function validStaff(d) {
+      return d.keys().hasOnly(['roles', 'buildingIds', 'fullName', 'email', 'cpf', 'active', 'createdAt', 'updatedAt', 'updatedBy'])
+        && d.roles is list && d.roles.size() > 0
+        && d.roles.hasOnly(['ROOT', 'CIVIL_SERVANT', 'PHARMACY_MANAGER'])
+        && d.buildingIds is list && d.buildingIds.size() <= 30
+        && d.active is bool
+        && isStr(d.fullName, 1, 120)
+        && d.updatedBy == uid()
+        && stampedNow(d);
+    }
+
+    // Servidor pode cadastrar colegas apenas nas unidades que ele mesmo gerencia
+    function servantCanGrant(staffId) {
+      let mine = staff().buildingIds;
+      return hasRole('CIVIL_SERVANT')
+        && staffId != uid()
+        && !('ROOT' in request.resource.data.roles)
+        && request.resource.data.buildingIds.hasOnly(mine)
+        && (resource == null || (!('ROOT' in resource.data.roles) && resource.data.buildingIds.hasOnly(mine)));
+    }
+
+    match /staff/{staffId} {
+      allow read: if signedIn() && (uid() == staffId || isManager());
+      allow create, update: if validStaff(request.resource.data)
+        && (isRoot() || servantCanGrant(staffId));
+      allow delete: if false; // desative com active=false
+    }
+
+    // ---------- Unidades (prédios públicos e farmácias) ----------
+    function validBuilding(d) {
+      return d.keys().hasOnly(['name', 'type', 'address', 'lat', 'lng', 'isOpen', 'isOnDuty', 'ownerIds', 'phones', 'openingHours', 'active', 'createdAt', 'updatedAt'])
+        && isStr(d.name, 2, 200)
+        && d.type in ['PUBLIC', 'PHARMACY']
+        && isStr(d.address, 3, 255)
+        && inMunicipality(d.lat, d.lng)
+        && d.isOpen is bool && d.isOnDuty is bool && d.active is bool
+        && d.ownerIds is list && (d.type == 'PHARMACY' || d.ownerIds.size() == 0)
+        && d.phones is list && d.phones.size() <= 5
+        && optStr(d.get('openingHours', null), 120)
+        && stampedNow(d);
+    }
+
+    match /buildings/{buildingId} {
+      allow read: if true; // informação pública (farmácias de plantão, unidades)
+      allow create, update: if isRoot() && validBuilding(request.resource.data);
+      allow update: if hasRole('PHARMACY_MANAGER')
+        && resource.data.type == 'PHARMACY'
+        && uid() in resource.data.ownerIds
+        && onlyChanged(['isOpen', 'isOnDuty', 'updatedAt'])
+        && request.resource.data.isOpen is bool
+        && request.resource.data.isOnDuty is bool
+        && stampedNow(request.resource.data);
+      allow delete: if false; // desative com active=false
+    }
+
+    // ---------- Zeladoria ----------
+    function validAddress(a) {
+      return a is map
+        && a.keys().hasOnly(['streetType', 'streetName', 'number', 'neighborhood', 'complement'])
+        && a.keys().hasAll(['streetType', 'streetName', 'neighborhood'])
+        && isStr(a.streetType, 2, 30)
+        && isStr(a.streetName, 1, 160)
+        && isStr(a.neighborhood, 2, 120)
+        && optStr(a.get('number', null), 20)
+        && optStr(a.get('complement', null), 200);
+    }
+
+    function validNewRequest(d) {
+      return d.status == 'RECEIVED'
+        && d.citizenId == uid()
+        && d.citizenName == profileName()
+        && d.lastResponse == null
+        && d.createdAt == request.time
+        && d.statusChangedAt == request.time
+        && stampedNow(d)
+        && isStr(d.title, 5, 120)
+        && isStr(d.description, 10, 2000);
+    }
+
+    function validIssueCreate(d, issueId) {
+      return d.keys().hasOnly(['protocol', 'title', 'description', 'category', 'department', 'lat', 'lng', 'address', 'photoPath', 'status', 'citizenId', 'citizenName', 'lastResponse', 'createdAt', 'updatedAt', 'statusChangedAt'])
+        && d.keys().hasAll(['protocol', 'title', 'description', 'category', 'department', 'lat', 'lng', 'address', 'photoPath', 'status', 'citizenId', 'citizenName', 'lastResponse', 'createdAt', 'updatedAt', 'statusChangedAt'])
+        && d.protocol.matches('^ZEL-[0-9]{4}-[A-Z0-9]{8}$')
+        && d.category in ['lighting', 'pavement', 'sanitation', 'vegetation', 'signage', 'others']
+        && isStr(d.department, 2, 120)
+        && inMunicipality(d.lat, d.lng)
+        && validAddress(d.address)
+        && (d.photoPath == null || (d.photoPath is string && d.photoPath.matches('^issues/' + uid() + '/' + issueId + '/[^/]+$')))
+        && validNewRequest(d);
+    }
+
+    match /issues/{issueId} {
+      allow read: if signedIn() && (resource.data.citizenId == uid() || isManager());
+      allow create: if hasProfile() && validIssueCreate(request.resource.data, issueId);
+      allow update: if signedIn() && citizenCancel();
+      allow update: if isManager() && staffStatusChange('issues', issueId);
+      allow delete: if false;
+
+      match /history/{status} {
+        allow read: if signedIn()
+          && (get(docPath('issues', issueId)).data.citizenId == uid() || isManager());
+        allow create: if isManager()
+          && validHistory(request.resource.data, status,
+               get(docPath('issues', issueId)).data.status,
+               getAfter(docPath('issues', issueId)).data.status);
+        allow update, delete: if false;
+      }
+
+      // Observações internas: nunca visíveis ao cidadão
+      match /notes/{noteId} {
+        allow read: if isManager();
+        allow create: if isManager() && validNote(request.resource.data);
+        allow update, delete: if false;
+      }
+    }
+
+    // ---------- Ouvidoria ----------
+    function validOmbudsmanCreate(d) {
+      let building = get(docPath('buildings', d.buildingId)).data;
+      return d.keys().hasOnly(['protocol', 'title', 'description', 'type', 'buildingId', 'buildingName', 'occurrenceDate', 'occurrenceTime', 'status', 'citizenId', 'citizenName', 'lastResponse', 'createdAt', 'updatedAt', 'statusChangedAt'])
+        && d.keys().hasAll(['protocol', 'title', 'description', 'type', 'buildingId', 'buildingName', 'occurrenceDate', 'occurrenceTime', 'status', 'citizenId', 'citizenName', 'lastResponse', 'createdAt', 'updatedAt', 'statusChangedAt'])
+        && d.protocol.matches('^OUV-[0-9]{4}-[A-Z0-9]{8}$')
+        && d.type in ['employee_conduct', 'service_delay', 'poor_service', 'infrastructure', 'administrative', 'accessibility', 'others']
+        && d.buildingId is string
+        && building.type == 'PUBLIC'
+        && building.active == true
+        && d.buildingName == building.name
+        && d.occurrenceDate is string && d.occurrenceDate.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && (d.occurrenceTime == null || (d.occurrenceTime is string && d.occurrenceTime.matches('^([01][0-9]|2[0-3]):[0-5][0-9]$')))
+        && validNewRequest(d);
+    }
+
+    match /ombudsman/{ombudsmanId} {
+      allow read: if signedIn()
+        && (resource.data.citizenId == uid() || managesBuilding(resource.data.buildingId));
+      allow create: if hasProfile() && validOmbudsmanCreate(request.resource.data);
+      allow update: if signedIn() && citizenCancel();
+      allow update: if managesBuilding(resource.data.buildingId)
+        && staffStatusChange('ombudsman', ombudsmanId);
+      allow delete: if false;
+
+      match /history/{status} {
+        allow read: if signedIn()
+          && (get(docPath('ombudsman', ombudsmanId)).data.citizenId == uid()
+              || managesBuilding(get(docPath('ombudsman', ombudsmanId)).data.buildingId));
+        allow create: if managesBuilding(get(docPath('ombudsman', ombudsmanId)).data.buildingId)
+          && validHistory(request.resource.data, status,
+               get(docPath('ombudsman', ombudsmanId)).data.status,
+               getAfter(docPath('ombudsman', ombudsmanId)).data.status);
+        allow update, delete: if false;
+      }
+
+      match /notes/{noteId} {
+        allow read: if managesBuilding(get(docPath('ombudsman', ombudsmanId)).data.buildingId);
+        allow create: if managesBuilding(get(docPath('ombudsman', ombudsmanId)).data.buildingId)
+          && validNote(request.resource.data);
+        allow update, delete: if false;
+      }
+    }
+
+    // ---------- Comunicados (push) ----------
+    // O envio é feito pela Cloud Function quando o status passa para QUEUED.
+    function validNotification(d) {
+      return d.keys().hasOnly(['title', 'body', 'buildingId', 'buildingName', 'status', 'createdBy', 'createdByName', 'createdAt', 'updatedAt', 'sentAt', 'sentCount', 'error'])
+        && isStr(d.title, 3, 120)
+        && isStr(d.body, 3, 2000)
+        && d.buildingId is string
+        && isStr(d.buildingName, 1, 200)
+        && stampedNow(d);
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if resource.data.status == 'SENT' || managesBuilding(resource.data.buildingId);
+      allow create: if managesBuilding(request.resource.data.buildingId)
+        && validNotification(request.resource.data)
+        && request.resource.data.status == 'DRAFT'
+        && request.resource.data.createdBy == uid()
+        && request.resource.data.createdAt == request.time;
+      allow update: if managesBuilding(resource.data.buildingId)
+        && managesBuilding(request.resource.data.buildingId)
+        && resource.data.status in ['DRAFT', 'FAILED']
+        && request.resource.data.status in ['DRAFT', 'QUEUED']
+        && onlyChanged(['title', 'body', 'buildingId', 'buildingName', 'status', 'updatedAt'])
+        && validNotification(request.resource.data);
+      allow delete: if managesBuilding(resource.data.buildingId)
+        && resource.data.status in ['DRAFT', 'FAILED'];
+    }
+
+    // ---------- Dispositivos para push ----------
+    match /devices/{token} {
+      allow read, delete: if signedIn() && resource.data.uid == uid();
+      allow create, update: if signedIn()
+        && request.resource.data.keys().hasOnly(['uid', 'token', 'userAgent', 'updatedAt'])
+        && request.resource.data.uid == uid()
+        && request.resource.data.token == token
+        && optStr(request.resource.data.userAgent, 300)
+        && stampedNow(request.resource.data);
+    }
+
+    // ---------- Somente servidor (Cloud Functions) ----------
+    match /mail/{mailId} {
+      allow read, write: if false;
+    }
+    match /audit/{entryId} {
+      allow read: if isRoot();
+      allow write: if false;
+    }
+  }
+}

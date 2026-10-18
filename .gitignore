@@ -1,0 +1,26 @@
+node_modules/
+dist/
+dev-dist/
+functions/lib/
+coverage/
+.emulator-data/
+*.log
+firebase-debug*.log
+firestore-debug.log
+ui-debug.log
+database-debug.log
+pubsub-debug.log
+.DS_Store
+
+# Variáveis de ambiente locais (nunca versionar chaves de serviço)
+.env
+.env.local
+.env.*.local
+web/.env
+functions/.env.*
+!functions/.env.example
+service-account*.json
+*-firebase-adminsdk-*.json
+
+# Arquivos do sistema legado (Keycloak/FastAPI) não devem vir para este repositório
+legacy-src/

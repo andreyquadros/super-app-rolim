@@ -1,0 +1,23 @@
+{
+  "name": "super-app-rolim-functions",
+  "private": true,
+  "description": "Cloud Functions: e-mails, push e auditoria do Super App Rolim de Moura",
+  "main": "lib/index.js",
+  "engines": {
+    "node": "22"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "build:watch": "tsc -p tsconfig.json --watch",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.5.0",
+    "firebase-functions": "^6.4.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}

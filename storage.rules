@@ -1,0 +1,30 @@
+rules_version = '2';
+
+// Fotos da zeladoria: issues/{uid}/{issueId}/{arquivo}
+// Substitui o bucket MinIO público do backend antigo — agora as fotos só
+// são visíveis para quem abriu a solicitação e para a equipe da prefeitura.
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isManager() {
+      let staffPath = /databases/(default)/documents/staff/$(request.auth.uid);
+      return request.auth != null
+        && firestore.exists(staffPath)
+        && firestore.get(staffPath).data.active == true
+        && firestore.get(staffPath).data.roles.hasAny(['ROOT', 'CIVIL_SERVANT']);
+    }
+
+    match /issues/{userId}/{issueId}/{fileName} {
+      allow read: if request.auth != null
+        && (request.auth.uid == userId || isManager());
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow update, delete: if false;
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
