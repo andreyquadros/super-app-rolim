@@ -19,4 +19,12 @@ describe("roles", () => {
   it("plantão usa o ipê, a cor do destaque de plantão", () => {
     expect(ROLE_COLOR.DUTY_MANAGER).toBe("ipe");
   });
+
+  it("nenhum acesso usa o barro, reservado a problemas e indeferimentos", () => {
+    for (const role of ROLES) expect(ROLE_COLOR[role]).not.toBe("barro");
+  });
+
+  it("cada acesso tem uma cor diferente", () => {
+    expect(new Set(ROLES.map((r) => ROLE_COLOR[r])).size).toBe(ROLES.length);
+  });
 });

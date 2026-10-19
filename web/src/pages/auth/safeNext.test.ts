@@ -15,6 +15,21 @@ describe("safeNextPath", () => {
     expect(safeNextPath(null, origin)).toBe("/");
   });
 
+  it("recusa caminhos que normalizam para endereço externo (//)", () => {
+    expect(safeNextPath("/.//evil.com", origin)).toBe("/");
+    expect(safeNextPath("/..//evil.com", origin)).toBe("/");
+    expect(safeNextPath("/%2e//evil.com", origin)).toBe("/");
+    expect(safeNextPath("/%2E%2E//evil.com", origin)).toBe("/");
+    expect(safeNextPath("/a/..//evil.com", origin)).toBe("/");
+    expect(safeNextPath("/./\\evil.com", origin)).toBe("/");
+  });
+
+  it("normaliza segmentos de ponto que continuam no app", () => {
+    expect(safeNextPath("/a/../protocolos", origin)).toBe("/protocolos");
+    expect(safeNextPath("/./perfil#dados", origin)).toBe("/perfil#dados");
+    expect(safeNextPath("/?volta=//evil.com", origin)).toBe("/?volta=//evil.com");
+  });
+
   it("usa o destino de reserva informado", () => {
     expect(safeNextPath("javascript:alert(1)", origin, "/perfil")).toBe("/perfil");
   });

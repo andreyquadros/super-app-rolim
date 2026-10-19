@@ -77,7 +77,7 @@ export default function MyRequestsPage() {
     );
 
   const solicitar = (
-    <Button size="lg" h={56} radius="xl" leftSection={<IconPlus size={22} aria-hidden />} onClick={openNewRequest}>
+    <Button size="lg" radius="xl" className={classes.action} leftSection={<IconPlus size={22} aria-hidden />} onClick={openNewRequest}>
       Solicitar
     </Button>
   );
@@ -89,7 +89,8 @@ export default function MyRequestsPage() {
   return (
     <div className={classes.page}>
       <p className={classes.hint}>Toque num pedido para ver cada etapa e as respostas da prefeitura.</p>
-      <ChipRow label="Filtrar pedidos">
+      {/* Quatro chips curtos: quebram a linha e ficam todos à vista (o ativo nunca some de lado) */}
+      <ChipRow label="Filtrar pedidos" wrap>
         {FILTER_OPTIONS.map((f) => (
           <Chip key={f.value} pressed={filter === f.value} onClick={() => setFilter(f.value)}>
             {f.label}
@@ -115,7 +116,7 @@ export default function MyRequestsPage() {
           title={EMPTY_COPY[filter].title}
           description={EMPTY_COPY[filter].description}
           action={
-            <Button size="lg" h={56} radius="xl" variant="light" onClick={() => setFilter("todos")}>
+            <Button size="lg" radius="xl" variant="light" className={classes.action} onClick={() => setFilter("todos")}>
               Ver todos os pedidos
             </Button>
           }

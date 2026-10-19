@@ -32,9 +32,12 @@ export function distanceMeters(a: LatLng, b: LatLng): number {
   return 2 * EARTH_RADIUS_METERS * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
 }
 
+// Espaço que não quebra: o número nunca fica numa linha e a unidade na outra
+const NBSP = "\u00a0";
+
 export function formatDistance(meters: number): string {
-  if (meters < 1000) return `${Math.max(10, Math.round(meters / 10) * 10)} m`;
-  return `${(meters / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} km`;
+  if (meters < 1000) return `${Math.max(10, Math.round(meters / 10) * 10)}${NBSP}m`;
+  return `${(meters / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}${NBSP}km`;
 }
 
 export function directionsUrl(point: LatLng): string {

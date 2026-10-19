@@ -9,6 +9,10 @@ import { useBuildings, useStaffList } from "@/hooks/useAdminData";
 import classes from "./admin.module.css";
 import { BuildingForm } from "./BuildingForm";
 import { BuildingsTable } from "./BuildingsTable";
+import { useFitsWidth } from "./useFitsWidth";
+
+/** Largura das três abas lado a lado (325 px no texto padrão); abaixo disso, uma sob a outra. */
+const TABS_MIN_REM = 20.5;
 
 const TABS: Array<{ value: BuildingType; label: string }> = [
   { value: "PUBLIC", label: "Unidades públicas" },
@@ -39,6 +43,7 @@ export default function BuildingsAdminPage() {
   const [editing, setEditing] = useState<Building | "new" | null>(null);
   const dutyManagers = useMemo(() => (staff.data ?? []).filter((s) => s.active && s.roles.includes("DUTY_MANAGER")), [staff.data]);
   const buildings = data ?? [];
+  const { ref: barRef, fits: tabsInline } = useFitsWidth<HTMLDivElement>(TABS_MIN_REM);
 
   return (
     <Stack gap="md">
@@ -47,13 +52,15 @@ export default function BuildingsAdminPage() {
         title="Unidades e plantões"
         description="Unidades públicas recebem a ouvidoria e enviam comunicados; farmácias e funerárias aparecem nas listas de plantão."
       />
-      <Group justify="space-between" gap="sm">
+      <Group ref={barRef} justify="space-between" gap="sm">
         <SegmentedControl
           value={type}
           onChange={(v) => isBuildingType(v) && setType(v)}
           data={TABS}
           aria-label="Tipo de cadastro"
-          style={{ maxWidth: "100%" }}
+          orientation={tabsInline ? "horizontal" : "vertical"}
+          fullWidth={!tabsInline}
+          w={tabsInline ? undefined : "100%"}
         />
         <Button leftSection={<IconPlus size={18} aria-hidden />} onClick={() => setEditing("new")}>
           {NEW_LABEL[type]}

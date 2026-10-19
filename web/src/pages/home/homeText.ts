@@ -29,9 +29,38 @@ export function homeGreeting({ loading, signedIn, name }: GreetingInput, now: Da
   return name ? `${greeting(now)}, ${name}.` : `${greeting(now)}!`;
 }
 
+export interface GreetingParts {
+  /** "Boa noite," ou "Olá!": nunca quebra no meio */
+  lead: string;
+  /** " Maria." (com o espaço) ou "" */
+  rest: string;
+}
+
+/** Separa o cumprimento do resto, para "Boa noite," não virar "Boa / noite,". */
+export function greetingParts(title: string): GreetingParts {
+  const match = /^(.+?[,!])(\s.*)?$/.exec(title);
+  return match ? { lead: match[1], rest: match[2] ?? "" } : { lead: title, rest: "" };
+}
+
 /** Linha de apoio dos blocos de plantão: "1 de plantão agora" ou o texto de reserva. */
 export function dutyCountLabel(onDuty: number, fallback: string): string {
   return onDuty > 0 ? `${onDuty} de plantão agora` : fallback;
+}
+
+interface DutyListState {
+  data: readonly Building[];
+  loading: boolean;
+  error: string | null;
+}
+
+/**
+ * Destino do bloco de plantão: a lista do tipo; o filtro de reserva ("abertas",
+ * "todas") só quando o servidor respondeu que ninguém está de plantão.
+ */
+export function dutyTileTarget(state: DutyListState, path: string, emptyFilter: string): string {
+  const known = !state.loading && state.error === null;
+  const anyOnDuty = state.data.some((u) => u.isOnDuty);
+  return known && !anyOnDuty ? `${path}?filtro=${emptyFilter}` : path;
 }
 
 export interface DutyPick {

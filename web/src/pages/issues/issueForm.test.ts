@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { CITY_CENTER } from "@/config/city";
-import { formatIssueAddress, INITIAL_ISSUE, issueReachableStep, type IssueFormValues } from "./issueForm";
+import { formatAddressLine } from "@/domain/format";
+import { INITIAL_ISSUE, issueDraft, issueReachableStep, type IssueFormValues } from "./issueForm";
 
 const complete: IssueFormValues = {
   ...INITIAL_ISSUE,
@@ -36,12 +37,29 @@ describe("issueReachableStep", () => {
   });
 });
 
-describe("formatIssueAddress", () => {
-  it("monta logradouro, número e bairro", () => {
-    expect(formatIssueAddress(complete)).toBe("Avenida Norte Sul, 1200 – Centro");
+describe("endereço da revisão", () => {
+  it("usa o mesmo formato do detalhe do pedido", () => {
+    expect(formatAddressLine(complete)).toBe("Avenida Norte Sul, 1200 · Centro");
+    expect(formatAddressLine({ ...complete, number: " ", neighborhood: "" })).toBe("Avenida Norte Sul");
+  });
+});
+
+describe("issueDraft", () => {
+  it("monta o pedido com o ponto e o endereço (opcionais vazios viram null)", () => {
+    expect(issueDraft(complete, "abc")).toEqual({
+      id: "abc",
+      title: "Poste apagado na esquina",
+      description: "O poste está apagado há uma semana.",
+      category: "lighting",
+      lat: CITY_CENTER.lat,
+      lng: CITY_CENTER.lng,
+      address: { streetType: "Avenida", streetName: "Norte Sul", number: "1200", neighborhood: "Centro", complement: null },
+    });
+    expect(issueDraft({ ...complete, number: "" }, "abc")?.address.number).toBeNull();
   });
 
-  it("omite número e bairro vazios", () => {
-    expect(formatIssueAddress({ ...complete, number: " ", neighborhood: "" })).toBe("Avenida Norte Sul");
+  it("sem o tipo ou sem o ponto não há pedido", () => {
+    expect(issueDraft({ ...complete, category: null }, "abc")).toBeNull();
+    expect(issueDraft({ ...complete, point: null }, "abc")).toBeNull();
   });
 });

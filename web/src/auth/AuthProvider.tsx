@@ -24,10 +24,23 @@ interface Session {
   user: User | null;
   profile: Profile | null;
   staff: StaffMember | null;
+  /** Cadastro ilegível (sem servidor e nada salvo): não é o mesmo que "sem cadastro" */
+  profileError: boolean;
   ready: { auth: boolean; profile: boolean; staff: boolean };
 }
 
-const INITIAL: Session = { user: null, profile: null, staff: null, ready: { auth: false, profile: false, staff: false } };
+const INITIAL: Session = {
+  user: null,
+  profile: null,
+  staff: null,
+  profileError: false,
+  ready: { auth: false, profile: false, staff: false },
+};
+
+/** Ignora eventos atrasados de uma sessão anterior (troca de usuário). */
+function forUser(uid: string, update: (s: Session) => Session) {
+  return (s: Session): Session => (s.user?.uid === uid ? update(s) : s);
+}
 
 /**
  * Ao sair, apaga o cache local do Firestore (CPFs, telefones e solicitações)
@@ -44,6 +57,7 @@ async function wipeLocalDataAndReload(): Promise<void> {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session>(INITIAL);
+  const [profileAttempt, setProfileAttempt] = useState(0);
 
   useEffect(() => {
     return onAuthStateChanged(auth, (user) => {
@@ -51,6 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         profile: null,
         staff: null,
+        profileError: false,
         ready: { auth: true, profile: user === null, staff: user === null },
       });
     });
@@ -60,22 +75,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!uid) return undefined;
-    // Ignora eventos atrasados de uma sessão anterior (troca de usuário)
-    const forThisUser = (update: (s: Session) => Session) => (s: Session) => (s.user?.uid === uid ? update(s) : s);
-    const ready = (key: "profile" | "staff") => (s: Session) => ({ ...s, ready: { ...s.ready, [key]: true } });
-    const stopProfile = watchProfile(uid)(
-      (profile) => setSession(forThisUser((s) => ({ ...ready("profile")(s), profile }))),
-      () => setSession(forThisUser(ready("profile"))),
+    // `null` aqui é confirmado pelo servidor; sem resposta, chega o erro
+    return watchProfile(uid)(
+      (profile) => setSession(forUser(uid, (s) => ({ ...s, profile, profileError: false, ready: { ...s.ready, profile: true } }))),
+      () => setSession(forUser(uid, (s) => ({ ...s, profileError: true, ready: { ...s.ready, profile: true } }))),
     );
-    const stopStaff = watchStaffMember(uid)(
-      (staff) => setSession(forThisUser((s) => ({ ...ready("staff")(s), staff: staff?.active ? staff : null }))),
-      () => setSession(forThisUser(ready("staff"))),
+  }, [uid, profileAttempt]);
+
+  useEffect(() => {
+    if (!uid) return undefined;
+    return watchStaffMember(uid)(
+      (staff) => setSession(forUser(uid, (s) => ({ ...s, staff: staff?.active ? staff : null, ready: { ...s.ready, staff: true } }))),
+      () => setSession(forUser(uid, (s) => ({ ...s, ready: { ...s.ready, staff: true } }))),
     );
-    return () => {
-      stopProfile();
-      stopStaff();
-    };
   }, [uid]);
+
+  /** "Tentar de novo": volta ao carregando e assina o cadastro outra vez. */
+  const retryProfile = useCallback(() => {
+    setSession((s) => ({ ...s, profileError: false, ready: { ...s.ready, profile: s.user === null } }));
+    setProfileAttempt((n) => n + 1);
+  }, []);
 
   // Mantém o cadastro alinhado quando a pessoa confirma o e-mail
   const { user, profile } = session;
@@ -144,7 +163,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<AuthValue>(() => {
-    const { staff, ready } = session;
+    const { staff, ready, profileError } = session;
     const roles = staff?.roles ?? [];
     const isRoot = roles.includes("ROOT");
     const isManager = isRoot || roles.includes("CIVIL_SERVANT");
@@ -155,6 +174,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       profile,
       staff,
       loading: !(ready.auth && ready.profile && ready.staff),
+      profileError,
+      retryProfile,
       isRoot,
       isManager,
       isDutyManager: roles.includes("DUTY_MANAGER"),
@@ -169,7 +190,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       refreshVerification,
       deleteAccount,
     };
-  }, [session, user, profile, signIn, signUp, signInWithGoogle, signOut, resetPassword, resendVerification, refreshVerification, deleteAccount]);
+  }, [
+    session,
+    user,
+    profile,
+    retryProfile,
+    signIn,
+    signUp,
+    signInWithGoogle,
+    signOut,
+    resetPassword,
+    resendVerification,
+    refreshVerification,
+    deleteAccount,
+  ]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

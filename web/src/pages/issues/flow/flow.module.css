@@ -189,8 +189,8 @@
 
 .footerButton {
   --button-padding-x: 18px;
-  height: auto;
-  min-height: 56px;
+  /* 56 px: a regra .citizen .mantine-Button-root usa o maior entre --button-height e este */
+  --app-button-min: 56px;
   font-size: 1.0625rem;
 
   /* "Voltar" com as cores do app (o cinza padrão destoa no escuro) */
@@ -212,40 +212,4 @@
   .footerButton :global(.mantine-Button-section) {
     display: none;
   }
-}
-
-/* ---------- Folha de descarte ---------- */
-.sheetActions {
-  display: grid;
-  gap: 10px;
-}
-
-.sheetPrimary,
-.sheetDanger {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 56px;
-  padding: 0 22px;
-  border: 0;
-  border-radius: 999px;
-  font: inherit;
-  font-size: 1.0625rem;
-  font-weight: 700;
-  cursor: pointer;
-
-  &:focus-visible {
-    outline: 3px solid var(--mantine-color-mata-6);
-    outline-offset: 2px;
-  }
-}
-
-.sheetPrimary {
-  background: var(--mantine-color-mata-8);
-  color: #ffffff;
-}
-
-.sheetDanger {
-  background: var(--mantine-color-barro-light);
-  color: light-dark(var(--mantine-color-barro-9), var(--mantine-color-barro-2));
 }

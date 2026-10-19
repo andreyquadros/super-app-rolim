@@ -56,7 +56,8 @@
   font-weight: 600;
   line-height: 1.12;
   letter-spacing: -0.01em;
-  text-wrap: balance;
+  /* "pretty" evita palavra sozinha na última linha sem desequilibrar a primeira */
+  text-wrap: pretty;
   /* Nome comprido não passa por baixo do cartão-postal */
   overflow-wrap: break-word;
   hyphens: auto;
@@ -66,11 +67,17 @@
   }
 }
 
+/* "Boa noite," fica inteiro na primeira linha (a coluna sempre comporta) */
+.lead {
+  white-space: nowrap;
+}
+
 /* Cartão-postal da cidade: parado, só decoração */
 .art {
   grid-area: art;
   display: block;
-  width: clamp(100px, 31vw, 160px);
+  /* Menor no celular estreito: a saudação fica com a maior parte da largura */
+  width: clamp(84px, 26vw, 160px);
   height: auto;
   margin-top: 6px;
   border: 3px solid #ffffff;
@@ -88,6 +95,36 @@
   }
 }
 
+/* Celular estreito (menos de 360 px) ou texto muito grande: a saudação ocupa
+   a largura toda e o cartão-postal desce para o lado da data */
+@media (max-width: 359.98px) {
+  .header {
+    grid-template-areas:
+      "title title"
+      "date art"
+      "staff staff";
+  }
+
+  .art {
+    align-self: center;
+    margin-top: 10px;
+  }
+}
+
+@media (max-width: 47.99em) {
+  :global(html[data-text-size="muito-grande"]) .header {
+    grid-template-areas:
+      "title title"
+      "date art"
+      "staff staff";
+  }
+
+  :global(html[data-text-size="muito-grande"]) .art {
+    align-self: center;
+    margin-top: 10px;
+  }
+}
+
 :global(:root[data-mantine-color-scheme="dark"]) .art {
   border-color: rgba(255, 255, 255, 0.85);
   filter: brightness(0.88);
@@ -99,6 +136,8 @@
   color: rgba(255, 255, 255, 0.88);
   font-size: 1rem;
   line-height: 1.4;
+  /* Ao lado do cartão-postal: "Segunda-feira, / 19 de outubro" */
+  text-wrap: balance;
 
   @media (min-width: $mantine-breakpoint-sm) {
     margin-top: 10px;

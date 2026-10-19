@@ -5,6 +5,7 @@ import { useAuth } from "@/auth/AuthContext";
 import { useAppNavigate } from "@/components/AppLink";
 import { BrandMark } from "@/components/brand/BrandMark";
 import { APP_NAME, MAINTAINER_LINE } from "@/config/city";
+import { useBackNavigation } from "@/hooks/useBackNavigation";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { completeOnboarding } from "./onboardingState";
 import classes from "./OnboardingPage.module.css";
@@ -33,12 +34,19 @@ export default function OnboardingPage() {
   const titles = useRef<(HTMLHeadingElement | null)[]>([]);
   const shownIndex = useRef(index);
   const isLast = index === LAST;
+  const signedIn = user !== null;
   useDocumentTitle("Boas-vindas");
+  // Revendo pelo Perfil: sair devolve para lá (e não para a Início)
+  const backToProfile = useBackNavigation("/perfil");
 
   const start = useCallback(() => {
     completeOnboarding();
+    if (reviewing) {
+      backToProfile();
+      return;
+    }
     navigate("/", { replace: true, nav: "tab" });
-  }, [navigate]);
+  }, [navigate, reviewing, backToProfile]);
 
   const signIn = useCallback(() => {
     completeOnboarding();
@@ -117,7 +125,7 @@ export default function OnboardingPage() {
                 <span>{MAINTAINER_LINE}</span>
               </p>
             )}
-            {i === LAST && <SettingsPanel signedIn={user !== null} onSignIn={signIn} />}
+            {i === LAST && <SettingsPanel />}
           </Slide>
         ))}
       </div>
@@ -150,6 +158,12 @@ export default function OnboardingPage() {
               </button>
             )}
           </div>
+          {/* No rodapé fixo, e não no fim do slide: sempre à vista, sem rolar */}
+          {isLast && !signedIn && (
+            <button type="button" className={classes.signIn} onClick={signIn} data-press>
+              Entrar ou criar conta
+            </button>
+          )}
         </div>
       </div>
     </main>

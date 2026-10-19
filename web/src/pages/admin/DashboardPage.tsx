@@ -169,6 +169,7 @@ export default function DashboardPage() {
             }))}
           />
         </Paper>
+        {/* Coluna da direita: situação e os dois rankings, do tamanho do mapa */}
         <Stack gap="md">
           <Paper withBorder p="md" className={classes.panelCard}>
             <Title order={2} fz="lg" mb="sm">
@@ -182,32 +183,33 @@ export default function DashboardPage() {
             </Title>
             <Ranking rows={countBy(openIssues, (i) => categoryOf(i.category).label)} />
           </Paper>
+          <Paper withBorder p="md" className={classes.panelCard}>
+            <Title order={2} fz="lg" mb="sm">
+              Bairros com mais pedidos abertos
+            </Title>
+            <Ranking rows={countBy(openIssues, (i) => i.address.neighborhood || "Sem bairro")} />
+          </Paper>
         </Stack>
       </div>
 
-      <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
-        <Paper withBorder p="md" className={classes.panelCard}>
-          <Title order={2} fz="lg" mb="sm">
-            Bairros com mais pedidos abertos
-          </Title>
-          <Ranking rows={countBy(openIssues, (i) => i.address.neighborhood || "Sem bairro")} />
-        </Paper>
-        <Paper withBorder p="md" className={classes.panelCard}>
-          <Title order={2} fz="lg" mb="sm">
-            Esperando há mais tempo
-          </Title>
-          <Stack gap="sm">
-            {oldestWaiting.length === 0 && <Text size="sm" c="dimmed">Nenhuma solicitação aguardando análise.</Text>}
+      <Paper withBorder p="md" className={classes.panelCard}>
+        <Title order={2} fz="lg" mb="sm">
+          Esperando há mais tempo
+        </Title>
+        {oldestWaiting.length === 0 ? (
+          <Text size="sm" c="dimmed">
+            Nenhuma solicitação aguardando análise.
+          </Text>
+        ) : (
+          <ul className={classes.waitGrid}>
             {oldestWaiting.map((r) => (
-              <RequestCard
-                key={`${r.kind}-${r.id}`}
-                request={r}
-                onClick={() => navigate(`/painel/${r.kind === "issues" ? "zeladoria" : "ouvidoria"}?id=${r.id}`)}
-              />
+              <li key={`${r.kind}-${r.id}`} className={classes.cardCell}>
+                <RequestCard request={r} onClick={() => navigate(`/painel/${r.kind === "issues" ? "zeladoria" : "ouvidoria"}?id=${r.id}`)} />
+              </li>
             ))}
-          </Stack>
-        </Paper>
-      </SimpleGrid>
+          </ul>
+        )}
+      </Paper>
     </Stack>
   );
 }

@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { AppLink } from "@/components/AppLink";
 import { DUTY_META } from "@/domain/duty";
 import type { NavKind } from "@/lib/navMotion";
-import { dutyCountLabel } from "./homeText";
+import { dutyCountLabel, dutyTileTarget } from "./homeText";
 import type { DutyState } from "./types";
 import classes from "./ServiceGrid.module.css";
 
@@ -39,6 +39,9 @@ function ServiceTile({ to, nav, tone, icon: TileIcon, title, line, badge = null 
   );
 }
 
+/** Sem resposta do servidor: não dá para dizer que ninguém está de plantão. */
+const UNKNOWN_LINE = "Ver plantão";
+
 interface DutyLineProps {
   state: DutyState;
   fallback: string;
@@ -47,6 +50,7 @@ interface DutyLineProps {
 /** "1 de plantão agora", ao vivo; enquanto carrega, um traço com a altura do texto. */
 function DutyLine({ state, fallback }: DutyLineProps) {
   if (state.loading) return <span className={`${classes.lineSkeleton} shimmer`} aria-hidden />;
+  if (state.error) return UNKNOWN_LINE;
   const onDuty = state.data.filter((u) => u.isOnDuty).length;
   if (onDuty === 0) return fallback;
   return <span className={classes.live}>{dutyCountLabel(onDuty, fallback)}</span>;
@@ -59,8 +63,8 @@ interface ServiceGridProps {
 
 /** Os 4 serviços principais: aparecem na hora (só as contagens chegam depois). */
 export function ServiceGrid({ pharmacies, funerals }: ServiceGridProps) {
-  const anyPharmacy = pharmacies.data.some((u) => u.isOnDuty);
-  const anyFuneral = funerals.data.some((u) => u.isOnDuty);
+  const anyPharmacy = pharmacies.error === null && pharmacies.data.some((u) => u.isOnDuty);
+  const anyFuneral = funerals.error === null && funerals.data.some((u) => u.isOnDuty);
   return (
     <section className={classes.section} aria-labelledby="home-servicos">
       <h2 id="home-servicos" className={classes.heading}>
@@ -70,7 +74,7 @@ export function ServiceGrid({ pharmacies, funerals }: ServiceGridProps) {
         <ServiceTile to="/zeladoria/nova" nav="flow" tone="mata" icon={IconTools} title="Problema na rua" line="Zeladoria: buraco, poste, lixo, mato" />
         <ServiceTile to="/ouvidoria/nova" nav="flow" tone="ipe" icon={IconMessages} title="Ouvidoria" line="Elogio, sugestão ou reclamação" />
         <ServiceTile
-          to={anyPharmacy || pharmacies.loading ? DUTY_META.PHARMACY.path : `${DUTY_META.PHARMACY.path}?filtro=abertas`}
+          to={dutyTileTarget(pharmacies, DUTY_META.PHARMACY.path, "abertas")}
           nav="tab"
           tone="mata"
           icon={IconPill}
@@ -79,7 +83,7 @@ export function ServiceGrid({ pharmacies, funerals }: ServiceGridProps) {
           badge={anyPharmacy ? "live" : null}
         />
         <ServiceTile
-          to={anyFuneral || funerals.loading ? DUTY_META.FUNERAL.path : `${DUTY_META.FUNERAL.path}?filtro=todas`}
+          to={dutyTileTarget(funerals, DUTY_META.FUNERAL.path, "todas")}
           nav="tab"
           tone="slate"
           icon={IconFlower}

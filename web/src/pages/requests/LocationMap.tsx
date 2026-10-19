@@ -30,6 +30,7 @@ export function LocationMap({ request }: { request: Issue }) {
       {open && (
         <div id={mapId} className={classes.map}>
           <MapView
+            label="Local do problema no mapa"
             height={260}
             markers={[{ id: request.id, lat: request.lat, lng: request.lng, color: STATUS_HEX[request.status], label: request.title }]}
           />

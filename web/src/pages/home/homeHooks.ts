@@ -1,5 +1,6 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import type { LatLng } from "@/domain/geo";
+import { locationAlreadyGranted } from "@/lib/geoPermission";
 
 const MINUTE_MS = 60_000;
 
@@ -29,17 +30,6 @@ export function useWideLayout(): boolean {
     () => window.matchMedia(WIDE_QUERY).matches,
     () => false,
   );
-}
-
-/** A pessoa já liberou a localização antes? (consulta sem perguntar nada) */
-async function locationAlreadyGranted(): Promise<boolean> {
-  try {
-    if (!navigator.permissions || !("geolocation" in navigator)) return false;
-    const status = await navigator.permissions.query({ name: "geolocation" });
-    return status.state === "granted";
-  } catch {
-    return false;
-  }
 }
 
 const POSITION_OPTIONS: PositionOptions = { enableHighAccuracy: false, timeout: 10_000, maximumAge: 5 * MINUTE_MS };

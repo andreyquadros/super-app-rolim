@@ -1,0 +1,57 @@
+/* Folhas de confirmação: [ação segura] em cima, [ação sem volta] embaixo (56 px). */
+
+.actions {
+  display: grid;
+  gap: 10px;
+}
+
+.keep,
+.confirm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  padding: 8px 22px;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 3px solid var(--mantine-color-mata-6);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: progress;
+    opacity: 0.7;
+  }
+}
+
+.keep {
+  background: var(--mantine-color-mata-8);
+  color: #ffffff;
+}
+
+.confirm {
+  background: var(--mantine-color-barro-light);
+  color: light-dark(var(--mantine-color-barro-9), var(--mantine-color-barro-2));
+
+  &:focus-visible {
+    outline-color: var(--mantine-color-barro-5);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .keep:hover {
+    background: var(--mantine-color-mata-9);
+  }
+
+  .confirm:hover:not(:disabled) {
+    background: light-dark(rgba(207, 70, 35, 0.16), rgba(207, 70, 35, 0.24));
+  }
+}

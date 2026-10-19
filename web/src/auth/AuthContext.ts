@@ -16,6 +16,13 @@ export interface AuthValue {
   staff: StaffMember | null;
   /** true até sabermos quem está logado e termos lido perfil/equipe */
   loading: boolean;
+  /**
+   * O cadastro não pôde ser lido (servidor sem resposta e nada salvo no
+   * aparelho). Com `profile` null, não significa "sem cadastro".
+   */
+  profileError: boolean;
+  /** Assina o cadastro de novo depois de `profileError` */
+  retryProfile: () => void;
   isRoot: boolean;
   isManager: boolean;
   /** Responsável por plantão (farmácias/funerárias) */

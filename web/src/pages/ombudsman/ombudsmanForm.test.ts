@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatOccurrence, initialOmbudsman, ombudsmanReachableStep, ombudsmanValidators, type OmbudsmanFormValues } from "./ombudsmanForm";
+import { initialOmbudsman, ombudsmanDraft, ombudsmanReachableStep, ombudsmanValidators, type OmbudsmanFormValues } from "./ombudsmanForm";
 
 const TODAY = "2026-10-19";
 
@@ -44,13 +44,23 @@ describe("ombudsmanValidators", () => {
   });
 });
 
-describe("formatOccurrence", () => {
-  it("escreve a data por extenso, com horário quando houver", () => {
-    expect(formatOccurrence("2026-10-18", "14:30")).toBe("18 de outubro de 2026, às 14:30");
-    expect(formatOccurrence("2026-10-18", "")).toBe("18 de outubro de 2026");
+describe("ombudsmanDraft", () => {
+  const unit = { id: "ubs-centro", name: "Unidade Básica de Saúde Centro" };
+
+  it("leva o nome inteiro da unidade e o horário opcional", () => {
+    expect(ombudsmanDraft(complete, unit)).toEqual({
+      title: "Ótimo atendimento",
+      description: "Fui muito bem atendida na recepção.",
+      type: "compliment",
+      buildingId: "ubs-centro",
+      buildingName: "Unidade Básica de Saúde Centro",
+      occurrenceDate: "2026-10-18",
+      occurrenceTime: "14:30",
+    });
+    expect(ombudsmanDraft({ ...complete, occurrenceTime: "" }, unit)?.occurrenceTime).toBeNull();
   });
 
-  it("data inválida vira travessão", () => {
-    expect(formatOccurrence("ontem", "")).toBe("—");
+  it("sem o assunto não há relato", () => {
+    expect(ombudsmanDraft({ ...complete, type: "" }, unit)).toBeNull();
   });
 });

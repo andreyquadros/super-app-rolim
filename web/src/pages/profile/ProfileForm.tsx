@@ -60,7 +60,7 @@ export function ProfileForm({ uid, profile }: ProfileFormProps) {
           <dd className={classes.readonlyValue}>{maskCpf(profile.cpf)}</dd>
           <dd className={classes.readonlyHint}>Por segurança, o CPF aparece só em parte. Para corrigir, procure a prefeitura.</dd>
         </dl>
-        <Button type="submit" size="lg" radius="xl" fullWidth loading={saving} disabled={!form.isDirty()}>
+        <Button type="submit" size="lg" radius="xl" fullWidth loading={saving} disabled={!form.isDirty()} className={classes.saveButton}>
           Salvar alterações
         </Button>
       </form>

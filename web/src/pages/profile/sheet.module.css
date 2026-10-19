@@ -1,0 +1,19 @@
+/* Folhas de confirmação do Perfil (Sair, Excluir conta) */
+
+/* Erro dentro da própria folha: um aviso solto ficaria escondido atrás dela */
+.error {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--mantine-color-barro-light);
+  color: light-dark(var(--mantine-color-barro-9), var(--mantine-color-barro-2));
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+
+  p {
+    margin: 0;
+  }
+}

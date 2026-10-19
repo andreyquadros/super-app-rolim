@@ -6,11 +6,14 @@
 
 /* ---------- Farmácias | Funerárias ---------- */
 .switchWrap {
+  container: duty-switch / inline-size;
   position: sticky;
-  top: calc(env(safe-area-inset-top) + var(--app-bar-h));
+  /* Preso 2 px por baixo da barra: em telas de densidade fracionária não sobra
+     fresta por onde o conteúdo rolando apareça (a barra fica por cima) */
+  top: calc(env(safe-area-inset-top) + var(--app-bar-h) - 2px);
   z-index: 50;
-  margin: -8px -16px 0;
-  padding: 8px 16px;
+  margin: -10px -16px 0;
+  padding: 10px 16px 8px;
   background: var(--app-paper);
 }
 
@@ -46,7 +49,9 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
+  min-width: 0;
   min-height: 52px;
+  padding-inline: 6px;
   border-radius: 999px;
   color: var(--app-ink-soft);
   font-size: 1.0625rem;
@@ -64,6 +69,17 @@
   }
 }
 
+.switchIcon {
+  flex-shrink: 0;
+}
+
+/* Tela estreita com texto grande: só o nome, para caber dentro do indicador */
+@container duty-switch (max-width: 16.25rem) {
+  .switchIcon {
+    display: none;
+  }
+}
+
 .hint {
   margin: 0;
   color: var(--app-ink-soft);
@@ -74,6 +90,23 @@
 /* ---------- Filtros (chips compartilhados; funerárias em ardósia) ---------- */
 .page[data-type="FUNERAL"] button[data-kind="filter"][aria-pressed="true"] {
   background: var(--mantine-color-slate-8);
+}
+
+/* "Perto de mim" e "Mapa": fora da linha que rola, sempre à vista.
+   Colunas iguais quando cabem; senão cada um na sua linha */
+.tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: -6px;
+
+  & > button {
+    flex: 1 1 0;
+    justify-content: center;
+    min-width: max-content;
+    max-width: 18rem;
+    min-height: 48px;
+  }
 }
 
 .updatedAll,
@@ -100,6 +133,7 @@
 }
 
 .card {
+  container: duty-card / inline-size;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -156,12 +190,55 @@
   font-weight: 600;
 }
 
+/* Botões de ligar do "Em caso de falecimento": lado a lado só se couberem */
 .actions {
   display: grid;
-  grid-auto-columns: minmax(0, 1fr);
-  grid-auto-flow: column;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
   gap: 8px;
   margin-top: 12px;
+}
+
+/* Ações do cartão (as medidas em rem crescem com o tamanho do texto):
+   - padrão: a principal ("Ligar") na linha toda, WhatsApp e Rota embaixo;
+   - cartão largo: três colunas iguais;
+   - estreito: ícone sobre o texto nas ações lado a lado;
+   - muito estreito: uma por linha. */
+.cardActions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+
+  /* Número ímpar de ações: a primeira ocupa a linha toda */
+  & > :first-child:nth-last-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
+
+@container duty-card (min-width: 26rem) {
+  .cardActions {
+    grid-template-columns: none;
+    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-flow: column;
+
+    & > :first-child:nth-last-child(odd) {
+      grid-column: auto;
+    }
+  }
+}
+
+@container duty-card (min-width: 12.5rem) and (max-width: 17rem) {
+  .cardActions > :not(:first-child:nth-last-child(odd)) {
+    flex-direction: column;
+    gap: 2px;
+    padding: 6px 8px;
+  }
+}
+
+@container duty-card (max-width: 12.5rem) {
+  .cardActions {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .action {
@@ -169,13 +246,21 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
+  min-width: 0;
   min-height: 52px;
   padding: 0 10px;
   border: 1px solid transparent;
   border-radius: 999px;
   font-size: 1rem;
   font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
   text-decoration: none;
+
+  /* O ícone nunca encolhe até sumir */
+  & svg {
+    flex-shrink: 0;
+  }
 
   &[data-variant="filled"] {
     background: var(--mantine-color-mata-8);
@@ -202,6 +287,11 @@
 .skeleton {
   height: 196px;
   border-radius: 20px;
+}
+
+/* Funerárias: nada se mexe além da troca de tela (nem o brilho do carregando) */
+.page[data-type="FUNERAL"] .skeleton::after {
+  animation: none;
 }
 
 .error {
@@ -294,10 +384,16 @@
   color: var(--app-ink);
 }
 
+/* Altura inicial; ao abrir, o mapa encolhe o que for preciso para a folha
+   caber sem rolar (DutyMapSheet) */
+.mapFrame {
+  height: 62dvh;
+}
+
 .mapLegend {
   display: flex;
   flex-wrap: wrap;
-  gap: 14px;
+  gap: 4px 14px;
   margin: 12px 0 0;
   font-size: 0.9375rem;
 

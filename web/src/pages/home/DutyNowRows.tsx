@@ -68,7 +68,7 @@ export function DutyNowRow({ type, pick, distance, index }: DutyNowRowProps) {
           {first.name}
         </AppLink>
         {isPharmacy && (first.address || distance) && (
-          <span className={classes.address}>{[first.address, distance].filter(Boolean).join(" · ")}</span>
+          <span className={classes.address}>{[first.address, distance].filter(Boolean).join("\u00a0· ")}</span>
         )}
         {others > 0 && (
           <AppLink to={meta.path} nav="tab" className={classes.more}>

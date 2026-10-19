@@ -1,8 +1,7 @@
-import { Button } from "@mantine/core";
 import { useCallback, useRef, useState, type ReactNode } from "react";
 import { BottomSheet } from "@/components/sheet/BottomSheet";
+import { ConfirmActions } from "@/components/sheet/ConfirmActions";
 import { useChrome } from "@/layouts/chrome/chromeContext";
-import classes from "./auth.module.css";
 
 interface CloseGuardOptions {
   /** Há algo preenchido que se perderia ao sair */
@@ -45,14 +44,7 @@ export function useCloseGuard({ dirty, onLeave }: CloseGuardOptions): ReactNode 
       title="Sair sem terminar?"
       description="O que você preencheu será perdido."
     >
-      <div className={classes.sheetActions}>
-        <Button size="lg" h={56} radius="xl" fullWidth className={classes.primary} onClick={keepEditing}>
-          Continuar preenchendo
-        </Button>
-        <Button size="lg" h={56} radius="xl" fullWidth variant="default" className={classes.discard} onClick={discard}>
-          Sair e descartar
-        </Button>
-      </div>
+      <ConfirmActions keepLabel="Continuar preenchendo" onKeep={keepEditing} confirmLabel="Sair e descartar" onConfirm={discard} />
     </BottomSheet>
   );
 }

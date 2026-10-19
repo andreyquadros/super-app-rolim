@@ -12,6 +12,7 @@ import { useDutyControls } from "./useDutyControls";
 const ROW_CLASSES = {
   root: classes.toggle,
   body: classes.toggleBody,
+  input: classes.toggleInput,
   labelWrapper: classes.toggleText,
   label: classes.toggleLabel,
   description: classes.toggleHint,

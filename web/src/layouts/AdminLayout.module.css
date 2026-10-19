@@ -25,6 +25,27 @@
   min-width: 0;
 }
 
+/* Botão do menu no celular: alvo de 48 px (o Burger do Mantine tem 28 px) */
+.burger {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  margin-inline-start: -8px;
+  padding: 12px;
+  border-radius: 999px;
+
+  &:focus-visible {
+    outline: 3px solid var(--mantine-color-mata-6);
+    outline-offset: -3px;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: light-dark(var(--mantine-color-gray-1), rgba(255, 255, 255, 0.06));
+    }
+  }
+}
+
 .brandLink {
   display: inline-flex;
   align-items: center;
@@ -175,6 +196,17 @@
   line-height: 1.4;
 }
 
+/* Sem menu lateral (uma área só): acessos e a linha da prefeitura no fim da página */
+.pageFooter {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 64rem;
+  margin: 40px auto 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--app-line);
+}
+
 /* ---------- Conteúdo ---------- */
 .main {
   background: var(--app-paper);
@@ -184,6 +216,11 @@
   max-width: 1200px;
   margin-inline: auto;
   animation: panel-fade var(--motion-fast) var(--ease-standard) both;
+
+  /* Uma área só (cartões de plantão): coluna mais estreita e centrada, sem sobra à direita */
+  &[data-single] {
+    max-width: 64rem;
+  }
 }
 
 @keyframes panel-fade {

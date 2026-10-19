@@ -101,13 +101,6 @@ export function canCancel(request: CitizenRequest): boolean {
   return request.status === "RECEIVED";
 }
 
-/** "Rua da Escola, 300 · Centro" */
-export function issueAddressLine(request: Issue): string {
-  const { streetType, streetName, number, neighborhood } = request.address;
-  const street = [`${streetType} ${streetName}`.trim(), number].filter(Boolean).join(", ");
-  return [street, neighborhood].filter(Boolean).join(" · ");
-}
-
 export function shareText(title: string, protocol: string): string {
   return `Meu pedido no ${APP_NAME}: ${title}. Protocolo ${protocol}.`;
 }

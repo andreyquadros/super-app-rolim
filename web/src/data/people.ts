@@ -23,6 +23,10 @@ function tokenEmailVerified(): boolean {
   return auth.currentUser?.emailVerified ?? false;
 }
 
+/**
+ * `null` só quando o servidor confirma que não há cadastro: sem resposta, o
+ * cidadão já cadastrado não pode ser mandado de volta ao "Completar cadastro".
+ */
 export function watchProfile(uid: string): Watcher<Profile | null> {
   return watchDoc(doc(db, "users", uid), parseProfile);
 }
@@ -96,8 +100,10 @@ export function parseStaff(id: string, d: DocumentData): StaffMember {
   };
 }
 
+/** Ausente no cache vale como "sem acesso da equipe" (resposta segura; o servidor corrige). */
 export function watchStaffMember(uid: string): Watcher<StaffMember | null> {
-  return watchDoc(doc(db, "staff", uid), parseStaff);
+  const watcher = watchDoc(doc(db, "staff", uid), parseStaff);
+  return (onData, onError) => watcher(onData, onError, { deliverEmptyFromCache: true });
 }
 
 export function watchStaff(): Watcher<StaffMember[]> {

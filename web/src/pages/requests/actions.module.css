@@ -1,4 +1,5 @@
-/* Botões do detalhe do pedido: Copiar, Compartilhar, mapa e cancelar. */
+/* Botões do detalhe do pedido: Copiar, Compartilhar, mapa e cancelar
+   (os da folha de confirmação vêm de issues/flow/ConfirmActions). */
 
 /* ---------- Copiar (rótulos sobrepostos, troca com crossfade) ---------- */
 .copy {
@@ -48,7 +49,8 @@
   background: transparent;
   color: inherit;
   font: inherit;
-  font-size: 17px;
+  /* Segue o Tamanho do texto com teto, como o Voltar da barra (56 px de altura) */
+  font-size: clamp(17px, 1.0625rem, 19px);
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
@@ -59,8 +61,8 @@
   }
 }
 
-/* Celular com o protocolo visível na barra (data-collapsed da AppBar):
-   o botão fica só com o ícone; o nome acessível continua "Compartilhar" */
+/* Celular com o título compacto "Pedido" visível na barra (data-collapsed da
+   AppBar): o botão fica só com o ícone; o nome acessível continua "Compartilhar" */
 @media (max-width: 479px) {
   :global([data-collapsed]) .share {
     padding: 0 13px;
@@ -167,44 +169,4 @@
   background: var(--mantine-color-barro-light);
   color: light-dark(var(--mantine-color-barro-9), var(--mantine-color-barro-2));
   font-weight: 600;
-}
-
-.sheetActions {
-  display: grid;
-  gap: 10px;
-}
-
-.danger,
-.neutral {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 56px;
-  padding: 0 22px;
-  border: 0;
-  border-radius: 999px;
-  font: inherit;
-  font-size: 1.0625rem;
-  font-weight: 700;
-  cursor: pointer;
-
-  &:focus-visible {
-    outline: 3px solid var(--mantine-color-mata-6);
-    outline-offset: 2px;
-  }
-
-  &:disabled {
-    cursor: progress;
-    opacity: 0.7;
-  }
-}
-
-.danger {
-  background: var(--mantine-color-barro-8);
-  color: #ffffff;
-}
-
-.neutral {
-  background: light-dark(rgba(23, 36, 28, 0.06), rgba(255, 255, 255, 0.08));
-  color: var(--app-ink);
 }

@@ -3,7 +3,7 @@ import { Group, Paper, SimpleGrid, Stack, Text } from "@mantine/core";
 import { MapView, STATUS_HEX } from "@/components/map";
 import { RequestPhoto } from "@/components/RequestPhoto";
 import { categoryOf, ombudsmanTypeOf } from "@/domain/catalog";
-import { formatDate, formatDateTime } from "@/domain/format";
+import { formatAddressLine, formatDateTime, formatOccurrence } from "@/domain/format";
 import type { CitizenRequest } from "@/domain/types";
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
@@ -25,20 +25,14 @@ export function RequestDetails({ request }: { request: CitizenRequest }) {
             <>
               <Field label="Tipo">{categoryOf(request.category).label}</Field>
               <Field label="Setor responsável">{request.department}</Field>
-              <Field label="Endereço">
-                {request.address.streetType} {request.address.streetName}
-                {request.address.number ? `, ${request.address.number}` : ""} — {request.address.neighborhood}
-              </Field>
+              <Field label="Endereço">{formatAddressLine(request.address)}</Field>
               {request.address.complement && <Field label="Referência">{request.address.complement}</Field>}
             </>
           ) : (
             <>
               <Field label="Assunto">{ombudsmanTypeOf(request.type).label}</Field>
               <Field label="Unidade">{request.buildingName}</Field>
-              <Field label="Quando ocorreu">
-                {formatDate(new Date(`${request.occurrenceDate}T12:00:00`))}
-                {request.occurrenceTime ? ` às ${request.occurrenceTime}` : ""}
-              </Field>
+              <Field label="Quando ocorreu">{formatOccurrence(request.occurrenceDate, request.occurrenceTime)}</Field>
             </>
           )}
           <Field label="Aberta em">{formatDateTime(request.createdAt)}</Field>

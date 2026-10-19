@@ -32,9 +32,12 @@ export default defineConfig({
     },
   },
   projects: [
-    { name: "celular", use: { ...devices["Pixel 7"] } },
+    { name: "celular", testIgnore: /visual\.spec\.ts/, use: { ...devices["Pixel 7"] } },
+    { name: "telas", testMatch: /visual\.spec\.ts/, use: { ...devices["Desktop Chrome"] } },
     // Quem pede "reduzir movimento" no sistema usa o app do mesmo jeito
     { name: "movimento-reduzido", testMatch: /plantao\.spec\.ts/, use: { ...devices["Pixel 7"], contextOptions: { reducedMotion: "reduce" } } },
+    // Safari do iPhone (WebKit): folhas <dialog>, barra verde e plantão
+    { name: "iphone", testMatch: /(plantao|visual)\.spec\.ts/, use: { ...devices["iPhone 13"] } },
   ],
   webServer: {
     command: "npx vite build --mode e2e && npx vite preview --mode e2e",

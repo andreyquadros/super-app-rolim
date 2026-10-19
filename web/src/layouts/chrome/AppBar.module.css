@@ -9,13 +9,17 @@
 
 .row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  /* Tarefas: Fechar e o lado oposto nunca encolhem abaixo do conteúdo;
+     o título fica no centro quando cabe e quebra a linha quando não cabe */
+  grid-template-columns: minmax(max-content, 1fr) minmax(0, auto) minmax(max-content, 1fr);
   align-items: center;
   gap: 8px;
   height: var(--app-bar-h);
   padding-inline: 8px;
 
-  .bar[data-chrome="home"] & {
+  /* Início e abas: marca ou título à esquerda, conta à direita (sem disputar o centro) */
+  .bar[data-chrome="home"] &,
+  .bar[data-chrome="root"] & {
     grid-template-columns: minmax(0, 1fr) auto;
     padding-inline: 16px 12px;
   }
@@ -40,16 +44,20 @@
   min-width: 0;
 }
 
-/* Título compacto: aparece quando o título grande passa por baixo da barra */
+/* Título compacto: aparece quando o título grande passa por baixo da barra.
+   Sem reticências: se não couber numa linha, quebra em duas */
 .title {
   justify-self: center;
   min-width: 0;
   max-width: min(100%, 420px);
+  max-height: 2.3em;
   overflow: hidden;
-  font-size: 17px;
+  font-size: clamp(17px, 1.0625rem, 19px);
   font-weight: 700;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  line-height: 1.15;
+  text-align: center;
+  text-wrap: balance;
+  overflow-wrap: break-word;
   opacity: 0;
   transform: translateY(4px);
   transition:
@@ -61,6 +69,11 @@
     opacity: 1;
     transform: none;
   }
+
+  .bar[data-chrome="root"] & {
+    justify-self: start;
+    text-align: start;
+  }
 }
 
 .brandLink {
@@ -70,6 +83,22 @@
   border-radius: var(--mantine-radius-md);
   color: inherit;
   text-decoration: none;
+
+  /* O trilho lateral já mostra o pino do logo ao lado: aqui fica só o nome */
+  @media (min-width: $mantine-breakpoint-sm) {
+    img {
+      display: none;
+    }
+  }
+}
+
+/* Perfil/Entrar: no celular, na barra; no tablet e no computador, no trilho */
+.account {
+  display: contents;
+
+  @media (min-width: $mantine-breakpoint-sm) {
+    display: none;
+  }
 }
 
 .back,
@@ -82,7 +111,7 @@
   background: transparent;
   color: inherit;
   font: inherit;
-  font-size: 17px;
+  font-size: clamp(17px, 1.0625rem, 19px);
   font-weight: 600;
   cursor: pointer;
 }
@@ -105,8 +134,9 @@
   border-radius: 999px;
   background: #ffffff;
   color: var(--mantine-color-mata-9);
-  font-size: 15px;
+  font-size: clamp(15px, 0.9375rem, 17px);
   font-weight: 700;
+  white-space: nowrap;
   text-decoration: none;
 
   /* Área de toque de 48 px sem aumentar a pílula */

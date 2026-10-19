@@ -3,7 +3,7 @@ import { useAuth } from "@/auth/AuthContext";
 import { watchBuildings } from "@/data/buildings";
 import { watchSentNotifications } from "@/data/notifications";
 import { watchMyRequests } from "@/data/requests";
-import { mergeWatchers } from "@/data/watch";
+import { mergeWatchers, type Watcher } from "@/data/watch";
 import type { CitizenRequest, DutyType } from "@/domain/types";
 import { useWatch } from "./useWatch";
 
@@ -13,11 +13,10 @@ const newestFirst = (a: CitizenRequest, b: CitizenRequest) => (b.createdAt?.getT
 export function useMyRequests() {
   const { user, profile } = useAuth();
   const uid = profile ? user?.uid : undefined;
-  const watcher = useMemo(() => {
+  const watcher = useMemo((): Watcher<CitizenRequest[]> | null => {
     if (!uid) return null;
     const merged = mergeWatchers<CitizenRequest>([watchMyRequests("issues", uid), watchMyRequests("ombudsman", uid)]);
-    return (onData: (v: CitizenRequest[]) => void, onError: Parameters<typeof merged>[1]) =>
-      merged((items) => onData([...items].sort(newestFirst)), onError);
+    return (onData, onError, options) => merged((items, meta) => onData([...items].sort(newestFirst), meta), onError, options);
   }, [uid]);
   return useWatch(watcher);
 }

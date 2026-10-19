@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { signIn } from "./helpers";
 
 test("funerárias de plantão aparecem sem login, com telefone para ligar", async ({ page }) => {
   await page.goto("/plantao/funerarias");
@@ -28,19 +29,21 @@ test("endereços antigos e a aba Plantão levam à lista certa", async ({ page }
   await expect(page.getByText("Página não encontrada").first()).toBeVisible();
 });
 
-test("responsável liga e desliga o plantão, com opção de desfazer", async ({ page }) => {
-  const password = process.env.E2E_PASSWORD ?? "rolim-dev-2026";
-  await page.goto(`/entrar?next=${encodeURIComponent("/painel/meus-plantoes")}`);
-  await page.getByLabel("E-mail").fill("plantao@rolim.test");
-  await page.getByLabel("Senha").fill(password);
-  await page.getByRole("button", { name: "Entrar", exact: true }).click();
-  await page.waitForURL((url) => url.pathname === "/painel/meus-plantoes");
+test("responsável liga e desliga o plantão, com opção de desfazer", async ({ page, context }) => {
+  await signIn(page, "plantao@rolim.test", "/painel/meus-plantoes");
+  // Outra aba mostra o que a cidade vê (só muda depois que o servidor gravou)
+  const city = await context.newPage();
+  await city.goto("/plantao/farmacias");
+  await expect(city.getByRole("button", { name: "De plantão (1)" })).toBeVisible();
 
   const duty = page.getByRole("switch", { name: /De plantão/ }).first();
   await expect(duty).toBeChecked();
   await duty.click({ force: true });
   await expect(duty).not.toBeChecked();
   await expect(page.getByText(/^Plantão desligado\./)).toBeVisible();
+  await expect(city.getByRole("button", { name: "De plantão (0)" })).toBeVisible();
+
   await page.getByRole("button", { name: "Desfazer" }).click();
   await expect(duty).toBeChecked();
+  await expect(city.getByRole("button", { name: "De plantão (1)" })).toBeVisible();
 });

@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { DUTY_META } from "@/domain/duty";
 import type { Building, DutyType } from "@/domain/types";
 import { DutyUnitCard } from "./duty/DutyUnitCard";
-import { groupDutyUnits } from "./duty/dutyState";
+import { groupDutyUnits, oneUnitPerGroup } from "./duty/dutyState";
 import classes from "./duty/dutyAdmin.module.css";
 import { useDutyUnits } from "./duty/useDutyUnits";
 
@@ -78,7 +78,7 @@ export default function MyDutyUnitsPage() {
           />
         )
       ) : (
-        <div className={classes.groups}>
+        <div className={classes.groups} data-compact={oneUnitPerGroup(groups) || undefined}>
           {groups.map((g) => (
             <DutyGroup key={g.type} type={g.type} units={g.units} />
           ))}

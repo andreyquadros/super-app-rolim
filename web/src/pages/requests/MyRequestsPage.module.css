@@ -100,3 +100,8 @@
     outline-offset: 2px;
   }
 }
+
+/* Ações principais do estado vazio (56 px; o texto quebra em vez de cortar) */
+.action {
+  --app-button-min: 56px;
+}

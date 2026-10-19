@@ -5,22 +5,26 @@ import { AppLink } from "@/components/AppLink";
 import { EmptyState } from "@/components/EmptyState";
 import { PushToggle } from "@/components/PushToggle";
 import { useSentNotifications } from "@/hooks/useCitizenData";
-import { getNoticesSeenAt, markNoticesSeen } from "@/lib/noticesSeen";
+import { getNoticesSeenAt, isNewNotice, markNoticesSeen, seenMarkFor } from "@/lib/noticesSeen";
 import { currentPushState } from "@/lib/push";
 import { NoticeCard, NoticeCardSkeleton } from "./NoticeCard";
-import { groupNotices, isNewNotice } from "./noticeGroups";
+import { groupNotices } from "./noticeGroups";
 import classes from "./notices.module.css";
 
 const SKELETONS = [0, 1, 2];
 
-/** Logado com avisos desligados: oferece ligar; sem conta: convida a entrar. */
+/**
+ * Só quando dá para ligar os avisos neste aparelho ("disabled"): logado, o
+ * interruptor; sem conta, o convite para entrar. Sem configuração, sem suporte
+ * ou bloqueado, nada aparece (não promete o que não vai funcionar).
+ */
 function PushSlot() {
   const { user, loading } = useAuth();
   // Decide uma vez: depois de ligar, o cartão continua (mostrando ligado)
   const [pushOff] = useState(() => currentPushState() === "disabled");
 
-  if (loading) return null;
-  if (user) return pushOff ? <PushToggle /> : null;
+  if (loading || !pushOff) return null;
+  if (user) return <PushToggle />;
   return (
     <div className={classes.invite}>
       <span className={classes.inviteIcon} aria-hidden>
@@ -42,11 +46,13 @@ function NoticeList() {
   // "Novo" compara com a visita anterior (lida antes de marcar esta como vista)
   const [seenAt] = useState(getNoticesSeenAt);
   const latest = data?.[0]?.sentAt?.getTime() ?? 0;
+  const shown = !loading && !error && data !== undefined;
 
-  // Marca como visto ao abrir e quando chega um aviso com a tela aberta
+  // Marca como visto só quando a lista apareceu (erro ou carregando não contam)
+  // e de novo quando chega um aviso com a tela aberta
   useEffect(() => {
-    markNoticesSeen();
-  }, [latest]);
+    if (shown) markNoticesSeen(seenMarkFor(latest));
+  }, [shown, latest]);
 
   if (error) {
     return (

@@ -17,6 +17,9 @@ auth.languageCode = "pt-BR";
 // Cache persistente: o app abre e mostra os protocolos mesmo sem internet,
 // e solicitações sem foto ficam na fila até a conexão voltar.
 export const db = initializeFirestore(app, {
+  // Emulador: o Safari (WebKit) perde respostas do canal de streaming local de
+  // vez em quando; long polling é estável. Em produção vale a detecção automática.
+  ...(useEmulators ? { experimentalForceLongPolling: true } : {}),
   localCache: useEmulators
     ? memoryLocalCache()
     : persistentLocalCache({ tabManager: persistentMultipleTabManager() }),

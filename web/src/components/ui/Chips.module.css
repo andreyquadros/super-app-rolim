@@ -9,6 +9,16 @@
   &::-webkit-scrollbar {
     display: none;
   }
+
+  /* Bordas que esmaecem: o chip cortado à direita mostra que a linha rola */
+  &:not([data-wrap]) {
+    mask-image: linear-gradient(to right, transparent, #000 16px, #000 calc(100% - 16px), transparent);
+  }
+
+  &[data-wrap] {
+    flex-wrap: wrap;
+    overflow: visible;
+  }
 }
 
 .chip {

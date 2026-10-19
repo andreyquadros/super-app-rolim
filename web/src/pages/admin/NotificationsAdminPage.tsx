@@ -6,14 +6,17 @@ import { useMemo, useState } from "react";
 import { useAuth } from "@/auth/AuthContext";
 import { EmptyState } from "@/components/EmptyState";
 import { PageHeader } from "@/components/PageHeader";
+import { BADGE_INK } from "@/components/StatusBadge";
 import { deleteNotification, queueNotification, saveNotificationDraft, watchAdminNotifications } from "@/data/notifications";
 import { formatDateTime } from "@/domain/format";
+import type { StatusColor } from "@/domain/status";
 import type { CityNotification, NotificationStatus } from "@/domain/types";
 import { useManagedUnits } from "@/hooks/useAdminData";
 import { useWatch } from "@/hooks/useWatch";
 import { errorMessage } from "@/lib/errors";
+import classes from "./admin.module.css";
 
-const STATUS: Record<NotificationStatus, { label: string; color: string }> = {
+const STATUS: Record<NotificationStatus, { label: string; color: StatusColor }> = {
   DRAFT: { label: "Rascunho", color: "gray" },
   QUEUED: { label: "Na fila", color: "ipe" },
   SENDING: { label: "Enviando", color: "ipe" },
@@ -129,11 +132,13 @@ export default function NotificationsAdminPage() {
       ) : (
         <Stack gap="sm">
           {(data ?? []).map((n) => (
-            <Paper key={n.id} withBorder p="md">
+            <Paper key={n.id} withBorder p="md" className={classes.panelCard}>
               <Group justify="space-between" align="flex-start" wrap="nowrap">
                 <div style={{ minWidth: 0 }}>
                   <Group gap="xs">
-                    <Badge color={STATUS[n.status].color}>{STATUS[n.status].label}</Badge>
+                    <Badge color={STATUS[n.status].color} tt="none" c={BADGE_INK[STATUS[n.status].color]}>
+                      {STATUS[n.status].label}
+                    </Badge>
                     <Text size="xs" c="dimmed">
                       {n.buildingName} · {n.status === "SENT" ? `enviado ${formatDateTime(n.sentAt)}` : `criado por ${n.createdByName}`}
                     </Text>

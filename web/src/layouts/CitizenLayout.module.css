@@ -17,6 +17,12 @@
   outline: none;
 }
 
+/* "Pular para o conteúdo" e foco ao trocar de tela: o título fica abaixo da barra verde */
+.main,
+.main h1 {
+  scroll-margin-top: calc(env(safe-area-inset-top) + var(--app-bar-h) + 12px);
+}
+
 /* Faixa verde com o título grande das telas das abas */
 .band {
   padding: 4px 16px 40px;
@@ -24,8 +30,9 @@
   color: #ffffff;
 }
 
+/* Mesma caixa do conteúdo abaixo (.inner tem 16 px de respiro dentro dos 720 px) */
 .bandTitle {
-  max-width: var(--app-content-max);
+  max-width: calc(var(--app-content-max) - 32px);
   margin: 0 auto;
   font-family: var(--mantine-font-family-headings);
   font-size: 1.75rem;

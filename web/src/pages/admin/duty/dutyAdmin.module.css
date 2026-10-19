@@ -6,6 +6,19 @@
   gap: 32px;
 }
 
+/* Um estabelecimento por tipo (o caso comum de quem cuida do plantão):
+   os grupos ficam lado a lado em vez de um cartão sob um título de largura inteira */
+.groups[data-compact] {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 24rem), 1fr));
+  align-items: start;
+  gap: 32px 16px;
+
+  & .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .group {
   display: flex;
   flex-direction: column;
@@ -157,6 +170,12 @@
   gap: 16px;
   min-height: 56px;
   padding: 10px 18px;
+  cursor: pointer;
+}
+
+/* A caixa invisível do Switch cobre só a linha (sem inset ela vazava 18 px à direita) */
+.toggleInput {
+  inset: 0;
   cursor: pointer;
 }
 

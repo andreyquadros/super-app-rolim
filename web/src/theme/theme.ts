@@ -16,6 +16,14 @@ const barro: MantineColorsTuple = [
 const slate: MantineColorsTuple = [
   "#eef3f7", "#dfe5ea", "#bcc9d4", "#97abbd", "#7892aa", "#64829e", "#597a99", "#486885", "#3d5c78", "#2d4f6b",
 ];
+// Escuro esverdeado: o Mantine tira daqui o fundo de campos, gavetas, menus e
+// do SegmentedControl no tema escuro (em vez do cinza neutro). Os tons 6 e 7
+// são as superfícies do app (--app-surface e --app-paper em global.css).
+// 0 texto (12,7:1 no campo) · 2 apagado · 3 dica do campo (4,6:1) · 4 bordas
+// · 5 realce · 6 campos e cartões · 7 fundo · 8 trilho do SegmentedControl
+const dark: MantineColorsTuple = [
+  "#dfe6e1", "#c3cec7", "#a7b5ac", "#7f8d85", "#3b4842", "#2c3731", "#1b231f", "#141a17", "#101512", "#0b0f0d",
+];
 
 /** Texto secundário ("dimmed") com contraste AA nos dois temas. */
 export const cssVariablesResolver: CSSVariablesResolver = () => ({
@@ -28,7 +36,7 @@ export const cssVariablesResolver: CSSVariablesResolver = () => ({
 export const theme = createTheme({
   primaryColor: "mata",
   primaryShade: { light: 8, dark: 8 },
-  colors: { mata, ipe, barro, slate },
+  colors: { mata, ipe, barro, slate, dark },
   fontFamily: "'Public Sans Variable', system-ui, -apple-system, 'Segoe UI', sans-serif",
   fontFamilyMonospace: "ui-monospace, 'SF Mono', 'Roboto Mono', monospace",
   headings: {
@@ -61,6 +69,8 @@ export const theme = createTheme({
     TextInput: { defaultProps: { size: "md" } },
     PasswordInput: { defaultProps: { size: "md" } },
     SegmentedControl: { defaultProps: { radius: "xl" } },
-    Modal: { defaultProps: { radius: "lg", centered: true } },
+    // O X dos diálogos e gavetas do Mantine não tem nome acessível por padrão
+    Modal: { defaultProps: { radius: "lg", centered: true, closeButtonProps: { "aria-label": "Fechar" } } },
+    Drawer: { defaultProps: { closeButtonProps: { "aria-label": "Fechar" } } },
   },
 });

@@ -1,15 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
-
-/** Senha das contas criadas por scripts/seed-emulator.mjs (só existem no emulador). */
-const TEST_PASSWORD = process.env.E2E_PASSWORD ?? "rolim-dev-2026";
-
-async function signIn(page: Page, email: string, next: string) {
-  await page.goto(`/entrar?next=${encodeURIComponent(next)}`);
-  await page.getByLabel("E-mail").fill(email);
-  await page.getByLabel("Senha").fill(TEST_PASSWORD);
-  await page.getByRole("button", { name: "Entrar", exact: true }).click();
-  await page.waitForURL((url) => url.pathname === next);
-}
+import { expect, test } from "@playwright/test";
+import { signIn } from "./helpers";
 
 test("início mostra os serviços e dados públicos ao vivo", async ({ page }) => {
   await page.goto("/");

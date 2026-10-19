@@ -1,29 +1,70 @@
-/* Pílula logo abaixo da barra superior (não cobre o relógio do iPhone) */
-.offline {
-  position: fixed;
-  top: calc(env(safe-area-inset-top) + var(--app-bar-h) + 8px);
-  left: 50%;
-  z-index: 200;
-  display: flex;
+/* ---------- Sem internet ---------- */
+.pill {
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  max-width: calc(100vw - 32px);
-  white-space: nowrap;
-  padding: 8px 16px;
+  max-width: 100%;
+  padding: 6px 14px;
   border-radius: 999px;
   background: var(--mantine-color-ipe-3);
   color: #3a2a00;
   font-size: 0.9375rem;
   font-weight: 700;
-  box-shadow: var(--mantine-shadow-md);
-  transform: translateX(-50%);
+  line-height: 1.25;
+  text-align: center;
+  /* Texto grande ou tela estreita: quebra a linha, sem cortar */
+  white-space: normal;
   animation: offline-in var(--motion-base) var(--ease-enter);
+}
+
+.icon {
+  flex-shrink: 0;
+}
+
+.text {
+  text-wrap: balance;
+}
+
+/* Dentro da barra verde: a tela desce, nada fica por baixo do aviso */
+.barSlot {
+  display: flex;
+  justify-content: center;
+  padding-inline: 16px;
+
+  &:not(:empty) {
+    padding-bottom: 10px;
+  }
+}
+
+/* Fora da casca do cidadão (apresentação, painel) */
+.floating {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  z-index: 200;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+
+  &[data-placement="top"] {
+    top: calc(env(safe-area-inset-top) + var(--app-bar-h) + 8px);
+  }
+
+  &[data-placement="bottom"] {
+    bottom: calc(env(safe-area-inset-bottom) + 16px);
+  }
+
+  .pill {
+    box-shadow: var(--mantine-shadow-md);
+    pointer-events: auto;
+  }
 }
 
 @keyframes offline-in {
   from {
     opacity: 0;
-    transform: translate(-50%, -8px);
+    transform: translateY(-6px);
   }
 }
 

@@ -25,7 +25,8 @@
 }
 
 /* ---------- Transições de tela (View Transitions) ----------
-   A casca (barras) fica parada; só o conteúdo anima. */
+   A casca (barras) fica parada; só o conteúdo anima. Uma barra que aparece ou
+   some (fluxos não têm abas) entra ou sai pela borda. */
 .app-bar-vt {
   view-transition-name: app-bar;
 }
@@ -38,8 +39,10 @@
   view-transition-name: nav-rail;
 }
 
-/* Farmácias | Funerárias: o indicador desliza ao vivo, sem esmaecer */
-.duty-switch-vt {
+/* Farmácias | Funerárias: o indicador desliza ao vivo, sem esmaecer. O nome só
+   vale na troca entre os dois (DutyTypeSwitch grava data-nav-scope="duty");
+   vindo de outra aba, a troca entra e sai junto com a tela. */
+html[data-nav-scope="duty"] .duty-switch-vt {
   view-transition-name: duty-switch;
 }
 
@@ -63,6 +66,28 @@
 
 ::view-transition-old(duty-switch) {
   display: none;
+}
+
+/* Barra superior: só a nova aparece (a antiga, de outra altura, não fica por baixo) */
+::view-transition-old(app-bar) {
+  display: none;
+}
+
+/* Abas e trilho que somem (abrir um fluxo) ou voltam (fechar o fluxo) */
+::view-transition-old(tab-bar):only-child {
+  animation: vt-bar-out 200ms var(--ease-exit) both;
+}
+
+::view-transition-new(tab-bar):only-child {
+  animation: vt-bar-in var(--motion-base) var(--ease-enter) both;
+}
+
+::view-transition-old(nav-rail):only-child {
+  animation: vt-rail-out 200ms var(--ease-exit) both;
+}
+
+::view-transition-new(nav-rail):only-child {
+  animation: vt-rail-in var(--motion-base) var(--ease-enter) both;
 }
 
 ::view-transition-old(root) {
@@ -99,6 +124,15 @@ html[data-nav="tab"]::view-transition-new(root) {
 
 html[data-nav="flow"]::view-transition-new(root) {
   animation-name: vt-flow-in;
+}
+
+/* Sair do fluxo: o espelho da entrada (a tarefa desce e some; a tela de trás aparece) */
+html[data-nav="flow-exit"]::view-transition-old(root) {
+  animation: vt-flow-out 220ms var(--ease-exit) both;
+}
+
+html[data-nav="flow-exit"]::view-transition-new(root) {
+  animation: vt-fade-in var(--motion-screen) var(--ease-enter) both;
 }
 
 @keyframes vt-fade-out {
@@ -152,6 +186,41 @@ html[data-nav="flow"]::view-transition-new(root) {
   from {
     opacity: 0;
     transform: translateY(40px);
+  }
+}
+
+@keyframes vt-flow-out {
+  to {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+}
+
+@keyframes vt-bar-out {
+  to {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+}
+
+@keyframes vt-bar-in {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+}
+
+@keyframes vt-rail-out {
+  to {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes vt-rail-in {
+  from {
+    opacity: 0;
+    transform: translateX(-100%);
   }
 }
 
@@ -258,13 +327,6 @@ html[data-nav="flow"]::view-transition-new(root) {
   }
 }
 
-/* Sem View Transitions: entrada simples da tela (evita animar duas vezes) */
-@supports not (view-transition-name: none) {
-  .screen-in {
-    animation: rise 200ms var(--ease-enter) both;
-  }
-}
-
 /* ---------- Movimento reduzido e modo leve ---------- */
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(*),
@@ -276,8 +338,7 @@ html[data-nav="flow"]::view-transition-new(root) {
   .enter-rise,
   .shimmer::after,
   .live-dot::after,
-  .bump,
-  .screen-in {
+  .bump {
     animation: none !important;
   }
 
@@ -288,8 +349,7 @@ html[data-nav="flow"]::view-transition-new(root) {
 
 html[data-motion="lite"] .enter-rise,
 html[data-motion="lite"] .shimmer::after,
-html[data-motion="lite"] .bump,
-html[data-motion="lite"] .screen-in {
+html[data-motion="lite"] .bump {
   animation: none !important;
 }
 

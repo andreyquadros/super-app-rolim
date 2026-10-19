@@ -4,6 +4,8 @@ import {
   callablePhone,
   chooseInvite,
   dutyCountLabel,
+  dutyTileTarget,
+  greetingParts,
   homeGreeting,
   latestUpdate,
   longDate,
@@ -72,6 +74,13 @@ describe("cabeçalho da Início", () => {
     expect(homeGreeting({ loading: true, signedIn: false, name: "" }, NIGHT)).toBe("Boa noite!");
     expect(homeGreeting({ loading: false, signedIn: true, name: "" }, NIGHT)).toBe("Boa noite!");
   });
+
+  it("separa o cumprimento (que não quebra) do nome", () => {
+    expect(greetingParts("Boa noite, Maria.")).toEqual({ lead: "Boa noite,", rest: " Maria." });
+    expect(greetingParts("Olá! Que bom ter você aqui.")).toEqual({ lead: "Olá!", rest: " Que bom ter você aqui." });
+    expect(greetingParts("Boa noite!")).toEqual({ lead: "Boa noite!", rest: "" });
+    expect(greetingParts("Bem-vindo")).toEqual({ lead: "Bem-vindo", rest: "" });
+  });
 });
 
 describe("plantão na Início", () => {
@@ -79,6 +88,16 @@ describe("plantão na Início", () => {
     expect(dutyCountLabel(1, "Ver abertas")).toBe("1 de plantão agora");
     expect(dutyCountLabel(3, "Ver abertas")).toBe("3 de plantão agora");
     expect(dutyCountLabel(0, "Ver lista")).toBe("Ver lista");
+  });
+
+  it("só manda para o filtro de reserva quando o servidor disse que ninguém está de plantão", () => {
+    const path = "/plantao/farmacias";
+    const ok = { loading: false, error: null };
+    expect(dutyTileTarget({ ...ok, data: [unit("A")] }, path, "abertas")).toBe(`${path}?filtro=abertas`);
+    expect(dutyTileTarget({ ...ok, data: [unit("A", { isOnDuty: true })] }, path, "abertas")).toBe(path);
+    // Carregando ou sem resposta (lista vazia do cache): não afirma que ninguém está de plantão
+    expect(dutyTileTarget({ loading: true, error: null, data: [] }, path, "abertas")).toBe(path);
+    expect(dutyTileTarget({ loading: false, error: "Sem conexão", data: [] }, path, "abertas")).toBe(path);
   });
 
   it("escolhe a de plantão mais perto e conta as demais", () => {

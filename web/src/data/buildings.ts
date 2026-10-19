@@ -37,14 +37,15 @@ const byName = (a: Building, b: Building) => a.name.localeCompare(b.name, "pt-BR
 export function watchBuildings(type?: BuildingType): Watcher<Building[]> {
   const ref = collection(db, "buildings");
   const watcher = watchQuery(type ? query(ref, where("type", "==", type)) : ref, parseBuilding);
-  return (onData, onError) => watcher((items) => onData([...items].sort(byName)), onError);
+  return (onData, onError, options) => watcher((items, meta) => onData([...items].sort(byName), meta), onError, options);
 }
 
 /** Farmácias e funerárias que um responsável por plantão pode atualizar. */
 export function watchOwnedDutyUnits(uid: string): Watcher<Building[]> {
   const q = query(collection(db, "buildings"), where("ownerIds", "array-contains", uid));
   const watcher = watchQuery(q, parseBuilding);
-  return (onData, onError) => watcher((items) => onData(items.filter((b) => isDutyType(b.type)).sort(byName)), onError);
+  return (onData, onError, options) =>
+    watcher((items, meta) => onData(items.filter((b) => isDutyType(b.type)).sort(byName), meta), onError, options);
 }
 
 export type BuildingInput = Omit<Building, "id" | "updatedAt">;

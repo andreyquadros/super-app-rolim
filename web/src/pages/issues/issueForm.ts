@@ -1,3 +1,4 @@
+import type { NewIssueInput } from "@/data/requests";
 import type { IssueCategory } from "@/domain/catalog";
 import { isInsideMunicipality, type LatLng } from "@/domain/geo";
 import { lastReachableStep } from "./flow/steps";
@@ -54,10 +55,26 @@ export function issueReachableStep(values: IssueFormValues): number {
   return lastReachableStep(values, issueValidators, STEP_FIELDS, ISSUE_TOTAL_STEPS);
 }
 
-/** "Avenida Norte Sul, 1200 – Centro" */
-export function formatIssueAddress(values: Pick<IssueFormValues, "streetType" | "streetName" | "number" | "neighborhood">): string {
-  const number = values.number.trim() ? `, ${values.number.trim()}` : "";
-  const street = `${values.streetType} ${values.streetName.trim()}${number}`;
-  const neighborhood = values.neighborhood.trim();
-  return neighborhood ? `${street} – ${neighborhood}` : street;
+/** O pedido montado a partir do formulário (a foto entra depois, já enviada). */
+export type IssueDraft = Omit<NewIssueInput, "photoPath">;
+
+/** Monta o pedido; null quando falta o tipo ou o ponto no mapa. */
+export function issueDraft(values: IssueFormValues, id: string): IssueDraft | null {
+  const { category, point } = values;
+  if (!category || !point) return null;
+  return {
+    id,
+    title: values.title,
+    description: values.description,
+    category,
+    lat: point.lat,
+    lng: point.lng,
+    address: {
+      streetType: values.streetType,
+      streetName: values.streetName,
+      number: values.number || null,
+      neighborhood: values.neighborhood,
+      complement: values.complement || null,
+    },
+  };
 }

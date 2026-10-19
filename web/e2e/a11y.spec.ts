@@ -1,7 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
-
-const TEST_PASSWORD = process.env.E2E_PASSWORD ?? "rolim-dev-2026";
+import { signIn } from "./helpers";
 
 const PUBLIC_PAGES = ["/", "/plantao/farmacias", "/plantao/funerarias", "/comunicados", "/entrar", "/cadastro", "/privacidade"];
 const CITIZEN_PAGES = ["/protocolos", "/perfil", "/perfil/dados", "/zeladoria/nova", "/ouvidoria/nova"];
@@ -28,11 +27,7 @@ for (const scheme of ["light", "dark"] as const) {
     });
 
     test("telas do cidadão sem violações", async ({ page }) => {
-      await page.goto("/entrar?next=%2Fprotocolos");
-      await page.getByLabel("E-mail").fill("cidadao@rolim.test");
-      await page.getByLabel("Senha").fill(TEST_PASSWORD);
-      await page.getByRole("button", { name: "Entrar", exact: true }).click();
-      await page.waitForURL((url) => url.pathname === "/protocolos");
+      await signIn(page, "cidadao@rolim.test", "/protocolos");
       for (const path of CITIZEN_PAGES) await expectNoViolations(page, path);
     });
   });

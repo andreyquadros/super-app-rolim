@@ -27,12 +27,7 @@
   /* Campo focado não some atrás da barra superior nem do rodapé fixo */
   scroll-margin: 96px 0 128px;
 
-  &:focus,
-  &:focus-within {
-    border-color: light-dark(var(--mantine-color-mata-8), var(--mantine-color-mata-4));
-    box-shadow: 0 0 0 3px light-dark(rgba(13, 122, 73, 0.18), rgba(114, 194, 151, 0.22));
-  }
-
+  /* O anel de foco é o mesmo do app todo (theme/global.css) */
   &[data-error] {
     border-color: light-dark(var(--mantine-color-barro-8), var(--mantine-color-barro-4));
     color: var(--app-ink);

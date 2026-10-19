@@ -1,62 +1,117 @@
-import { IconCurrentLocation, IconFlower, IconMap, IconPill, IconRefresh } from "@tabler/icons-react";
+import { IconFlower, IconPill, IconRefresh } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { EmptyState } from "@/components/EmptyState";
-import { MapView } from "@/components/map";
-import { BottomSheet } from "@/components/sheet/BottomSheet";
-import { Chip, ChipRow } from "@/components/ui/Chips";
-import { DUTY_COPY, DUTY_META, dutyCounts, dutyTypeFromSlug, filterDuty, isDutyFilter, sortDuty, type DutyFilter } from "@/domain/duty";
+import { DUTY_COPY, dutyCounts, dutyTypeFromSlug, filterDuty, isDutyFilter, sortDuty, type DutyFilter } from "@/domain/duty";
 import { relativeTime } from "@/domain/format";
-import { distanceMeters, formatDistance } from "@/domain/geo";
+import { distanceMeters, formatDistance, type LatLng } from "@/domain/geo";
 import type { Building, DutyType } from "@/domain/types";
 import { useDutyUnits } from "@/hooks/useCitizenData";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { rememberDutyType } from "@/lib/dutyMemory";
+import { locationAlreadyGranted } from "@/lib/geoPermission";
 import NotFoundPage from "@/pages/StatusPages";
 import { DutyCard, DutyCardSkeleton } from "./DutyCard";
+import { DutyMapSheet } from "./DutyMapSheet";
+import { DutyToolbar } from "./DutyToolbar";
 import { DutyTypeSwitch } from "./DutyTypeSwitch";
+import { emptyTitle, filterOptions, latestUpdate } from "./dutyView";
 import { FuneralHelp } from "./FuneralHelp";
-import { LocationPrompt, locationAlreadyGranted } from "./LocationPrompt";
+import { LocationPrompt } from "./LocationPrompt";
 import classes from "./duty.module.css";
 
-const MARKER = { duty: "#ffbb36", open: "#14874c", closed: "#868e96" } as const;
-
-function latestUpdate(list: readonly Building[]): Date | null {
-  return list.reduce<Date | null>((max, u) => (u.updatedAt && (!max || u.updatedAt > max) ? u.updatedAt : max), null);
+function useDutyFilter(): [DutyFilter, (value: DutyFilter) => void] {
+  const [params, setParams] = useSearchParams();
+  const raw = params.get("filtro");
+  const filter: DutyFilter = isDutyFilter(raw) ? raw : "plantao";
+  const setFilter = (value: DutyFilter) =>
+    setParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (value === "plantao") next.delete("filtro");
+        else next.set("filtro", value);
+        return next;
+      },
+      { replace: true },
+    );
+  return [filter, setFilter];
 }
 
-function emptyTitle(type: DutyType, filter: DutyFilter): string {
-  if (filter === "plantao") return DUTY_COPY[type].empty;
-  const noun = DUTY_META[type].singular.toLowerCase();
-  if (filter === "abertas") return type === "FUNERAL" ? `Nenhuma ${noun} atendendo agora` : `Nenhuma ${noun} aberta agora`;
-  return `Ainda não há ${DUTY_META[type].plural.toLowerCase()} cadastradas`;
+interface DutyResultsProps {
+  type: DutyType;
+  filter: DutyFilter;
+  list: readonly Building[];
+  total: number;
+  loading: boolean;
+  error: string | null;
+  position: LatLng | null;
+  onRetry: () => void;
+  onShowAll: () => void;
+}
+
+/** Erro, carregando, vazio ou a lista. Erro vem antes: nunca um "nenhuma de plantão" falso. */
+function DutyResults({ type, filter, list, total, loading, error, position, onRetry, onShowAll }: DutyResultsProps) {
+  if (error) {
+    return (
+      <div className={classes.error} role="alert">
+        <p>Não foi possível carregar a lista.</p>
+        <button type="button" className={classes.sheetSecondary} onClick={onRetry} data-press>
+          <IconRefresh size={18} aria-hidden /> Tentar de novo
+        </button>
+      </div>
+    );
+  }
+  if (loading) {
+    return (
+      <ul className={classes.list} aria-busy>
+        {[0, 1, 2].map((i) => (
+          <DutyCardSkeleton key={i} />
+        ))}
+      </ul>
+    );
+  }
+  if (list.length === 0) {
+    return (
+      <EmptyState
+        order={2}
+        icon={type === "FUNERAL" ? <IconFlower size={28} /> : <IconPill size={28} />}
+        title={emptyTitle(type, filter)}
+        action={
+          filter !== "todas" && total > 0 ? (
+            <button type="button" className={classes.sheetPrimary} onClick={onShowAll} data-press>
+              Ver todas ({total})
+            </button>
+          ) : undefined
+        }
+      />
+    );
+  }
+  return (
+    <ul className={classes.list}>
+      {list.map((unit, i) => (
+        <DutyCard key={unit.id} unit={unit} type={type} index={i} distance={position ? formatDistance(distanceMeters(position, unit)) : null} />
+      ))}
+    </ul>
+  );
 }
 
 function DutyList({ type }: { type: DutyType }) {
   const { data, loading, error, retry } = useDutyUnits(type);
   const geo = useGeolocation();
-  const [params, setParams] = useSearchParams();
+  const [filter, setFilter] = useDutyFilter();
   const [askLocation, setAskLocation] = useState(false);
   const [mapOpen, setMapOpen] = useState(false);
 
-  const rawFilter = params.get("filtro");
-  const filter: DutyFilter = isDutyFilter(rawFilter) ? rawFilter : "plantao";
   const counts = useMemo(() => dutyCounts(data), [data]);
   const position = geo.position;
-
   const list = useMemo(() => {
     const distanceOf = position ? (u: Building) => distanceMeters(position, u) : undefined;
     return sortDuty(filterDuty(data, filter), distanceOf);
   }, [data, filter, position]);
 
-  const updated = latestUpdate(data);
-  const setFilter = (value: DutyFilter) =>
-    setParams((prev) => {
-      const next = new URLSearchParams(prev);
-      if (value === "plantao") next.delete("filtro");
-      else next.set("filtro", value);
-      return next;
-    }, { replace: true });
+  // Só há números para mostrar quando a lista de fato chegou
+  const settled = !loading && !error;
+  const updated = settled ? latestUpdate(data) : null;
 
   const nearMe = async () => {
     if (position) return;
@@ -64,70 +119,38 @@ function DutyList({ type }: { type: DutyType }) {
     else setAskLocation(true);
   };
 
-  const FILTERS: { value: DutyFilter; label: string }[] = [
-    { value: "plantao", label: `De plantão (${counts.plantao})` },
-    { value: "abertas", label: `${type === "FUNERAL" ? "Atendendo agora" : "Abertas agora"} (${counts.abertas})` },
-    { value: "todas", label: `Todas (${counts.todas})` },
-  ];
-
   return (
     <>
-      <ChipRow label="Filtrar a lista">
-        {FILTERS.map((f) => (
-          <Chip key={f.value} pressed={filter === f.value} onClick={() => setFilter(f.value)}>
-            {f.label}
-          </Chip>
-        ))}
-        <Chip kind="action" pressed={position !== null} onClick={nearMe} disabled={geo.loading} icon={<IconCurrentLocation size={18} aria-hidden />}>
-          {geo.loading ? "Localizando…" : "Perto de mim"}
-        </Chip>
-        <Chip kind="action" pressed={mapOpen} onClick={() => setMapOpen(true)} disabled={data.length === 0} icon={<IconMap size={18} aria-hidden />}>
-          Mapa
-        </Chip>
-      </ChipRow>
+      <DutyToolbar
+        filters={filterOptions(type, settled ? counts : null)}
+        filter={filter}
+        onFilter={setFilter}
+        located={position !== null}
+        locating={geo.loading}
+        onNearMe={nearMe}
+        mapOpen={mapOpen}
+        mapDisabled={!settled || data.length === 0}
+        onMap={() => setMapOpen(true)}
+      />
 
-      {geo.error && <p className={classes.notice}>{geo.error}</p>}
-      {updated && !loading && <p className={classes.updatedAll}>Atualizado {relativeTime(updated)}</p>}
-
-      {error ? (
-        <div className={classes.error} role="alert">
-          <p>Não foi possível carregar a lista.</p>
-          <button type="button" className={classes.sheetSecondary} onClick={retry} data-press>
-            <IconRefresh size={18} aria-hidden /> Tentar de novo
-          </button>
-        </div>
-      ) : loading ? (
-        <ul className={classes.list} aria-busy>
-          {[0, 1, 2].map((i) => (
-            <DutyCardSkeleton key={i} />
-          ))}
-        </ul>
-      ) : list.length === 0 ? (
-        <EmptyState
-          order={2}
-          icon={type === "FUNERAL" ? <IconFlower size={28} /> : <IconPill size={28} />}
-          title={emptyTitle(type, filter)}
-          action={
-            filter !== "todas" && counts.todas > 0 ? (
-              <button type="button" className={classes.sheetPrimary} onClick={() => setFilter("todas")} data-press>
-                Ver todas ({counts.todas})
-              </button>
-            ) : undefined
-          }
-        />
-      ) : (
-        <ul className={classes.list}>
-          {list.map((unit, i) => (
-            <DutyCard
-              key={unit.id}
-              unit={unit}
-              type={type}
-              index={i}
-              distance={position ? formatDistance(distanceMeters(position, unit)) : null}
-            />
-          ))}
-        </ul>
+      {geo.error && (
+        <p className={classes.notice} role="alert">
+          {geo.error}
+        </p>
       )}
+      {updated && <p className={classes.updatedAll}>Atualizado {relativeTime(updated)}</p>}
+
+      <DutyResults
+        type={type}
+        filter={filter}
+        list={list}
+        total={counts.todas}
+        loading={loading}
+        error={error}
+        position={position}
+        onRetry={retry}
+        onShowAll={() => setFilter("todas")}
+      />
 
       <p className={classes.footnote}>Informações atualizadas pelas próprias empresas. Ligue antes de ir.</p>
 
@@ -139,24 +162,7 @@ function DutyList({ type }: { type: DutyType }) {
           geo.locate();
         }}
       />
-      <BottomSheet open={mapOpen} onClose={() => setMapOpen(false)} title={`Mapa: ${DUTY_META[type].plural.toLowerCase()}`}>
-        <MapView
-          height={Math.round(window.innerHeight * 0.62)}
-          center={position ?? undefined}
-          markers={list.map((u) => ({
-            id: u.id,
-            lat: u.lat,
-            lng: u.lng,
-            color: u.isOnDuty ? MARKER.duty : u.isOpen ? MARKER.open : MARKER.closed,
-            label: u.name,
-          }))}
-        />
-        <p className={classes.mapLegend}>
-          <span data-tone="duty">De plantão</span>
-          <span data-tone="open">{DUTY_COPY[type].openLabel}</span>
-          <span data-tone="closed">{DUTY_COPY[type].closedLabel}</span>
-        </p>
-      </BottomSheet>
+      <DutyMapSheet open={mapOpen} onClose={() => setMapOpen(false)} type={type} units={list} center={position} />
     </>
   );
 }

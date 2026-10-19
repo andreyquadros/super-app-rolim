@@ -1,9 +1,18 @@
 import type { ComponentType, ReactNode } from "react";
-import { createBrowserRouter, Navigate, Outlet, redirect, ScrollRestoration, useNavigation, type RouteObject } from "react-router";
+import {
+  createBrowserRouter,
+  Navigate,
+  Outlet,
+  redirect,
+  ScrollRestoration,
+  useMatches,
+  useNavigation,
+  type RouteObject,
+} from "react-router";
 import { useAuth } from "@/auth/AuthContext";
 import { RequireCitizen, RequireStaff, RequireUser } from "@/auth/guards";
 import { ForegroundPush, OfflineBanner, UpdatePrompt } from "@/components/AppStatus";
-import { LoadingScreen } from "@/components/LoadingScreen";
+import { BootSplash } from "@/components/LoadingScreen";
 import { RouteError } from "@/components/RouteError";
 import { DUTY_COPY, DUTY_META, dutyTypeFromSlug } from "@/domain/duty";
 import { shouldShowOnboarding, withoutIntroParam } from "@/features/onboarding/onboardingState";
@@ -19,14 +28,21 @@ function page(load: Loader): Pick<RouteObject, "lazy"> {
   return { lazy: async () => ({ Component: (await load()).default }) };
 }
 
+const CITIZEN_ROUTE = "citizen";
+const PANEL_ROUTE = "painel";
+
 function Root() {
   const navigation = useNavigation();
+  const matches = useMatches();
+  // Na casca do cidadão o aviso fica dentro da barra verde (AppBar)
+  const inCitizen = matches.some((m) => m.id === CITIZEN_ROUTE);
+  const inPanel = matches.some((m) => m.id === PANEL_ROUTE);
   return (
     <>
       {/* Cada tela guarda a própria rolagem (voltar a uma aba volta ao mesmo ponto) */}
       <ScrollRestoration getKey={(location) => location.pathname} />
       {navigation.state === "loading" && <div className="route-progress" aria-hidden />}
-      <OfflineBanner />
+      {!inCitizen && <OfflineBanner placement={inPanel ? "bottom" : "top"} />}
       <Outlet />
       <UpdatePrompt />
       <ForegroundPush />
@@ -56,12 +72,14 @@ export const router = createBrowserRouter([
   {
     element: <Root />,
     errorElement: <RouteError />,
-    // Exibido enquanto a primeira tela (carregada sob demanda) chega
-    hydrateFallbackElement: <LoadingScreen />,
+    // Enquanto a primeira tela (carregada sob demanda) chega: a mesma abertura
+    // verde do index.html, sem uma tela intermediária de "Carregando"
+    hydrateFallbackElement: <BootSplash />,
     children: [
       // Apresentação dos primeiros acessos: tela cheia, fora da casca do app
       { path: "boas-vindas", ...page(() => import("@/features/onboarding/OnboardingPage")) },
       {
+        id: CITIZEN_ROUTE,
         element: <CitizenLayout />,
         children: [
           {
@@ -149,6 +167,7 @@ export const router = createBrowserRouter([
         ],
       },
       {
+        id: PANEL_ROUTE,
         path: "painel",
         lazy: async () => {
           const { AdminLayout } = await import("@/layouts/AdminLayout");

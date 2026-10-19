@@ -9,6 +9,15 @@ const PARTS = [
   { type: "FUNERAL", icon: IconFlower },
 ] as const;
 
+/**
+ * Só na troca Farmácias <-> Funerárias o seletor tem transição própria (o
+ * indicador desliza ao vivo); vindo de outra aba, ele esmaece com a tela.
+ * Roda depois do setNavKind do AppLink, que limpa o escopo a cada navegação.
+ */
+function scopeDutySwitch() {
+  document.documentElement.dataset.navScope = "duty";
+}
+
 /** Farmácias | Funerárias, preso logo abaixo da barra superior. */
 export function DutyTypeSwitch({ type }: { type: DutyType }) {
   return (
@@ -21,10 +30,11 @@ export function DutyTypeSwitch({ type }: { type: DutyType }) {
             to={DUTY_META[part.type].path}
             replace
             nav="tab"
+            onClick={scopeDutySwitch}
             className={classes.switchPart}
             aria-current={part.type === type ? "page" : undefined}
           >
-            <part.icon size={22} stroke={1.8} aria-hidden />
+            <part.icon className={classes.switchIcon} size={22} stroke={1.8} aria-hidden />
             {DUTY_META[part.type].plural}
           </AppLink>
         ))}

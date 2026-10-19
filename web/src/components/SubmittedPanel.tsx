@@ -6,6 +6,7 @@ import { AppLink } from "@/components/AppLink";
 import { canOfferPush, EnablePushSheet } from "@/components/push/EnablePushSheet";
 import { StepBar } from "@/components/ui/StepBar";
 import { APP_NAME } from "@/config/city";
+import { copyText } from "@/lib/clipboard";
 import classes from "./SubmittedPanel.module.css";
 
 interface SubmittedPanelProps {
@@ -31,14 +32,13 @@ function CopyButton({ value }: { value: string }) {
     return () => window.clearTimeout(timer);
   }, [copied]);
 
+  // Mesmo caminho do Copiar do detalhe (com a cópia antiga quando falta a API nova)
   const copy = async () => {
-    try {
-      if (!navigator.clipboard) throw new Error("Área de transferência indisponível");
-      await navigator.clipboard.writeText(value);
+    if (await copyText(value)) {
       setCopied(true);
-    } catch {
-      notifications.show({ message: "Não foi possível copiar. Anote o número do protocolo.", color: "barro" });
+      return;
     }
+    notifications.show({ color: "barro", title: "Não foi possível copiar", message: `Anote o número: ${value}` });
   };
 
   return (

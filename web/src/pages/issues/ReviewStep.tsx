@@ -2,9 +2,10 @@ import { IconMapPin, IconMessage2, IconPhoto } from "@tabler/icons-react";
 import { usePhotoPreview } from "@/components/PhotoPicker";
 import { CATEGORY_ICONS } from "@/components/icons";
 import { categoryOf } from "@/domain/catalog";
+import { formatAddressLine } from "@/domain/format";
 import { ReviewList, type ReviewEntry } from "./flow/Choices";
 import review from "./flow/choices.module.css";
-import { formatIssueAddress, type IssueFormValues } from "./issueForm";
+import type { IssueFormValues } from "./issueForm";
 
 interface ReviewStepProps {
   values: IssueFormValues;
@@ -42,7 +43,7 @@ export function ReviewStep({ values, photo, onEdit }: ReviewStepProps) {
       editName: "o local",
       value: (
         <>
-          <p>{formatIssueAddress(values)}</p>
+          <p>{formatAddressLine(values)}</p>
           {values.complement.trim() && <p className={review.reviewSoft}>Referência: {values.complement.trim()}</p>}
         </>
       ),

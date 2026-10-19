@@ -1,5 +1,6 @@
 import type { ComponentType, ReactNode } from "react";
 import { StepBar } from "@/components/ui/StepBar";
+import { APP_NAME } from "@/config/city";
 import { CityArt, DutyArt, SettingsArt, StreetArt } from "./illustrations";
 import classes from "./OnboardingPage.module.css";
 
@@ -30,10 +31,25 @@ function TrackArt({ active }: ArtProps) {
   );
 }
 
+const BRAND = "SUPER APP";
+
+/** "SUPER APP" nunca quebra no meio; o resto do título quebra normalmente. */
+function keepBrandTogether(text: string): ReactNode {
+  const at = text.indexOf(BRAND);
+  if (at < 0) return text;
+  return (
+    <>
+      {text.slice(0, at)}
+      <span className={classes.brandName}>{BRAND}</span>
+      {text.slice(at + BRAND.length)}
+    </>
+  );
+}
+
 export const SLIDES: readonly SlideCopy[] = [
   {
     id: "bem-vindo",
-    title: "Bem-vindo ao SUPER APP Rolim de Moura",
+    title: `Bem-vindo ao ${APP_NAME}`,
     text: "Os serviços da prefeitura num só lugar, no seu celular. É grátis.",
     Art: CityArt,
   },
@@ -91,7 +107,7 @@ export function Slide({ copy, position, total, active, titleRef, children }: Sli
       <div className={classes.sheet}>
         <div className={classes.inner}>
           <h2 ref={titleRef} tabIndex={-1} className={classes.title}>
-            {copy.title}
+            {keepBrandTogether(copy.title)}
           </h2>
           <p className={classes.text}>{copy.text}</p>
           {children}

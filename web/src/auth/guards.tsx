@@ -3,6 +3,7 @@ import { Navigate, useLocation } from "react-router";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { ForbiddenPage } from "@/pages/StatusPages";
 import { useAuth } from "./AuthContext";
+import { GuardSkeleton, ProfileUnavailable } from "./GuardStates";
 
 function useNextParam(): string {
   const location = useLocation();
@@ -11,25 +12,29 @@ function useNextParam(): string {
 
 /** Exige login e cadastro completo (CPF e telefone). */
 export function RequireCitizen({ children }: { children: ReactNode }) {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, profileError, retryProfile, loading } = useAuth();
   const next = useNextParam();
-  if (loading) return <LoadingScreen />;
+  if (loading) return <GuardSkeleton />;
   if (!user) return <Navigate to={`/entrar?next=${next}`} replace />;
-  if (!profile) return <Navigate to={`/completar-cadastro?next=${next}`} replace />;
+  if (!profile) {
+    // Sem resposta do servidor não dá para saber se falta o cadastro
+    if (profileError) return <ProfileUnavailable onRetry={retryProfile} />;
+    return <Navigate to={`/completar-cadastro?next=${next}`} replace />;
+  }
   return children;
 }
 
 export function RequireUser({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
   const next = useNextParam();
-  if (loading) return <LoadingScreen />;
+  if (loading) return <GuardSkeleton />;
   if (!user) return <Navigate to={`/entrar?next=${next}`} replace />;
   return children;
 }
 
 type Access = "staff" | "manager" | "root" | "duty";
 
-/** Área da prefeitura: verifica o perfil de acesso da equipe. */
+/** Área da prefeitura: verifica o perfil de acesso da equipe (fora da casca do cidadão). */
 export function RequireStaff({ access, children }: { access: Access; children: ReactNode }) {
   const { user, staff, isRoot, isManager, isDutyManager, loading } = useAuth();
   const next = useNextParam();

@@ -48,7 +48,7 @@ interface MyRequestsPreviewProps {
 
 /** "Seus pedidos": até 2 em andamento, ou o convite certo para cada situação. */
 export function MyRequestsPreview({ requests }: MyRequestsPreviewProps) {
-  const { user, profile, loading: authLoading } = useAuth();
+  const { user, profile, profileError, retryProfile, loading: authLoading } = useAuth();
   const openNewRequest = useOpenNewRequest();
   const preview = useMemo(() => openRequestsPreview(requests.data ?? []), [requests.data]);
   const signedIn = user !== null && profile !== null;
@@ -67,6 +67,9 @@ export function MyRequestsPreview({ requests }: MyRequestsPreviewProps) {
         </Button>
       </Prompt>
     );
+  } else if (!profile && profileError) {
+    // Cadastro não lido (sem resposta do servidor): não é "cadastro incompleto"
+    body = <CardError onRetry={retryProfile} />;
   } else if (!profile) {
     body = (
       <Prompt text="Falta pouco: complete seu cadastro para fazer pedidos">

@@ -36,3 +36,8 @@ export interface DutyGroup<T> {
 export function groupDutyUnits<T extends { type: BuildingType }>(units: readonly T[]): DutyGroup<T>[] {
   return DUTY_TYPES.map((type) => ({ type, units: units.filter((u) => u.type === type) })).filter((g) => g.units.length > 0);
 }
+
+/** Um estabelecimento por tipo: os grupos podem ficar lado a lado (sem metade da tela vazia). */
+export function oneUnitPerGroup<T>(groups: readonly DutyGroup<T>[]): boolean {
+  return groups.length > 0 && groups.every((g) => g.units.length === 1);
+}

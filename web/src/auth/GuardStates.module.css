@@ -1,0 +1,90 @@
+/* Estados dos guardas de rota (dentro da casca do cidadão) */
+
+/* ---------- Carregando: forma da tela, sem spinner ---------- */
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.skLine {
+  height: 48px;
+  border-radius: 14px;
+}
+
+.skCard {
+  height: 178px;
+  border-radius: 20px;
+}
+
+/* ---------- Cadastro indisponível ---------- */
+.problem {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 32px 8px 8px;
+  text-align: center;
+}
+
+.problemIcon {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--mantine-color-mata-light);
+  color: light-dark(var(--mantine-color-mata-8), var(--mantine-color-mata-3));
+}
+
+.problemCopy {
+  display: grid;
+  gap: 8px;
+  max-width: 26rem;
+}
+
+.problemTitle {
+  margin: 4px 0 0;
+  font-family: var(--mantine-font-family-headings);
+  font-size: 1.625rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+.problemText {
+  margin: 0;
+  color: var(--app-ink-soft);
+  font-size: 1.0625rem;
+  line-height: 1.45;
+}
+
+.retry {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: min(100%, 22.5rem);
+  min-height: 56px;
+  margin-top: 12px;
+  padding: 8px 24px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--mantine-color-mata-8);
+  color: #ffffff;
+  font: inherit;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.25;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 3px solid var(--mantine-color-mata-6);
+    outline-offset: 2px;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: var(--mantine-color-mata-9);
+    }
+  }
+}

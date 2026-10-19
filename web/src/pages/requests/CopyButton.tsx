@@ -1,7 +1,7 @@
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconCopy } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
-import { copyText } from "./clipboard";
+import { copyText } from "@/lib/clipboard";
 import classes from "./actions.module.css";
 
 const COPIED_MS = 2000;

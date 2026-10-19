@@ -6,8 +6,9 @@ export const ROLE_LABEL: Record<Role, string> = {
   DUTY_MANAGER: "Responsável por plantão",
 };
 
-export const ROLE_COLOR: Record<Role, string> = {
-  ROOT: "barro",
+/** Barro fica para problemas: o administrador usa a ardósia (neutra), o servidor o verde e o plantão o ipê. */
+export const ROLE_COLOR: Record<Role, "slate" | "mata" | "ipe"> = {
+  ROOT: "slate",
   CIVIL_SERVANT: "mata",
   DUTY_MANAGER: "ipe",
 };

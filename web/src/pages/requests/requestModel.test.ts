@@ -4,7 +4,6 @@ import {
   canCancel,
   filterRequests,
   groupRequests,
-  issueAddressLine,
   latestResponse,
   parseRequestFilter,
   shareText,
@@ -107,11 +106,7 @@ describe("detalhe do pedido", () => {
     expect(canCancel(issue("a", "CANCELED"))).toBe(false);
   });
 
-  it("monta o endereço e o texto para compartilhar", () => {
-    expect(issueAddressLine(issue("a", "RECEIVED"))).toBe("Rua da Escola, 300 · Centro");
-    expect(issueAddressLine(issue("a", "RECEIVED", { address: { streetType: "Rua", streetName: "Exemplo", number: null, neighborhood: "", complement: null } }))).toBe(
-      "Rua Exemplo",
-    );
+  it("monta o texto para compartilhar (o endereço vem de domain/format)", () => {
     expect(shareText("Poste apagado", "ZEL-2026-K7Q2MX9P")).toBe("Meu pedido no SUPER APP Rolim de Moura: Poste apagado. Protocolo ZEL-2026-K7Q2MX9P.");
   });
 });

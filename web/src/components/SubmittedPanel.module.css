@@ -287,8 +287,8 @@
 }
 
 .action {
-  height: auto;
-  min-height: 56px;
+  /* 56 px: a regra .citizen .mantine-Button-root usa o maior entre --button-height e este */
+  --app-button-min: 56px;
   font-size: 1.0625rem;
 
   &[data-variant="default"] {

@@ -2,7 +2,7 @@ import { IconChevronRight, IconLayoutDashboard } from "@tabler/icons-react";
 import { useAuth } from "@/auth/AuthContext";
 import { AppLink } from "@/components/AppLink";
 import { firstName, toIsoDate } from "@/domain/format";
-import { homeGreeting, longDate } from "./homeText";
+import { greetingParts, homeGreeting, longDate } from "./homeText";
 import classes from "./HomeHeader.module.css";
 
 interface HomeHeaderProps {
@@ -13,12 +13,13 @@ interface HomeHeaderProps {
 export function HomeHeader({ now }: HomeHeaderProps) {
   const { user, profile, staff, loading } = useAuth();
   const name = firstName(profile?.fullName ?? user?.displayName);
-  const title = homeGreeting({ loading, signedIn: user !== null, name }, now);
+  const title = greetingParts(homeGreeting({ loading, signedIn: user !== null, name }, now));
 
   return (
     <header className={classes.header}>
       <h1 className={classes.title} tabIndex={-1}>
-        {title}
+        <span className={classes.lead}>{title.lead}</span>
+        {title.rest}
       </h1>
       <img src="/ilustracoes/cidade.svg" width={220} height={120} alt="" aria-hidden className={classes.art} />
       <p className={classes.date}>

@@ -44,7 +44,7 @@ export function NewRequestSheet({ open, onClose }: NewRequestSheetProps) {
   }, [navigate]);
 
   return (
-    <BottomSheet open={open} onClose={onClose} onAfterClose={afterClose} title="O que você quer registrar?">
+    <BottomSheet open={open} onClose={onClose} onAfterClose={afterClose} title="O que você quer registrar?" closeLabel="Cancelar">
       <ul className={classes.options}>
         {OPTIONS.map((o, i) => (
           <li key={o.to} className="enter-rise" style={{ "--i": i } as CSSProperties}>
@@ -61,9 +61,6 @@ export function NewRequestSheet({ open, onClose }: NewRequestSheetProps) {
           </li>
         ))}
       </ul>
-      <button type="button" className={classes.cancel} onClick={onClose} data-press>
-        Cancelar
-      </button>
     </BottomSheet>
   );
 }

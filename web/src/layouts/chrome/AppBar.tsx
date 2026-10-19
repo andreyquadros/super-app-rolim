@@ -3,6 +3,7 @@ import { forwardRef, type ReactNode } from "react";
 import { useLocation } from "react-router";
 import { BrandMark } from "@/components/brand/BrandMark";
 import { AppLink } from "@/components/AppLink";
+import { OfflineBanner } from "@/components/AppStatus";
 import { useBackNavigation } from "@/hooks/useBackNavigation";
 import type { Chrome } from "../routeHandle";
 import { AccountButton } from "./AccountButton";
@@ -44,26 +45,28 @@ export const AppBar = forwardRef<HTMLElement, AppBarProps>(function AppBar(
   return (
     <header ref={ref} className={`${classes.bar} app-bar-vt`} data-chrome={chrome} data-collapsed={collapsed || undefined}>
       <div className={classes.row}>
-        <div className={classes.start}>
-          {chrome === "home" && (
-            <AppLink to="/" nav="tab" className={classes.brandLink} aria-label="SUPER APP Rolim de Moura, início">
-              <BrandMark variant="onGreen" />
-            </AppLink>
-          )}
-          {chrome === "push" && (
-            <button type="button" className={classes.back} onClick={goBack} data-press>
-              <IconChevronLeft size={26} stroke={2.2} aria-hidden />
-              <span>{backLabel}</span>
-            </button>
-          )}
-          {chrome === "flow" && (
-            <button type="button" className={classes.close} onClick={onClose ?? goBack} aria-label="Fechar" data-press>
-              <IconX size={24} stroke={2.2} aria-hidden />
-            </button>
-          )}
-        </div>
+        {chrome !== "root" && (
+          <div className={classes.start}>
+            {chrome === "home" && (
+              <AppLink to="/" nav="tab" className={classes.brandLink} aria-label="SUPER APP Rolim de Moura, início">
+                <BrandMark variant="onGreen" />
+              </AppLink>
+            )}
+            {chrome === "push" && (
+              <button type="button" className={classes.back} onClick={goBack} data-press>
+                <IconChevronLeft size={26} stroke={2.2} aria-hidden />
+                <span>{backLabel}</span>
+              </button>
+            )}
+            {chrome === "flow" && (
+              <button type="button" className={classes.close} onClick={onClose ?? goBack} aria-label="Fechar" data-press>
+                <IconX size={24} stroke={2.2} aria-hidden />
+              </button>
+            )}
+          </div>
+        )}
 
-        {chrome !== "home" && title && (
+        {chrome !== "home" && (
           <span className={classes.title} aria-hidden={chrome !== "flow" || undefined}>
             {title}
           </span>
@@ -71,10 +74,16 @@ export const AppBar = forwardRef<HTMLElement, AppBarProps>(function AppBar(
 
         <div className={classes.end}>
           {chrome === "push" && actions}
-          {showAccount && <AccountButton />}
+          {/* No tablet e no computador, Perfil/Entrar ficam no trilho lateral */}
+          {showAccount && (
+            <span className={classes.account}>
+              <AccountButton />
+            </span>
+          )}
         </div>
       </div>
       {chrome === "flow" && progress && progress.total > 1 && <Progress {...progress} />}
+      <OfflineBanner placement="bar" />
     </header>
   );
 });

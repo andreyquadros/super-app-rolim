@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import type { RequestStatus } from "@/domain/status";
 import type { MapPickerProps, MapViewProps } from "./LeafletMaps";
 
 export type { MapMarker } from "./LeafletMaps";
@@ -22,12 +23,15 @@ export function MapView(props: MapViewProps) {
   );
 }
 
-/** Cor (hex) de cada status para marcadores de mapa. */
-export const STATUS_HEX: Record<string, string> = {
+/**
+ * Cor (hex) de cada status para marcadores de mapa e a barra do painel, só da paleta do app:
+ * "Em andamento" em verde claro (mata-4) e "Concluída" no verde da marca (mata-8).
+ */
+export const STATUS_HEX: Record<RequestStatus, string> = {
   RECEIVED: "#597a99",
   UNDER_ANALYSIS: "#e39500",
-  IN_PROGRESS: "#1c7ed6",
-  RESOLVED: "#14874c",
+  IN_PROGRESS: "#4aaf79",
+  RESOLVED: "#0d7a49",
   REJECTED: "#cf4623",
   CANCELED: "#868e96",
 };

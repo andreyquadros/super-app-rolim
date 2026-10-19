@@ -1,12 +1,13 @@
-import { Avatar } from "@mantine/core";
 import { IconLayoutDashboard, IconLogin2, IconPlus } from "@tabler/icons-react";
-import type { MouseEvent } from "react";
 import { useLocation } from "react-router";
 import { useAuth } from "@/auth/AuthContext";
 import { AppLink } from "@/components/AppLink";
 import { MAINTAINER_LINE } from "@/config/city";
-import { NAV_ITEMS, scrollToTop } from "./navItems";
+import { withNext } from "@/pages/auth/nextPath";
+import { ariaCurrentFor, NAV_ITEMS, PROFILE_ROOT, tabState } from "./navItems";
 import classes from "./NavRail.module.css";
+import { ProfileAvatar } from "./ProfileAvatar";
+import { useTabPress } from "./tabHistory";
 
 interface NavRailProps {
   sheetOpen: boolean;
@@ -14,10 +15,17 @@ interface NavRailProps {
   hasUnreadNotices: boolean;
 }
 
+const PROFILE_ITEM = {
+  isActive: (p: string) => p.startsWith(PROFILE_ROOT),
+  isRoot: (p: string) => p === PROFILE_ROOT,
+};
+
 /** Trilho lateral (tablet e computador): as mesmas abas da barra inferior. */
 export function NavRail({ sheetOpen, onRequest, hasUnreadNotices }: NavRailProps) {
-  const { pathname } = useLocation();
-  const { user, profile, staff } = useAuth();
+  const { pathname, search } = useLocation();
+  const { user, staff } = useAuth();
+  const onPress = useTabPress();
+  const profileState = tabState(PROFILE_ITEM, pathname);
 
   return (
     <nav className={`${classes.rail} nav-rail-vt`} aria-label="Navegação principal">
@@ -34,17 +42,19 @@ export function NavRail({ sheetOpen, onRequest, hasUnreadNotices }: NavRailProps
 
       <ul className={classes.items}>
         {NAV_ITEMS.map((item) => {
-          const active = item.isActive(pathname);
-          const Icon = active ? item.activeIcon : item.icon;
+          const state = tabState(item, pathname);
+          const Icon = state === "inactive" ? item.icon : item.activeIcon;
           const unread = item.key === "avisos" && hasUnreadNotices;
-          const onClick = (event: MouseEvent) => {
-            if (!active) return;
-            event.preventDefault();
-            scrollToTop();
-          };
+          const to = item.to();
           return (
             <li key={item.key}>
-              <AppLink to={item.to()} nav="tab" className={classes.item} aria-current={active ? "page" : undefined} onClick={onClick}>
+              <AppLink
+                to={to}
+                nav="tab"
+                className={classes.item}
+                aria-current={ariaCurrentFor(state)}
+                onClick={(event) => onPress(event, state, to)}
+              >
                 <span className={classes.iconWrap}>
                   <span className={classes.pill} aria-hidden />
                   <Icon size={26} stroke={1.8} aria-hidden className={classes.icon} />
@@ -64,19 +74,30 @@ export function NavRail({ sheetOpen, onRequest, hasUnreadNotices }: NavRailProps
         {staff && (
           <AppLink to="/painel" className={classes.item}>
             <span className={classes.iconWrap}>
+              <span className={classes.pill} aria-hidden />
               <IconLayoutDashboard size={24} stroke={1.8} aria-hidden className={classes.icon} />
             </span>
             <span className={classes.label}>Painel</span>
           </AppLink>
         )}
         {user ? (
-          <AppLink to="/perfil" nav="tab" className={classes.item} aria-current={pathname.startsWith("/perfil") ? "page" : undefined}>
-            <Avatar name={profile?.fullName ?? user.email ?? "?"} color="mata" variant="white" size={36} className={classes.avatar} />
+          <AppLink
+            to={PROFILE_ROOT}
+            nav="tab"
+            className={classes.item}
+            aria-current={ariaCurrentFor(profileState)}
+            onClick={(event) => onPress(event, profileState, PROFILE_ROOT)}
+          >
+            <span className={classes.iconWrap}>
+              <span className={classes.pill} aria-hidden />
+              <ProfileAvatar size={30} className={classes.avatar} />
+            </span>
             <span className={classes.label}>Perfil</span>
           </AppLink>
         ) : (
-          <AppLink to="/entrar" nav="flow" className={classes.item}>
+          <AppLink to={withNext("/entrar", pathname + search)} nav="flow" className={classes.item}>
             <span className={classes.iconWrap}>
+              <span className={classes.pill} aria-hidden />
               <IconLogin2 size={24} stroke={1.8} aria-hidden className={classes.icon} />
             </span>
             <span className={classes.label}>Entrar</span>

@@ -1,8 +1,9 @@
 /* Partes específicas do "Problema na rua" (o resto vem de flow/flow.module.css) */
 
-.gps {
-  height: auto;
-  min-height: 52px;
+.gps,
+.center {
+  /* A regra .citizen .mantine-Button-root usa o maior entre --button-height e este */
+  --app-button-min: 52px;
   font-size: 1.0625rem;
 
   :global(.mantine-Button-label) {
@@ -15,15 +16,95 @@
   }
 }
 
+/* "Marcar o centro do mapa" com as cores do app (o cinza padrão destoa no escuro) */
+.center[data-variant="default"] {
+  border-color: var(--app-line);
+  background: var(--app-surface);
+  color: light-dark(var(--mantine-color-mata-9), var(--mantine-color-mata-2));
+}
+
 .map {
+  position: relative;
   overflow: hidden;
   border: 1px solid var(--app-line);
   border-radius: 20px;
   background: var(--app-line);
-  /* O mapa fica parado durante as transições de tela */
+  /* Sem nome próprio (DESIGN §7): o mapa anima junto com a tela, no root */
   view-transition-name: none;
 
   :global(.leaflet-container) {
     border-radius: 0;
+  }
+
+  /* O foco do mapa fica no contorno do quadro (o do Leaflet seria cortado) */
+  &:has(:global(.leaflet-container:focus-visible)) {
+    outline: 3px solid var(--mantine-color-mata-6);
+    outline-offset: 2px;
+  }
+}
+
+/* Mira no centro: onde Enter e "Marcar o centro do mapa" põem o ponto */
+.crosshair {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
+  width: 30px;
+  height: 30px;
+  margin: -15px 0 0 -15px;
+  border: 2px solid var(--mantine-color-mata-8);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.85),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.85);
+  pointer-events: none;
+  transition: opacity var(--motion-fast) var(--ease-standard);
+
+  /* O marcador já está no centro: a mira não fica por cima dele */
+  .map[data-centered] & {
+    opacity: 0;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 50% auto auto 50%;
+    width: 6px;
+    height: 6px;
+    margin: -3px 0 0 -3px;
+    border-radius: 50%;
+    background: var(--mantine-color-mata-8);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85);
+  }
+
+  .map:has(:global(.leaflet-container:focus-visible)) & {
+    border-width: 3px;
+  }
+}
+
+/* Instruções de teclado: só aparecem com o mapa em foco pelo teclado */
+.keysHint {
+  position: absolute;
+  inset: auto 10px 40px;
+  z-index: 1;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgba(16, 30, 22, 0.88);
+  color: #ffffff;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(4px);
+  transition:
+    opacity var(--motion-fast) var(--ease-standard),
+    transform var(--motion-fast) var(--ease-standard);
+
+  .map:has(:global(.leaflet-container:focus-visible)) & {
+    opacity: 1;
+    transform: none;
   }
 }

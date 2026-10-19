@@ -2,6 +2,7 @@ import { useForm } from "@mantine/form";
 import { useCallback, useState } from "react";
 import { Navigate, useLocation } from "react-router";
 import { useAuth } from "@/auth/AuthContext";
+import { ProfileUnavailable } from "@/auth/GuardStates";
 import { useAppNavigate } from "@/components/AppLink";
 import { createProfile } from "@/data/people";
 import { completeOnboarding } from "@/features/onboarding/onboardingState";
@@ -24,7 +25,7 @@ const FIELD_ORDER = [...PROFILE_FIELD_ORDER, "accepted"] as const;
 
 /** Após login com Google (ou cadastro interrompido) pedimos CPF e celular. */
 export default function CompleteProfilePage() {
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, profileError, retryProfile, signOut } = useAuth();
   const navigate = useAppNavigate();
   const next = useNextPath();
   const carried = (useLocation().state ?? null) as CarriedState | null;
@@ -49,6 +50,8 @@ export default function CompleteProfilePage() {
   // Durante o envio o cadastro aparece localmente antes da confirmação do
   // servidor; só redirecionamos depois, para não esconder um erro de CPF
   if (profile && !busy) return <Navigate to={next} replace />;
+  // Cadastro ilegível agora (sem conexão): não pede CPF de novo a quem já tem
+  if (profileError) return <ProfileUnavailable onRetry={retryProfile} />;
   if (!user) return <Navigate to="/entrar" replace />;
 
   const submit = form.onSubmit(

@@ -2,6 +2,10 @@
    Faixa verde sob a barra de status do iPhone, papel embaixo, rodapé fixo. */
 
 .page {
+  /* Uma coluna só para a marca, o texto e os botões: as bordas se alinham */
+  --onb-column: 36rem;
+  --onb-gutter: clamp(16px, 5vw, 20px);
+
   display: flex;
   flex-direction: column;
   height: 100dvh;
@@ -20,15 +24,21 @@
   color: #ffffff;
 }
 
+.topRow,
+.inner,
+.footerInner {
+  width: 100%;
+  max-width: var(--onb-column);
+  margin-inline: auto;
+  padding-inline: var(--onb-gutter);
+}
+
 .topRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  max-width: var(--app-content-max);
   min-height: var(--app-bar-h);
-  margin-inline: auto;
-  padding-inline: 16px 12px;
 }
 
 .brand {
@@ -145,10 +155,7 @@
   flex: 1;
   flex-direction: column;
   gap: 12px;
-  width: 100%;
-  max-width: 36rem;
-  margin-inline: auto;
-  padding: 28px 20px 24px;
+  padding-block: 28px 24px;
 }
 
 .title {
@@ -162,6 +169,10 @@
   &:focus {
     outline: none;
   }
+}
+
+.brandName {
+  white-space: nowrap;
 }
 
 .text {
@@ -228,7 +239,7 @@
 /* ---------- Rodapé fixo: pontos, Voltar e Próximo ---------- */
 .footer {
   flex: none;
-  padding: 10px 16px calc(12px + env(safe-area-inset-bottom));
+  padding-block: 10px calc(12px + env(safe-area-inset-bottom));
   border-top: 1px solid var(--app-line);
   background: var(--app-paper);
 }
@@ -236,8 +247,6 @@
 .footerInner {
   display: grid;
   gap: 10px;
-  max-width: 36rem;
-  margin-inline: auto;
 }
 
 .dots {
@@ -307,6 +316,31 @@
   box-shadow: 0 10px 22px -14px rgba(13, 122, 73, 0.9);
 }
 
+/* Último slide: a segunda saída, abaixo de "Começar a usar" e sem disputar com ele */
+.signIn {
+  min-height: 48px;
+  margin-top: -2px;
+  padding: 6px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: light-dark(var(--mantine-color-mata-8), var(--mantine-color-mata-3));
+  font: inherit;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 3px solid var(--mantine-color-mata-6);
+    outline-offset: 2px;
+  }
+}
+
 @media (hover: hover) and (pointer: fine) {
   .skip:hover {
     background: rgba(0, 0, 0, 0.26);
@@ -318,6 +352,10 @@
 
   .back:hover {
     background: light-dark(rgba(23, 36, 28, 0.11), rgba(255, 255, 255, 0.14));
+  }
+
+  .signIn:hover {
+    background: var(--mantine-color-mata-light);
   }
 }
 

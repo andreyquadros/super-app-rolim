@@ -154,23 +154,7 @@
   background: var(--app-surface);
 }
 
-/* ---------- Folha de confirmação ---------- */
-.sheetError {
-  display: grid;
-  gap: 10px;
-  margin-bottom: 14px;
-  padding: 12px 14px;
-  border-radius: 14px;
-  background: var(--mantine-color-barro-light);
-  color: light-dark(var(--mantine-color-barro-9), var(--mantine-color-barro-2));
-  font-weight: 600;
-
-  p {
-    margin: 0;
-  }
-}
-
-.sheetActions {
-  display: grid;
-  gap: 10px;
+/* ---------- Salvar: ação principal da tela (56 px) ---------- */
+.saveButton {
+  --app-button-min: 56px;
 }

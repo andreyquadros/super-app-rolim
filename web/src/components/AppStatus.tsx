@@ -8,14 +8,39 @@ import { useOnline } from "@/hooks/useOnline";
 import { listenForegroundPush } from "@/lib/push";
 import classes from "./AppStatus.module.css";
 
-/** Aviso fixo quando o aparelho está sem internet. */
-export function OfflineBanner() {
+export const OFFLINE_TEXT = "Sem internet · mostrando dados salvos";
+
+/**
+ * - bar: dentro da barra verde do cidadão, empurrando a tela para baixo
+ *   (nunca por cima do título);
+ * - top/bottom: pílula flutuante nas telas fora da casca (apresentação, painel).
+ */
+export type OfflinePlacement = "bar" | "top" | "bottom";
+
+function OfflinePill() {
+  return (
+    <span className={classes.pill}>
+      <IconCloudOff size={18} aria-hidden className={classes.icon} />
+      <span className={classes.text}>{OFFLINE_TEXT}</span>
+    </span>
+  );
+}
+
+/** Aviso quando o aparelho está sem internet. */
+export function OfflineBanner({ placement }: { placement: OfflinePlacement }) {
   const online = useOnline();
+  if (placement === "bar") {
+    // Região sempre presente: o leitor de tela anuncia quando a conexão cai
+    return (
+      <div className={classes.barSlot} role="status">
+        {!online && <OfflinePill />}
+      </div>
+    );
+  }
   if (online) return null;
   return (
-    <div className={classes.offline} role="status">
-      <IconCloudOff size={18} aria-hidden />
-      <span>Sem internet · dados salvos</span>
+    <div className={classes.floating} data-placement={placement} role="status">
+      <OfflinePill />
     </div>
   );
 }

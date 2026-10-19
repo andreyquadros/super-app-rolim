@@ -1,9 +1,9 @@
 import { IconPlus } from "@tabler/icons-react";
-import type { MouseEvent } from "react";
 import { useLocation } from "react-router";
 import { AppLink } from "@/components/AppLink";
-import { NAV_ITEMS, scrollToTop, type NavItem } from "./navItems";
+import { ariaCurrentFor, NAV_ITEMS, tabState, type NavItem } from "./navItems";
 import classes from "./TabBar.module.css";
+import { useTabPress } from "./tabHistory";
 
 interface TabBarProps {
   sheetOpen: boolean;
@@ -11,15 +11,26 @@ interface TabBarProps {
   hasUnreadNotices: boolean;
 }
 
-function Tab({ item, active, unread }: { item: NavItem; active: boolean; unread: boolean }) {
-  const Icon = active ? item.activeIcon : item.icon;
-  const onClick = (event: MouseEvent) => {
-    if (!active) return;
-    event.preventDefault();
-    scrollToTop();
-  };
+interface TabProps {
+  item: NavItem;
+  pathname: string;
+  unread: boolean;
+  onPress: ReturnType<typeof useTabPress>;
+}
+
+function Tab({ item, pathname, unread, onPress }: TabProps) {
+  const state = tabState(item, pathname);
+  const Icon = state === "inactive" ? item.icon : item.activeIcon;
+  const to = item.to();
   return (
-    <AppLink to={item.to()} nav="tab" className={classes.tab} aria-current={active ? "page" : undefined} onClick={onClick} data-press>
+    <AppLink
+      to={to}
+      nav="tab"
+      className={classes.tab}
+      aria-current={ariaCurrentFor(state)}
+      onClick={(event) => onPress(event, state, to)}
+      data-press
+    >
       <span className={classes.iconWrap}>
         <span className={classes.pill} aria-hidden />
         <Icon size={26} stroke={1.8} aria-hidden className={classes.icon} />
@@ -36,9 +47,10 @@ function Tab({ item, active, unread }: { item: NavItem; active: boolean; unread:
 /** Barra inferior do celular: 4 abas e o botão central "Solicitar". */
 export function TabBar({ sheetOpen, onRequest, hasUnreadNotices }: TabBarProps) {
   const { pathname } = useLocation();
+  const onPress = useTabPress();
   const [first, second, ...rest] = NAV_ITEMS;
   const tab = (item: NavItem) => (
-    <Tab key={item.key} item={item} active={item.isActive(pathname)} unread={item.key === "avisos" && hasUnreadNotices} />
+    <Tab key={item.key} item={item} pathname={pathname} unread={item.key === "avisos" && hasUnreadNotices} onPress={onPress} />
   );
   return (
     <nav className={`${classes.bar} tab-bar-vt`} aria-label="Navegação principal">

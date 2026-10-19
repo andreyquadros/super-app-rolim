@@ -82,7 +82,7 @@ Nenhum componente escreve "Prefeitura de" como título.
 
 **Painel**
 - Cabeçalho: `BrandMark onPaper compact` mais o chip ardósia "Painel da equipe".
-- Título da janela: "Painel · SUPER APP Rolim de Moura".
+- Título da janela: "<Página> · Painel · SUPER APP Rolim de Moura" (ex.: "Zeladoria · Painel · SUPER APP Rolim de Moura").
 - Rodapé do menu: `MAINTAINER_LINE`.
 
 **Rodapé institucional:** sai da Início. A linha `MAINTAINER_LINE` aparece em:
@@ -182,6 +182,7 @@ Ordem no celular:
 **1. `HomeHeader`**
 - Fundo: gradiente mata-8 até #0a5c37.
 - H1 em Fraunces 30 branco: "Boa noite, Maria." quando logado; "Olá! Que bom ter você aqui." quando não.
+- Celular com menos de 360 px ou texto "Muito grande": a saudação ocupa a largura toda e o cartão-postal fica ao lado da data; "Boa noite," nunca quebra no meio.
 - Linha de 16 px (branco a 88%): a data por extenso.
 - Equipe logada: chip "Você é da equipe · Abrir painel".
 - `<img src="/ilustracoes/cidade.svg" width=220 height=120 aria-hidden>`, estática, com cerca de 2 KB: ipê-amarelo, morros e Av. Norte Sul com postes.
@@ -345,6 +346,7 @@ Ordem no celular:
 - **Avisos:**
   - título "Avisos";
   - cartão de push só se estiver `disabled` e a pessoa logada. **O estado `unconfigured` fica oculto**;
+  - sem conta: convite [Entrar] ("Receba os avisos no celular") só quando o push está disponível neste aparelho (estado `disabled`); `unconfigured`, `unsupported`, `denied` e `enabled` não mostram nada;
   - sem `InstallCard`;
   - grupos Hoje, Esta semana e Mais antigos, com o chip "Novo" (`rolim.noticesSeenAt`).
 - **Perfil:**
@@ -397,7 +399,7 @@ Só se animam `transform`, `opacity` e `clip-path`. `will-change` só durante o 
 | tab | fade 120 ms | fade + scale(.985→1), 200 ms, atraso 60 ms |
 | flow | fade 200 ms | translateY(40px→0)+fade, 280 ms |
 
-- Sem suporte a View Transitions: `.screen-in` (opacity e translateY de 8 px, 200 ms) **só** dentro de `@supports not (view-transition-name: none)`, para não animar duas vezes.
+- Sem suporte a View Transitions: entrada da tela só por opacidade (200 ms, `layouts/chrome/useScreenEntrance.ts`), para não animar duas vezes. Sem `transform` no contêiner da rota: ele viraria o bloco de referência dos rodapés fixos das tarefas.
 - Desligar a transição (`viewTransition: false`) quando houver `useReducedMotion()` ou `data-motion="lite"`.
 - **Modo lite:** `<html data-motion="lite">` quando houver `navigator.connection?.saveData` ou `deviceMemory ≤ 2`. Nesse modo, sem View Transitions, sem brilho e sem stagger. O toque e a folha continuam.
 - Pré-carregar em `requestIdleCallback` os chunks de `/protocolos`, `/plantao/:tipo` e `/comunicados`.
@@ -490,7 +492,8 @@ Nos dois casos (movimento reduzido e `[data-motion="lite"]`), a regra global atu
      - sem o evento: "Você pode instalar depois pelo menu do navegador.";
      - já instalado: o item some.
    - **Avisos**: só texto, "Depois de entrar, você pode ligar os avisos para saber quando seu pedido andar." Nenhuma permissão é pedida aqui.
-   - Botões: [Começar a usar], que faz `navigate("/", { replace: true, viewTransition: true })`, e [Entrar ou criar conta], que leva a `/entrar?next=/`.
+   - Botões: [Começar a usar], que faz `navigate("/", { replace: true, viewTransition: true })`, e [Entrar ou criar conta], que leva a `/entrar?next=/`. [Entrar ou criar conta] fica no rodapé fixo, abaixo de [Voltar] [Começar a usar], só sem login (botão de texto, 48 px); Instalar e Avisos ficam lado a lado quando cabem.
+   - Com `?rever=1` (aberto pelo Perfil), Pular, Esc e Começar a usar voltam ao Perfil.
 
 **"Novidade" para usuários antigos:** uma folha única, 1,2 s depois de abrir a Início, com "Agora você também encontra a funerária de plantão, com telefone e rota.", [Ver funerárias de plantão] e [Fechar].
 - Grava `rolim.novidades = "2026-10-funerarias"`.

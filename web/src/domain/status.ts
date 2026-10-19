@@ -12,17 +12,20 @@ export const REQUEST_STATUSES = [
 
 export type RequestStatus = (typeof REQUEST_STATUSES)[number];
 
+/** Só a paleta do app: verde = andamento e conclusão, ipê = atenção, barro = problema, ardósia = neutro. */
+export type StatusColor = "slate" | "ipe" | "mata" | "barro" | "gray";
+
 export interface StatusMeta {
   label: string;
   /** Cor do tema Mantine */
-  color: string;
+  color: StatusColor;
   description: string;
 }
 
 export const STATUS_META: Record<RequestStatus, StatusMeta> = {
   RECEIVED: { label: "Recebida", color: "slate", description: "A prefeitura recebeu sua solicitação." },
   UNDER_ANALYSIS: { label: "Em análise", color: "ipe", description: "A equipe técnica está avaliando." },
-  IN_PROGRESS: { label: "Em andamento", color: "blue", description: "As ações necessárias foram iniciadas." },
+  IN_PROGRESS: { label: "Em andamento", color: "mata", description: "As ações necessárias foram iniciadas." },
   RESOLVED: { label: "Concluída", color: "mata", description: "Atendimento finalizado." },
   REJECTED: { label: "Indeferida", color: "barro", description: "Não pôde ser atendida. Veja a justificativa." },
   CANCELED: { label: "Cancelada", color: "gray", description: "Cancelada por quem abriu." },

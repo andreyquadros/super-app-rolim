@@ -86,8 +86,11 @@ describe("geografia", () => {
     const d = distanceMeters(CITY_CENTER, { lat: CITY_CENTER.lat + 0.01, lng: CITY_CENTER.lng });
     expect(d).toBeGreaterThan(1100);
     expect(d).toBeLessThan(1120);
-    expect(formatDistance(347)).toBe("350 m");
-    expect(formatDistance(1234)).toBe("1,2 km");
+    expect(formatDistance(347)).toBe("350\u00a0m");
+    expect(formatDistance(1234)).toBe("1,2\u00a0km");
+    expect(formatDistance(3)).toBe("10\u00a0m");
+    // Nunca separa o número da unidade numa quebra de linha
+    expect(formatDistance(1234)).not.toMatch(/ /);
   });
 });
 

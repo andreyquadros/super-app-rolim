@@ -1,13 +1,14 @@
 import { Select, Textarea, TextInput } from "@mantine/core";
 import type { UseFormReturnType } from "@mantine/form";
-import { IconAlertTriangle, IconBuildingCommunity, IconMessage2, IconRefresh } from "@tabler/icons-react";
+import { IconAlertTriangle, IconBuildingCommunity, IconCircleCheck, IconMessage2, IconRefresh } from "@tabler/icons-react";
 import { OMBUDSMAN_ICONS } from "@/components/icons";
 import { ombudsmanTypeOf } from "@/domain/catalog";
+import { formatOccurrence } from "@/domain/format";
 import type { Building } from "@/domain/types";
 import { ReviewList, type ReviewEntry } from "@/pages/issues/flow/Choices";
 import review from "@/pages/issues/flow/choices.module.css";
 import flow from "@/pages/issues/flow/flow.module.css";
-import { formatOccurrence, type OmbudsmanFormValues } from "./ombudsmanForm";
+import type { OmbudsmanFormValues } from "./ombudsmanForm";
 import classes from "./NewOmbudsman.module.css";
 
 type Form = UseFormReturnType<OmbudsmanFormValues>;
@@ -21,33 +22,57 @@ interface PlaceStepProps {
   today: string;
 }
 
+function UnitsError({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div className={flow.error} role="alert">
+      <IconAlertTriangle size={20} aria-hidden />
+      <div className={classes.retry}>
+        <span>Não foi possível carregar as unidades.</span>
+        <button type="button" className={classes.retryButton} onClick={onRetry} data-press>
+          <IconRefresh size={18} aria-hidden />
+          Tentar de novo
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/** O campo de uma linha corta nomes longos: a unidade escolhida aparece inteira logo abaixo. */
+function ChosenUnit({ unit }: { unit: Building }) {
+  return (
+    <div className={classes.chosen}>
+      <IconCircleCheck size={22} stroke={2} aria-hidden />
+      <p className={classes.chosenText}>
+        <span className="visually-hidden">Unidade escolhida: </span>
+        <span className={classes.chosenName}>{unit.name}</span>
+        {unit.address && <span className={classes.chosenAddress}>{unit.address}</span>}
+      </p>
+    </div>
+  );
+}
+
 /** Passo 2: a unidade pública e quando aconteceu. */
 export function PlaceStep({ form, units, loading, error, onRetry, today }: PlaceStepProps) {
+  const chosen = units.find((b) => b.id === form.values.buildingId) ?? null;
   return (
     <div className={flow.fields}>
       {error ? (
-        <div className={flow.error} role="alert">
-          <IconAlertTriangle size={20} aria-hidden />
-          <div className={classes.retry}>
-            <span>Não foi possível carregar as unidades.</span>
-            <button type="button" className={classes.retryButton} onClick={onRetry} data-press>
-              <IconRefresh size={18} aria-hidden />
-              Tentar de novo
-            </button>
-          </div>
-        </div>
+        <UnitsError onRetry={onRetry} />
       ) : (
-        <Select
-          label="Unidade"
-          description="Escola, posto de saúde, secretaria… Dá para digitar para procurar."
-          placeholder={loading ? "Carregando unidades…" : "Escolha a unidade"}
-          data={units.map((b) => ({ value: b.id, label: b.name }))}
-          searchable
-          nothingFoundMessage="Nenhuma unidade com esse nome"
-          size="lg"
-          disabled={loading}
-          {...form.getInputProps("buildingId")}
-        />
+        <div className={classes.unitField}>
+          <Select
+            label="Unidade"
+            description="Escola, posto de saúde, secretaria… Dá para digitar para procurar."
+            placeholder={loading ? "Carregando unidades…" : "Escolha a unidade"}
+            data={units.map((b) => ({ value: b.id, label: b.name }))}
+            searchable
+            nothingFoundMessage="Nenhuma unidade com esse nome"
+            size="lg"
+            disabled={loading}
+            {...form.getInputProps("buildingId")}
+          />
+          {chosen && <ChosenUnit unit={chosen} />}
+        </div>
       )}
       <div className={flow.fieldRow}>
         <TextInput label="Dia" type="date" max={today} size="lg" {...form.getInputProps("occurrenceDate")} />
@@ -73,7 +98,7 @@ export function StoryStep({ form }: { form: Form }) {
       <TextInput
         label="Resumo"
         description="Em poucas palavras, como um título."
-        placeholder="Ex.: Ótimo atendimento na recepção"
+        placeholder="Ex.: Bom atendimento"
         maxLength={120}
         size="lg"
         {...form.getInputProps("title")}

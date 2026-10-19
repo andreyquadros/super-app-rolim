@@ -26,13 +26,17 @@
     <link rel="icon" href="/logo.svg" sizes="any" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />
     <style>
-      /* Abertura imediata, antes do CSS e do JavaScript do app */
+      /* Abertura imediata, antes do CSS e do JavaScript do app. A abertura tem
+         cor própria: o CSS do app (papel claro) chega depois e não a cobre */
       html { background: #0d7a49; color: #ffffff; }
-      @media (prefers-color-scheme: dark) { html { background: #0f3b28; } }
-      .boot { min-height: 100dvh; display: grid; grid-template-rows: 1fr auto; justify-items: center; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; text-align: center; padding: env(safe-area-inset-top) 24px calc(24px + env(safe-area-inset-bottom)); }
+      html:has(.boot), html:has(.boot) body { background: #0d7a49; color: #ffffff; }
+      .boot { min-height: 100dvh; display: grid; grid-template-rows: 1fr auto; justify-items: center; background: #0d7a49; color: #ffffff; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; text-align: center; padding: env(safe-area-inset-top) 24px calc(24px + env(safe-area-inset-bottom)); }
+      @media (prefers-color-scheme: dark) {
+        html, html:has(.boot), html:has(.boot) body, .boot { background: #0f3b28; }
+      }
       .boot-center { align-self: center; display: grid; justify-items: center; gap: 4px; }
       .boot img { margin-bottom: 16px; }
-      .boot p { margin: 0; }
+      .boot p { margin: 0; color: #ffffff; }
       .boot-kicker { font-size: 13px; letter-spacing: .2em; font-weight: 800; }
       .boot-title { font-family: Georgia, "Times New Roman", serif; font-size: 32px; font-weight: 600; }
       .boot-dots { display: flex; gap: 8px; margin-top: 24px; }
@@ -41,8 +45,14 @@
       .boot-dots span:nth-child(3) { animation-delay: .4s; }
       .boot-foot { font-size: 13px; opacity: .85; max-width: 32ch; }
       .boot-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+      .boot-error { margin-top: 24px; max-width: 30ch; }
+      .boot .boot-error-title { font-size: 1.1875rem; font-weight: 700; line-height: 1.3; }
+      .boot .boot-error-text { margin-top: 4px; font-size: 1.0625rem; line-height: 1.4; opacity: .9; }
+      .boot-retry { margin-top: 24px; min-width: 220px; min-height: 56px; padding: 8px 28px; border: 0; border-radius: 999px; background: #ffffff; color: #00653a; font: inherit; font-size: 1.0625rem; font-weight: 700; cursor: pointer; }
+      .boot-retry:focus-visible { outline: 3px solid #ffbb36; outline-offset: 3px; }
+      .boot-retry:active { transform: scale(.97); }
       @keyframes boot-dot { 50% { opacity: 1; } }
-      @media (prefers-reduced-motion: reduce) { .boot-dots span { animation: none; opacity: .7; } }
+      @media (prefers-reduced-motion: reduce) { .boot-dots span { animation: none; opacity: .7; } .boot-retry:active { transform: none; } }
     </style>
   </head>
   <body>

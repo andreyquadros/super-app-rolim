@@ -10,9 +10,8 @@ import {
 } from "@tabler/icons-react";
 import { CATEGORY_ICONS, OMBUDSMAN_ICONS } from "@/components/icons";
 import { categoryOf, ombudsmanTypeOf } from "@/domain/catalog";
-import { formatDate, formatDateTime } from "@/domain/format";
+import { formatAddressLine, formatDateTime, formatOccurrence } from "@/domain/format";
 import type { CitizenRequest, Issue, Ombudsman } from "@/domain/types";
-import { issueAddressLine } from "./requestModel";
 import classes from "./detail.module.css";
 
 interface Row {
@@ -27,18 +26,18 @@ function issueRows(request: Issue): Row[] {
   const { complement } = request.address;
   return [
     { icon: CATEGORY_ICONS[request.category], term: "Tipo de problema", value: categoryOf(request.category).label },
-    { icon: IconMapPin, term: "Endereço", value: issueAddressLine(request) },
+    { icon: IconMapPin, term: "Endereço", value: formatAddressLine(request.address) },
     ...(complement ? [{ icon: IconFlag, term: "Ponto de referência", value: complement }] : []),
     ...(request.department ? [{ icon: IconBuildingCommunity, term: "Setor responsável", value: request.department }] : []),
   ];
 }
 
 function ombudsmanRows(request: Ombudsman): Row[] {
-  const day = request.occurrenceDate ? formatDate(new Date(`${request.occurrenceDate}T12:00:00`)) : "Não informado";
+  const when = request.occurrenceDate ? formatOccurrence(request.occurrenceDate, request.occurrenceTime) : "Não informado";
   return [
     { icon: OMBUDSMAN_ICONS[request.type], term: "Assunto", value: ombudsmanTypeOf(request.type).label },
     { icon: IconBuilding, term: "Local do atendimento", value: request.buildingName },
-    { icon: IconCalendarEvent, term: "Quando aconteceu", value: request.occurrenceTime ? `${day}, às ${request.occurrenceTime}` : day },
+    { icon: IconCalendarEvent, term: "Quando aconteceu", value: when },
   ];
 }
 

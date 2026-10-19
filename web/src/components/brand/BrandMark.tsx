@@ -17,7 +17,7 @@ export function BrandMark({ variant = "onGreen", compact = false }: BrandMarkPro
     <span className={classes.brand} data-variant={variant} data-compact={compact || undefined}>
       <img src={logo} alt="" width={size} height={size} className={classes.logo} />
       <span className={classes.text}>
-        <span className={classes.kicker}>{APP_KICKER}</span>
+        <span className={classes.kicker}>{APP_KICKER}</span>{" "}
         <span className={classes.city}>{CITY_NAME}</span>
       </span>
     </span>

@@ -9,6 +9,7 @@ import { Center, MantineProvider, Stack, Text, Title } from "@mantine/core";
 import { lazy, StrictMode, Suspense, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { RouterProvider } from "react-router/dom";
+import { BootError } from "./components/LoadingScreen";
 import { isFirebaseConfigured } from "./config/env";
 import { recordSessionEntry } from "./features/onboarding/onboardingState";
 import "./lib/installPrompt";
@@ -61,13 +62,41 @@ function MissingConfig() {
   );
 }
 
+const CHUNK_RELOAD_KEY = "rolim.chunkReload";
+/** Uma recarga automática por vez: se falhar de novo logo depois, mostra o erro */
+const CHUNK_RELOAD_WINDOW_MS = 30_000;
+
+/**
+ * Versão nova no ar e o aparelho pediu um pedaço da antiga: recarrega uma vez
+ * (sessionStorage evita recarregar sem parar quando a rede está fora).
+ */
+function recoverFromStaleChunks() {
+  window.addEventListener("vite:preloadError", (event) => {
+    // Sem internet a falha é da rede, não de versão velha: recarregar
+    // derrubaria o app (e o aviso "Sem internet") no meio do uso
+    if (!navigator.onLine) return;
+    try {
+      const last = Number(window.sessionStorage.getItem(CHUNK_RELOAD_KEY) ?? 0);
+      if (Date.now() - last < CHUNK_RELOAD_WINDOW_MS) return;
+      window.sessionStorage.setItem(CHUNK_RELOAD_KEY, String(Date.now()));
+    } catch {
+      // sem sessionStorage não há como evitar o laço: deixa o erro aparecer
+      return;
+    }
+    event.preventDefault();
+    window.location.reload();
+  });
+}
+
+const root = createRoot(document.getElementById("root")!);
+
 async function start() {
   // Antes do roteador: o "voltar" do navegador vira transição "pop" e o
   // tamanho de texto escolhido já vale na primeira pintura
   initNavMotion();
   applyTextSize(getTextSize());
   recordSessionEntry();
-  const root = createRoot(document.getElementById("root")!);
+  recoverFromStaleChunks();
   if (!isFirebaseConfigured) {
     root.render(
       <MantineProvider theme={theme}>
@@ -92,5 +121,7 @@ async function start() {
 }
 
 start().catch((error: unknown) => {
-  document.body.textContent = `Não foi possível iniciar o aplicativo: ${error instanceof Error ? error.message : String(error)}`;
+  // Detalhe técnico só no console; a pessoa vê a abertura com "Tentar de novo"
+  console.error("Falha ao iniciar o app", error);
+  root.render(<BootError />);
 });

@@ -8,6 +8,7 @@ import { ListGroup, ListRow } from "@/components/ui/ListGroup";
 import { APP_NAME, MAINTAINER_LINE } from "@/config/city";
 import { version as APP_VERSION } from "../../../package.json";
 import { CompleteProfileInvite } from "./CompleteProfileInvite";
+import { ProfileLoadError } from "./ProfileLoadError";
 import { AppearanceChoice, TextSizeChoice } from "./ReadingPrefs";
 import { SignOut } from "./SignOut";
 import { useInstallAction } from "./useInstallAction";
@@ -33,7 +34,7 @@ function ProfileHeader() {
 
 /** /perfil: conta, celular, leitura e ajuda, no estilo dos ajustes do celular. */
 export default function ProfilePage() {
-  const { profile, staff } = useAuth();
+  const { profile, profileError, staff } = useAuth();
   const install = useInstallAction();
   const showPush = pushAvailable();
 
@@ -41,7 +42,7 @@ export default function ProfilePage() {
     <div className={classes.page}>
       <ProfileHeader />
 
-      {!profile && <CompleteProfileInvite next="/perfil" />}
+      {!profile && (profileError ? <ProfileLoadError /> : <CompleteProfileInvite next="/perfil" />)}
 
       <ListGroup title="Minha conta">
         <ListRow icon={<IconId size={22} stroke={1.8} />} label="Meus dados" description="Nome, celular, e-mail e CPF" to="/perfil/dados" />

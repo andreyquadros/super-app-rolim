@@ -4,6 +4,7 @@ import { BottomSheet } from "@/components/sheet/BottomSheet";
 import { cancelRequest } from "@/data/requests";
 import type { CitizenRequest } from "@/domain/types";
 import { errorMessage } from "@/lib/errors";
+import { ConfirmActions } from "@/components/sheet/ConfirmActions";
 import { canCancel } from "./requestModel";
 import classes from "./actions.module.css";
 
@@ -78,14 +79,14 @@ export function CancelRequest({ request }: { request: CitizenRequest }) {
             {error}
           </p>
         )}
-        <div className={classes.sheetActions}>
-          <button type="button" className={classes.danger} onClick={confirm} disabled={busy} aria-busy={busy || undefined} data-press>
-            {busy ? "Cancelando…" : "Sim, cancelar pedido"}
-          </button>
-          <button type="button" className={classes.neutral} onClick={close} data-press>
-            Não, manter pedido
-          </button>
-        </div>
+        <ConfirmActions
+          keepLabel="Não, manter pedido"
+          onKeep={close}
+          confirmLabel="Sim, cancelar pedido"
+          onConfirm={() => void confirm()}
+          busy={busy}
+          busyLabel="Cancelando…"
+        />
       </BottomSheet>
     </>
   );

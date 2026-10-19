@@ -21,8 +21,15 @@ export function DutyCard({ unit, type, distance, index }: DutyCardProps) {
   const hasPlace = Number.isFinite(unit.lat) && Number.isFinite(unit.lng) && (unit.lat !== 0 || unit.lng !== 0);
   const who = DUTY_META[type].singular.toLowerCase();
 
+  // Funerárias ficam paradas (sem entrada escalonada): só a troca de tela anima
+  const rises = type === "PHARMACY";
+
   return (
-    <li className={`${classes.card} enter-rise`} style={{ "--i": index } as CSSProperties} data-duty={unit.isOnDuty || undefined}>
+    <li
+      className={rises ? `${classes.card} enter-rise` : classes.card}
+      style={rises ? ({ "--i": index } as CSSProperties) : undefined}
+      data-duty={unit.isOnDuty || undefined}
+    >
       <DutyPills type={type} isOpen={unit.isOpen} isOnDuty={unit.isOnDuty} distance={distance} />
       <h2 className={classes.name}>{unit.name}</h2>
       {unit.address && <p className={classes.address}>{unit.address}</p>}
@@ -33,11 +40,11 @@ export function DutyCard({ unit, type, distance, index }: DutyCardProps) {
       </p>
       {isStale(unit.updatedAt) && <p className={classes.stale}>Faz tempo que não atualizam. Confirme por telefone.</p>}
 
-      <div className={classes.actions}>
+      <div className={classes.cardActions}>
         {phone && (
           <a href={`tel:${onlyDigits(phone.number)}`} className={classes.action} data-variant="filled" aria-label={`Ligar para ${unit.name}`} data-press>
             <IconPhone size={20} aria-hidden />
-            Ligar
+            <span>Ligar</span>
           </a>
         )}
         {whatsapp && (
@@ -51,13 +58,13 @@ export function DutyCard({ unit, type, distance, index }: DutyCardProps) {
             data-press
           >
             <IconBrandWhatsapp size={20} aria-hidden />
-            WhatsApp
+            <span>WhatsApp</span>
           </a>
         )}
         {hasPlace && (
           <a href={directionsUrl(unit)} target="_blank" rel="noreferrer" className={classes.action} data-variant="outline" aria-label={`Rota até ${unit.name}`} data-press>
             <IconRoute size={20} aria-hidden />
-            Rota
+            <span>Rota</span>
           </a>
         )}
       </div>

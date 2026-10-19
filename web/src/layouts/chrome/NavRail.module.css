@@ -80,7 +80,7 @@
     opacity var(--motion-base) var(--ease-enter),
     transform var(--motion-base) var(--ease-enter);
 
-  .item[aria-current="page"] & {
+  .item[aria-current] & {
     opacity: 1;
     transform: none;
   }
@@ -92,7 +92,7 @@
     transform: none;
   }
 
-  .item[aria-current="page"]:hover .pill {
+  .item[aria-current]:hover .pill {
     opacity: 1;
   }
 }
@@ -112,8 +112,9 @@
   background: var(--mantine-color-ipe-4);
 }
 
+/* Acompanha o Tamanho do texto, com teto para caber nos 88 px do trilho */
 .label {
-  font-size: 13px;
+  font-size: clamp(13px, 0.8125rem, 15px);
   font-weight: 600;
   line-height: 1.1;
 }
@@ -142,14 +143,16 @@
 }
 
 .avatar {
+  position: relative;
   border: 2px solid rgba(255, 255, 255, 0.9);
-  text-decoration: none;
 }
 
+/* Linha institucional legível (mínimo de 12 px, cresce com o Tamanho do texto) */
 .maintainer {
-  max-width: 76px;
+  max-width: 84px;
   margin: 8px 0 0;
-  font-size: 10px;
+  padding-inline: 2px;
+  font-size: 0.75rem;
   line-height: 1.3;
   text-align: center;
 }

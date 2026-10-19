@@ -1,5 +1,4 @@
 import { Alert, Group, SegmentedControl, Select, Skeleton, Stack, Table, Text, TextInput } from "@mantine/core";
-import { useMediaQuery } from "@mantine/hooks";
 import { IconInbox, IconSearch } from "@tabler/icons-react";
 import { useMemo } from "react";
 import { useSearchParams } from "react-router";
@@ -15,6 +14,7 @@ import type { CitizenRequest, RequestKind } from "@/domain/types";
 import { useAdminRequests } from "@/hooks/useAdminData";
 import classes from "./admin.module.css";
 import { ReviewDrawer } from "./ReviewDrawer";
+import { useFitsWidth } from "./useFitsWidth";
 
 const COPY: Record<RequestKind, { title: string; eyebrow: string }> = {
   issues: { title: "Zeladoria", eyebrow: "Atendimento" },
@@ -35,11 +35,68 @@ function typeLabel(request: CitizenRequest): string {
   return request.kind === "issues" ? categoryOf(request.category).label : ombudsmanTypeOf(request.type).label;
 }
 
+/** Largura que a tabela pede (760 px no texto padrão); abaixo disso, cartões. */
+const TABLE_MIN_REM = 47.5;
+
+interface RequestsTableProps {
+  kind: RequestKind;
+  items: CitizenRequest[];
+  onOpen: (id: string) => void;
+}
+
+function RequestsTable({ kind, items, onOpen }: RequestsTableProps) {
+  return (
+    <div className={`${classes.tableCard} ${classes.tableScroll}`}>
+      <Table verticalSpacing="sm" highlightOnHover={false}>
+        <Table.Thead>
+          <Table.Tr>
+            <Table.Th>Protocolo</Table.Th>
+            <Table.Th>Solicitação</Table.Th>
+            <Table.Th>{kind === "issues" ? "Bairro" : "Unidade"}</Table.Th>
+            <Table.Th>Aberta</Table.Th>
+            <Table.Th>Situação</Table.Th>
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>
+          {items.map((r) => (
+            <Table.Tr key={r.id} className={classes.row} onClick={() => onOpen(r.id)} tabIndex={0} onKeyDown={(e) => e.key === "Enter" && onOpen(r.id)}>
+              <Table.Td>
+                <Text size="sm" className={`protocol ${classes.nowrap}`}>
+                  {r.protocol}
+                </Text>
+              </Table.Td>
+              <Table.Td>
+                <Text size="sm" fw={600}>
+                  {r.title}
+                </Text>
+                <Text size="xs" c="dimmed">
+                  {typeLabel(r)} · {r.citizenName}
+                </Text>
+              </Table.Td>
+              <Table.Td>
+                <Text size="sm">{r.kind === "issues" ? r.address.neighborhood : r.buildingName}</Text>
+              </Table.Td>
+              <Table.Td>
+                <Text size="sm" className={classes.nowrap} title={formatDate(r.createdAt)}>
+                  {relativeTime(r.createdAt)}
+                </Text>
+              </Table.Td>
+              <Table.Td>
+                <StatusBadge status={r.status} />
+              </Table.Td>
+            </Table.Tr>
+          ))}
+        </Table.Tbody>
+      </Table>
+    </div>
+  );
+}
+
 export default function RequestsAdminPage({ kind }: { kind: RequestKind }) {
   const { buildingScope } = useAuth();
   const { data, loading, error } = useAdminRequests(kind);
   const [params, setParams] = useSearchParams();
-  const wide = useMediaQuery("(min-width: 62em)");
+  const { ref: listRef, fits: wide } = useFitsWidth<HTMLDivElement>(TABLE_MIN_REM);
 
   const scope = params.get("situacao") ?? "open";
   const type = params.get("tipo");
@@ -103,67 +160,23 @@ export default function RequestsAdminPage({ kind }: { kind: RequestKind }) {
       </Group>
       {error && <Alert color="barro">{error}</Alert>}
 
-      {loading ? (
-        <Skeleton h={320} radius="lg" />
-      ) : items.length === 0 ? (
-        <EmptyState icon={<IconInbox size={28} />} title="Nada por aqui" description="Ajuste os filtros para ver outras solicitações." />
-      ) : wide ? (
-        <Table.ScrollContainer minWidth={760}>
-          <Table verticalSpacing="sm" highlightOnHover={false} bg="var(--app-surface)" style={{ borderRadius: 12 }}>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Protocolo</Table.Th>
-                <Table.Th>Solicitação</Table.Th>
-                <Table.Th>{kind === "issues" ? "Bairro" : "Unidade"}</Table.Th>
-                <Table.Th>Aberta</Table.Th>
-                <Table.Th>Situação</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {items.map((r) => (
-                <Table.Tr
-                  key={r.id}
-                  className={classes.row}
-                  onClick={() => update("id", r.id)}
-                  tabIndex={0}
-                  onKeyDown={(e) => e.key === "Enter" && update("id", r.id)}
-                >
-                  <Table.Td>
-                    <Text size="sm" className="protocol">
-                      {r.protocol}
-                    </Text>
-                  </Table.Td>
-                  <Table.Td>
-                    <Text size="sm" fw={600} lineClamp={1}>
-                      {r.title}
-                    </Text>
-                    <Text size="xs" c="dimmed">
-                      {typeLabel(r)} · {r.citizenName}
-                    </Text>
-                  </Table.Td>
-                  <Table.Td>
-                    <Text size="sm">{r.kind === "issues" ? r.address.neighborhood : r.buildingName}</Text>
-                  </Table.Td>
-                  <Table.Td>
-                    <Text size="sm" title={formatDate(r.createdAt)}>
-                      {relativeTime(r.createdAt)}
-                    </Text>
-                  </Table.Td>
-                  <Table.Td>
-                    <StatusBadge status={r.status} />
-                  </Table.Td>
-                </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
-        </Table.ScrollContainer>
-      ) : (
-        <Stack gap="sm">
-          {items.map((r) => (
-            <RequestCard key={r.id} request={r} onClick={() => update("id", r.id)} />
-          ))}
-        </Stack>
-      )}
+      <div ref={listRef}>
+        {loading ? (
+          <Skeleton h={320} radius="lg" />
+        ) : items.length === 0 ? (
+          <EmptyState icon={<IconInbox size={28} />} title="Nada por aqui" description="Ajuste os filtros para ver outras solicitações." />
+        ) : wide ? (
+          <RequestsTable kind={kind} items={items} onOpen={(id) => update("id", id)} />
+        ) : (
+          <ul className={classes.cardGrid}>
+            {items.map((r) => (
+              <li key={r.id} className={classes.cardCell}>
+                <RequestCard request={r} onClick={() => update("id", r.id)} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
       <ReviewDrawer request={selected} onClose={() => update("id", null)} />
     </Stack>

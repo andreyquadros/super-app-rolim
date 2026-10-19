@@ -26,6 +26,15 @@ function historyIdx(): number {
   return (window.history.state as { idx?: number } | null)?.idx ?? 0;
 }
 
+/**
+ * Sair do fluxo desce a tela (ele entrou subindo). Voltando pelo histórico,
+ * o listener global de popstate grava "pop" antes deste: o tipo é refeito.
+ */
+function markFlowExit(viaHistory: boolean): void {
+  setNavKind("flow-exit");
+  if (viaHistory) window.addEventListener("popstate", () => setNavKind("flow-exit"), { once: true });
+}
+
 function withStep(params: URLSearchParams, step: number): URLSearchParams {
   const next = new URLSearchParams(params);
   next.set(STEP_PARAM, String(step));
@@ -84,8 +93,8 @@ export function useStepFlow(total: number, reachable: number, fallback = "/"): S
   );
 
   const exit = useCallback(() => {
-    setNavKind("pop");
     const depth = Math.max(0, historyIdx() - entryIdx);
+    markFlowExit(entryIdx > 0 || depth > 0);
     if (entryIdx > 0) {
       navigate(-(depth + 1));
       return;

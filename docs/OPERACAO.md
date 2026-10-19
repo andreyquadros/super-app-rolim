@@ -7,10 +7,13 @@ Tudo abaixo é feito pelo painel (`/painel`) ou pelo console do Firebase — sem
 | Tarefa | Como |
 | --- | --- |
 | Liberar um servidor | A pessoa cria a conta no app e **confirma o e-mail** (link enviado no cadastro; Perfil → Reenviar e-mail) → o administrador abre Painel → **Equipe e acessos** → Adicionar → busca por CPF ou e-mail → perfil *Servidor* + unidades que atende |
-| Liberar uma farmácia ou funerária | Mesmo caminho com o perfil *Plantão*; depois, em **Unidades e plantões**, inclua a pessoa como responsável pelo estabelecimento. Ela atualiza "aberta/de plantão" em **Meus plantões** |
+| Liberar uma farmácia ou funerária | Mesmo caminho com o perfil *Responsável por plantão*; depois, em **Unidades e plantões**, inclua a pessoa como responsável pelo estabelecimento. Ela atualiza "aberta/de plantão" em **Meus plantões** (ligar o plantão também marca "aberta"; dá para **Desfazer** por 5 segundos) |
+| Plantão desatualizado | Depois de 24 h sem atualização, o app avisa a população ("Confirme por telefone") e o painel mostra **Continua de plantão** para o responsável confirmar com um toque |
 | Retirar acesso | Equipe e acessos → abrir a pessoa → desmarcar **Acesso ativo** |
 | Quem pode mexer na equipe | Somente **administradores**. Servidores atendem, mas não concedem acessos |
 | Cidadão esqueceu a senha | Tela de login → "Esqueci minha senha" |
+| Cidadão quer ver a apresentação de novo | Perfil → **Ver a apresentação de novo** (ela aparece sozinha só nos primeiros acessos) |
+| Letras pequenas / tela escura | Perfil → **Tamanho do texto** (Normal, Grande, Muito grande) e **Aparência** (Automático, Claro, Escuro) |
 | CPF usado por outra pessoa | Console → Firestore → `cpfs` → apague o documento com o CPF; a pessoa correta completa o cadastro |
 | Pedido de exclusão de dados (LGPD) | A própria pessoa usa **Perfil → Excluir minha conta**; ou o admin apaga o usuário em Authentication (os dados pessoais são removidos automaticamente) |
 

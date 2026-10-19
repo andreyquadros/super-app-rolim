@@ -19,7 +19,7 @@ export function DetailsStep({ form, photo, onPhotoChange, onError, online }: Det
       <TextInput
         label="Resumo do problema"
         description="Em poucas palavras, como um título."
-        placeholder="Ex.: Poste apagado na esquina"
+        placeholder="Ex.: Poste apagado"
         maxLength={120}
         size="lg"
         {...form.getInputProps("title")}

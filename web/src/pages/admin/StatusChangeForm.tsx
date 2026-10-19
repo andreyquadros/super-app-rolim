@@ -1,11 +1,21 @@
 import { Alert, Button, Paper, SegmentedControl, Stack, Text, Textarea, Title } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { useAuth } from "@/auth/AuthContext";
 import { changeStatus } from "@/data/requests";
 import { nextStatuses, requiresResponse, STATUS_META, type RequestStatus } from "@/domain/status";
 import type { CitizenRequest } from "@/domain/types";
 import { errorMessage } from "@/lib/errors";
+import classes from "./admin.module.css";
+
+/** Indicador do próximo passo: ipê claro com texto escuro (branco sobre ipê fica em 3:1). */
+function segmentTone(to: RequestStatus): { color: string; style: CSSProperties } {
+  const ipe = STATUS_META[to].color === "ipe";
+  return {
+    color: ipe ? "ipe.4" : STATUS_META[to].color,
+    style: { "--seg-ink": ipe ? "#3a2a00" : "var(--mantine-color-white)" } as CSSProperties,
+  };
+}
 
 /** Avança a solicitação no fluxo, com resposta ao cidadão e nota interna. */
 export function StatusChangeForm({ request }: { request: CitizenRequest }) {
@@ -26,6 +36,7 @@ export function StatusChangeForm({ request }: { request: CitizenRequest }) {
   }
 
   const needsResponse = requiresResponse(to);
+  const tone = segmentTone(to);
   const responseError = needsResponse && response.trim().length < 10 ? "Explique ao cidadão o motivo (mínimo 10 caracteres)." : null;
 
   const submit = async () => {
@@ -57,7 +68,9 @@ export function StatusChangeForm({ request }: { request: CitizenRequest }) {
           value={to}
           onChange={(v) => setTo(v as RequestStatus)}
           data={options.map((s) => ({ value: s, label: STATUS_META[s].label }))}
-          color={STATUS_META[to].color}
+          color={tone.color}
+          classNames={{ label: classes.segLabel }}
+          style={tone.style}
         />
         <Textarea
           label="Resposta ao cidadão"

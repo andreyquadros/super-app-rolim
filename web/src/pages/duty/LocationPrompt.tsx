@@ -27,13 +27,3 @@ export function LocationPrompt({ open, onClose, onAccept }: LocationPromptProps)
     </BottomSheet>
   );
 }
-
-/** A permissão já foi dada antes? (sem perguntar de novo) */
-export async function locationAlreadyGranted(): Promise<boolean> {
-  try {
-    const status = await navigator.permissions?.query({ name: "geolocation" });
-    return status?.state === "granted";
-  } catch {
-    return false;
-  }
-}

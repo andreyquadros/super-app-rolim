@@ -1,4 +1,6 @@
+import type { NewOmbudsmanInput } from "@/data/requests";
 import type { OmbudsmanType } from "@/domain/catalog";
+import type { Building } from "@/domain/types";
 import { lastReachableStep } from "@/pages/issues/flow/steps";
 
 export interface OmbudsmanFormValues {
@@ -41,12 +43,16 @@ export function ombudsmanReachableStep(values: OmbudsmanFormValues, today: strin
   return lastReachableStep(values, ombudsmanValidators(today), OMBUDSMAN_STEP_FIELDS, OMBUDSMAN_TOTAL_STEPS);
 }
 
-const DATE_FORMAT = new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "long", year: "numeric" });
-
-/** "19 de outubro de 2026, às 14:30" (o horário é opcional). */
-export function formatOccurrence(date: string, time: string): string {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
-  if (!match) return "—";
-  const day = DATE_FORMAT.format(new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
-  return time ? `${day}, às ${time}` : day;
+/** Monta o relato; null quando falta o assunto. */
+export function ombudsmanDraft(values: OmbudsmanFormValues, unit: Pick<Building, "id" | "name">): NewOmbudsmanInput | null {
+  if (!values.type) return null;
+  return {
+    title: values.title,
+    description: values.description,
+    type: values.type,
+    buildingId: unit.id,
+    buildingName: unit.name,
+    occurrenceDate: values.occurrenceDate,
+    occurrenceTime: values.occurrenceTime || null,
+  };
 }

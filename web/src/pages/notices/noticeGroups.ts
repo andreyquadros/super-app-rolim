@@ -1,4 +1,4 @@
-// Agrupamento dos avisos por data e marcação de "Novo" (funções puras, com teste).
+// Agrupamento dos avisos por data (funções puras, com teste). O "Novo" fica em lib/noticesSeen.
 
 export type NoticeGroupKey = "hoje" | "semana" | "antigos";
 
@@ -22,9 +22,6 @@ export const NOTICE_GROUP_TITLE: Record<NoticeGroupKey, string> = {
 
 /** Dias corridos (contando hoje) que valem como "Esta semana". */
 const WEEK_DAYS = 7;
-/** Primeira visita (sem registro): só é "Novo" o que saiu nesses últimos dias. */
-const FIRST_VISIT_DAYS = 7;
-const DAY_MS = 24 * 3600 * 1000;
 
 function startOfDay(now: Date, daysAgo = 0): number {
   return new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysAgo).getTime();
@@ -45,11 +42,4 @@ export function groupNotices<T extends Dated>(list: readonly T[], now: Date): No
     title: NOTICE_GROUP_TITLE[key],
     items: list.filter((item) => noticeGroupOf(item.sentAt, now) === key),
   })).filter((group) => group.items.length > 0);
-}
-
-/** Publicado depois da última visita a "Avisos" (seenAt = 0: nunca visitou). */
-export function isNewNotice(sentAt: Date | null, seenAt: number, now: Date): boolean {
-  if (!sentAt) return false;
-  const floor = seenAt > 0 ? seenAt : now.getTime() - FIRST_VISIT_DAYS * DAY_MS;
-  return sentAt.getTime() > floor;
 }

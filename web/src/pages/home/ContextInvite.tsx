@@ -1,6 +1,6 @@
 import { notifications } from "@mantine/notifications";
 import { IconBellRinging, IconDeviceMobileDown } from "@tabler/icons-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { InstallHowToSheet } from "@/components/install/InstallHowToSheet";
 import { canOfferPush, EnablePushSheet } from "@/components/push/EnablePushSheet";
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
@@ -14,6 +14,18 @@ const PUSH_KEY = "rolim.pushInviteDismissed";
 
 const isPhone = () => /android|iphone|ipad|ipod/i.test(navigator.userAgent);
 
+const FOCUSABLE = "a[href], button:not([disabled]), [tabindex]:not([tabindex='-1'])";
+
+/**
+ * Para onde o foco vai quando o convite some: o item logo antes dele (o último
+ * aviso) ou, se não houver, o título da tela. Assim o leitor de tela não volta
+ * ao começo da página.
+ */
+function focusTargetAfter(invite: HTMLElement): HTMLElement | null {
+  const previous = invite.previousElementSibling?.querySelector<HTMLElement>(FOCUSABLE);
+  return previous ?? document.querySelector<HTMLElement>("main h1");
+}
+
 interface ContextInviteProps {
   signedIn: boolean;
   hasRequests: boolean;
@@ -26,6 +38,7 @@ export function ContextInvite({ signedIn, hasRequests }: ContextInviteProps) {
   const [pushDismissed, setPushDismissed] = useState(() => storageGet(PUSH_KEY) === "1");
   const [canPush, setCanPush] = useState(canOfferPush);
   const [sheet, setSheet] = useState<"ios" | "push" | null>(null);
+  const inviteRef = useRef<HTMLElement>(null);
 
   const kind = chooseInvite({
     installable: !installed && (canPrompt || needsIosInstructions),
@@ -37,6 +50,11 @@ export function ContextInvite({ signedIn, hasRequests }: ContextInviteProps) {
   });
 
   const dismiss = () => {
+    // O botão focado vai sumir junto com o convite: leva o foco para perto
+    const invite = inviteRef.current;
+    const target = invite?.contains(document.activeElement) ? focusTargetAfter(invite) : null;
+    if (target) requestAnimationFrame(() => target.focus({ preventScroll: true }));
+
     if (kind === "install") {
       storageSet(INSTALL_KEY, "1");
       setInstallDismissed(true);
@@ -67,7 +85,7 @@ export function ContextInvite({ signedIn, hasRequests }: ContextInviteProps) {
   return (
     <>
       {kind && (
-        <aside className={`${classes.invite} enter-rise`} aria-labelledby="home-convite" data-kind={kind}>
+        <aside ref={inviteRef} className={`${classes.invite} enter-rise`} aria-labelledby="home-convite" data-kind={kind}>
           <span className={classes.icon} aria-hidden>
             {kind === "install" ? <IconDeviceMobileDown size={26} stroke={1.7} /> : <IconBellRinging size={26} stroke={1.7} />}
           </span>

@@ -1,27 +1,25 @@
-import { useForm } from "@mantine/form";
-import { IconAlertTriangle, IconWifiOff } from "@tabler/icons-react";
-import { useCallback, useId, useMemo, useState } from "react";
-import { useAuth } from "@/auth/AuthContext";
+import { useForm, type UseFormReturnType } from "@mantine/form";
+import { IconWifiOff } from "@tabler/icons-react";
+import { useId, useMemo, useState } from "react";
 import { SubmittedPanel } from "@/components/SubmittedPanel";
 import { CONTACTS } from "@/config/city";
 import { watchBuildings } from "@/data/buildings";
-import { createOmbudsman } from "@/data/requests";
-import type { OmbudsmanType } from "@/domain/catalog";
+import { createOmbudsman, type NewOmbudsmanInput } from "@/data/requests";
 import { onlyDigits } from "@/domain/documents";
 import { toIsoDate } from "@/domain/format";
+import type { Building } from "@/domain/types";
 import { useOnline } from "@/hooks/useOnline";
 import { useWatch } from "@/hooks/useWatch";
-import { useChrome } from "@/layouts/chrome/chromeContext";
-import { errorMessage } from "@/lib/errors";
-import { DiscardSheet, FlowFooter, focusFirstError, StepHeading } from "@/pages/issues/flow/FlowParts";
-import flow from "@/pages/issues/flow/flow.module.css";
-import { useStepFlow } from "@/pages/issues/flow/useStepFlow";
+import { FlowFrame } from "@/pages/issues/flow/FlowFrame";
+import flowCss from "@/pages/issues/flow/flow.module.css";
+import { REVIEW_FIELDS, useFlow, type Flow, type Prepared } from "@/pages/issues/flow/useFlow";
 import classes from "./NewOmbudsman.module.css";
 import { OmbudsmanReview, PlaceStep, StoryStep } from "./OmbudsmanSteps";
 import {
   initialOmbudsman,
   OMBUDSMAN_STEP_FIELDS,
   OMBUDSMAN_TOTAL_STEPS,
+  ombudsmanDraft,
   ombudsmanReachableStep,
   ombudsmanValidators,
   type OmbudsmanFormValues,
@@ -36,10 +34,32 @@ const LEADS = [
   "Veja se está tudo certo antes de enviar.",
 ] as const;
 
-interface Submitted {
-  id: string;
-  protocol: string;
-  pendingSync: boolean;
+const UNIT_AGAIN = "Escolha a unidade de novo antes de enviar.";
+const SEND_FAILED = "Não foi possível enviar. Tente novamente.";
+
+type OmbudsmanForm = UseFormReturnType<OmbudsmanFormValues>;
+
+interface Units {
+  units: Building[];
+  loading: boolean;
+  error: string | null;
+  retry: () => void;
+}
+
+/** Unidades públicas ativas, para escolher onde foi o atendimento. */
+function usePublicUnits(): Units {
+  const watcher = useMemo(() => watchBuildings("PUBLIC"), []);
+  const { data, loading, error, retry } = useWatch(watcher);
+  const units = useMemo(() => (data ?? []).filter((b) => b.active), [data]);
+  return { units, loading, error, retry };
+}
+
+/** Checagem final: campos válidos e a unidade ainda na lista. */
+function prepareOmbudsman(form: OmbudsmanForm, unit: Building | null): Prepared<NewOmbudsmanInput> {
+  if (form.validate().hasErrors || !form.values.type) return { error: REVIEW_FIELDS };
+  if (!unit) return { error: UNIT_AGAIN };
+  const draft = ombudsmanDraft(form.values, unit);
+  return draft ? { payload: draft } : { error: REVIEW_FIELDS };
 }
 
 function OtherChannels() {
@@ -55,154 +75,72 @@ function OtherChannels() {
   );
 }
 
+interface OmbudsmanStepsProps {
+  wizard: Flow;
+  form: OmbudsmanForm;
+  units: Units;
+  unit: Building | null;
+  today: string;
+  online: boolean;
+}
+
+/** Conteúdo do passo atual. */
+function OmbudsmanSteps({ wizard, form, units, unit, today, online }: OmbudsmanStepsProps) {
+  const { step, move } = wizard;
+  const last = step === OMBUDSMAN_TOTAL_STEPS;
+  return (
+    <>
+      {step === 1 && (
+        <TypeStep
+          value={form.values.type}
+          onSelect={(type) => {
+            form.setFieldValue("type", type);
+            move(2);
+          }}
+        />
+      )}
+      {step === 2 && <PlaceStep form={form} units={units.units} loading={units.loading} error={units.error} onRetry={units.retry} today={today} />}
+      {step === 3 && <StoryStep form={form} />}
+      {last && <OmbudsmanReview values={form.values} unitName={unit?.name ?? null} onEdit={move} />}
+      {last && !online && (
+        <p className={flowCss.note}>
+          <IconWifiOff size={20} aria-hidden />
+          Você está sem internet. O pedido fica guardado no celular e é enviado sozinho quando a conexão voltar.
+        </p>
+      )}
+      {(step === 1 || last) && <OtherChannels />}
+    </>
+  );
+}
+
 /** /ouvidoria/nova: elogio, sugestão ou reclamação em 4 passos (?passo=N). */
 export default function NewOmbudsmanPage() {
-  const { user, profile } = useAuth();
   const online = useOnline();
   const headingId = useId();
   const [today] = useState(() => toIsoDate(new Date()));
   const validators = useMemo(() => ombudsmanValidators(today), [today]);
-  const watcher = useMemo(() => watchBuildings("PUBLIC"), []);
-  const buildings = useWatch(watcher);
-  const units = useMemo(() => (buildings.data ?? []).filter((b) => b.active), [buildings.data]);
-  const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [result, setResult] = useState<Submitted | null>(null);
-  const [discardOpen, setDiscardOpen] = useState(false);
-
+  const units = usePublicUnits();
   const form = useForm<OmbudsmanFormValues>({ initialValues: initialOmbudsman(today), validate: validators });
-  const { step, direction, headingRef, goTo, exit, rewind } = useStepFlow(
-    OMBUDSMAN_TOTAL_STEPS,
-    ombudsmanReachableStep(form.values, today),
-  );
-
-  // X da barra: confirma antes de jogar fora o que foi preenchido
-  const dirty = form.isDirty();
-  const requestClose = useCallback(() => (dirty ? setDiscardOpen(true) : exit()), [dirty, exit]);
-  const keepEditing = useCallback(() => setDiscardOpen(false), []);
-  useChrome({
-    progress: { step: result ? OMBUDSMAN_TOTAL_STEPS : step, total: OMBUDSMAN_TOTAL_STEPS },
-    onClose: result ? exit : requestClose,
+  const wizard = useFlow({
+    form,
+    total: OMBUDSMAN_TOTAL_STEPS,
+    reachable: ombudsmanReachableStep(form.values, today),
+    stepFields: OMBUDSMAN_STEP_FIELDS,
+    dirty: form.isDirty(),
+    online,
   });
+  const unit = units.units.find((b) => b.id === form.values.buildingId) ?? null;
 
-  const move = (target: number) => {
-    setError(null);
-    goTo(target);
-  };
+  const submit = () => void wizard.send(() => prepareOmbudsman(form, unit), createOmbudsman, SEND_FAILED);
 
-  const next = () => {
-    const fields = OMBUDSMAN_STEP_FIELDS[step - 1] ?? [];
-    const invalid = fields.map((field) => form.validateField(field).hasError).some(Boolean);
-    if (invalid) {
-      focusFirstError();
-      return;
-    }
-    move(step + 1);
-  };
-
-  const selectType = (type: OmbudsmanType) => {
-    form.setFieldValue("type", type);
-    move(2);
-  };
-
-  const unit = units.find((b) => b.id === form.values.buildingId) ?? null;
-
-  const submit = async () => {
-    if (!user || !profile) {
-      setError("Sua sessão terminou. Entre de novo para enviar o pedido.");
-      return;
-    }
-    const { values } = form;
-    if (form.validate().hasErrors || !values.type) {
-      setError("Revise os campos destacados antes de enviar.");
-      return;
-    }
-    if (!unit) {
-      setError("Escolha a unidade de novo antes de enviar.");
-      return;
-    }
-    setSubmitting(true);
-    setError(null);
-    try {
-      const created = createOmbudsman(
-        {
-          title: values.title,
-          description: values.description,
-          type: values.type,
-          buildingId: unit.id,
-          buildingName: unit.name,
-          occurrenceDate: values.occurrenceDate,
-          occurrenceTime: values.occurrenceTime || null,
-        },
-        { uid: user.uid, name: profile.fullName },
-      );
-      if (online) await created.committed;
-      else created.committed.catch(() => undefined);
-      setResult({ id: created.id, protocol: created.protocol, pendingSync: !online });
-      // O Voltar depois do envio sai do fluxo em vez de refazer os passos
-      rewind();
-    } catch (e: unknown) {
-      setError(errorMessage(e, "Não foi possível enviar. Tente novamente."));
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  if (result) {
-    return (
-      <SubmittedPanel
-        protocol={result.protocol}
-        detailPath={`/protocolos/ouvidoria/${result.id}`}
-        pendingSync={result.pendingSync}
-        kindLabel="Ouvidoria"
-      />
-    );
+  if (wizard.sent) {
+    const { id, protocol, pendingSync } = wizard.sent;
+    return <SubmittedPanel protocol={protocol} detailPath={`/protocolos/ouvidoria/${id}`} pendingSync={pendingSync} kindLabel="Ouvidoria" />;
   }
 
-  const last = step === OMBUDSMAN_TOTAL_STEPS;
-
   return (
-    <div className={flow.page}>
-      <div key={step} className={flow.step} data-dir={direction === "none" ? undefined : direction}>
-        <StepHeading
-          id={headingId}
-          step={step}
-          total={OMBUDSMAN_TOTAL_STEPS}
-          title={QUESTIONS[step - 1]}
-          lead={LEADS[step - 1]}
-          headingRef={headingRef}
-        />
-        {step === 1 && <TypeStep value={form.values.type} onSelect={selectType} />}
-        {step === 2 && (
-          <PlaceStep
-            form={form}
-            units={units}
-            loading={buildings.loading}
-            error={buildings.error}
-            onRetry={buildings.retry}
-            today={today}
-          />
-        )}
-        {step === 3 && <StoryStep form={form} />}
-        {last && <OmbudsmanReview values={form.values} unitName={unit?.name ?? null} onEdit={move} />}
-        {last && !online && (
-          <p className={flow.note}>
-            <IconWifiOff size={20} aria-hidden />
-            Você está sem internet. O pedido fica guardado no celular e é enviado sozinho quando a conexão voltar.
-          </p>
-        )}
-        {(step === 1 || last) && <OtherChannels />}
-      </div>
-
-      {error && (
-        <p className={flow.error} role="alert">
-          <IconAlertTriangle size={20} aria-hidden />
-          {error}
-        </p>
-      )}
-
-      {step > 1 && <FlowFooter onBack={() => move(step - 1)} onNext={last ? submit : next} submit={last} loading={submitting} />}
-      <DiscardSheet open={discardOpen} onCancel={keepEditing} onDiscard={exit} />
-    </div>
+    <FlowFrame flow={wizard} headingId={headingId} question={QUESTIONS[wizard.step - 1]} lead={LEADS[wizard.step - 1]} onSubmit={submit}>
+      <OmbudsmanSteps wizard={wizard} form={form} units={units} unit={unit} today={today} online={online} />
+    </FlowFrame>
   );
 }

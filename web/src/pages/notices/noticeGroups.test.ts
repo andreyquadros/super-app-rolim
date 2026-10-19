@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { groupNotices, isNewNotice, noticeGroupOf } from "./noticeGroups";
+import { groupNotices, noticeGroupOf } from "./noticeGroups";
 
 // Segunda-feira, 19/10/2026, 10h (horário local)
 const NOW = new Date(2026, 9, 19, 10, 0);
@@ -28,19 +28,5 @@ describe("grupos de avisos", () => {
   it("não altera a lista original", () => {
     const list = Object.freeze([{ sentAt: at(19) }]);
     expect(() => groupNotices(list, NOW)).not.toThrow();
-  });
-});
-
-describe("aviso novo", () => {
-  it("é novo quando saiu depois da última visita", () => {
-    const seenAt = at(18, 12).getTime();
-    expect(isNewNotice(at(19), seenAt, NOW)).toBe(true);
-    expect(isNewNotice(at(18, 11), seenAt, NOW)).toBe(false);
-    expect(isNewNotice(null, seenAt, NOW)).toBe(false);
-  });
-
-  it("na primeira visita, só os dos últimos 7 dias contam como novos", () => {
-    expect(isNewNotice(at(14), 0, NOW)).toBe(true);
-    expect(isNewNotice(at(1), 0, NOW)).toBe(false);
   });
 });

@@ -102,26 +102,20 @@ function InstallChoice() {
   );
 }
 
-interface SettingsPanelProps {
-  /** Já entrou na conta (revendo a apresentação pelo Perfil) */
-  signedIn: boolean;
-  onSignIn: () => void;
-}
-
-/** Slide 5: tamanho do texto, instalação e avisos (sem pedir permissão aqui). */
-export function SettingsPanel({ signedIn, onSignIn }: SettingsPanelProps) {
+/**
+ * Slide 5: tamanho do texto, instalação e avisos (sem pedir permissão aqui).
+ * "Entrar ou criar conta" fica no rodapé fixo, ao lado de "Começar a usar".
+ */
+export function SettingsPanel() {
   return (
     <div className={classes.groups}>
       <TextSizeChoice />
-      <InstallChoice />
-      <Group icon={<IconBell size={22} stroke={1.8} />} title="Avisos">
-        <p className={classes.groupText}>Depois de entrar, você pode ligar os avisos para saber quando seu pedido andar.</p>
-        {!signedIn && (
-          <button type="button" className={classes.action} data-variant="outline" onClick={onSignIn} data-press>
-            Entrar ou criar conta
-          </button>
-        )}
-      </Group>
+      <div className={classes.pair}>
+        <InstallChoice />
+        <Group icon={<IconBell size={22} stroke={1.8} />} title="Avisos">
+          <p className={classes.groupText}>Depois de entrar, você pode ligar os avisos para saber quando seu pedido andar.</p>
+        </Group>
+      </div>
     </div>
   );
 }

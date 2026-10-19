@@ -7,6 +7,7 @@
   --app-hero: #0d7a49;
   --app-hero-ink: #f4fbf6;
   --app-accent: #ffbb36;
+  --app-focus-ring: var(--mantine-color-mata-8);
   --app-header-h: 60px;
   --app-bar-h: 56px;
   --app-tabbar-h: 72px;
@@ -26,6 +27,7 @@
   --app-ink-soft: #a9b8ae;
   --app-line: #2a352f;
   --app-hero: #0f3b28;
+  --app-focus-ring: var(--mantine-color-mata-4);
 }
 
 html,
@@ -68,6 +70,7 @@ html.sheet-open {
   white-space: nowrap;
 }
 
+/* Fica inteiro acima da tela (também sob o entalhe do iPhone) até receber o foco */
 .skip-link {
   position: fixed;
   top: calc(env(safe-area-inset-top) + 8px);
@@ -78,12 +81,24 @@ html.sheet-open {
   background: #ffffff;
   color: var(--mantine-color-mata-9);
   font-weight: 700;
-  transform: translateY(-200%);
+  transform: translateY(calc(-100% - env(safe-area-inset-top) - 16px));
 
   &:focus {
     transform: none;
     outline: 3px solid var(--mantine-color-ipe-4);
   }
+}
+
+/* Barras, trilho e alvos de toque são partes do app: segurar o dedo não
+   seleciona o texto nem abre o menu de link (iPhone). Textos do conteúdo
+   (protocolo, endereço, telefone) continuam selecionáveis. */
+.tab-bar-vt,
+.app-bar-vt,
+.nav-rail-vt,
+[data-press] {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 /* Títulos que recebem foco ao trocar de tela não ganham contorno */
@@ -119,10 +134,25 @@ body::before {
   --input-bg: light-dark(#ffffff, var(--app-paper));
 }
 
+/* Campo em foco: anel de 3 px (borda + 2 px) bem visível nos dois temas;
+   vale para todos os campos, inclusive Entrar e Cadastro */
+.citizen .mantine-Input-input:focus,
+.citizen .mantine-Input-input:focus-within {
+  --input-bd: var(--app-focus-ring);
+  border-color: var(--app-focus-ring);
+  box-shadow: 0 0 0 2px var(--app-focus-ring);
+}
+
+.citizen .mantine-Input-input[data-error]:focus,
+.citizen .mantine-Input-input[data-error]:focus-within {
+  --app-focus-ring: light-dark(var(--mantine-color-barro-8), var(--mantine-color-barro-4));
+}
+
 /* Botões do app do cidadão quebram a linha em vez de cortar o texto (texto a 125%) */
+/* Ações principais pedem 56 px com --app-button-min: 56px na própria classe */
 .citizen .mantine-Button-root {
   height: auto;
-  min-height: var(--button-height);
+  min-height: max(var(--button-height), var(--app-button-min, 0px));
   padding-block: 8px;
 }
 
@@ -188,6 +218,21 @@ body:has(.tab-bar-vt) .mantine-Notifications-root[data-position^="bottom"] {
   font-family: inherit;
   border-radius: var(--mantine-radius-lg);
   z-index: 0;
+}
+
+/* Aproximar/Afastar com 48 px (público idoso); vence o leaflet.css, que chega depois */
+.leaflet-container .leaflet-control-zoom.leaflet-bar a {
+  width: 48px;
+  height: 48px;
+  line-height: 48px;
+  font-size: 26px;
+}
+
+/* Créditos do mapa: links com pelo menos 24 px de altura */
+.leaflet-container .leaflet-control-attribution a {
+  display: inline-block;
+  padding-block: 5px;
+  line-height: 14px;
 }
 
 .map-pin {

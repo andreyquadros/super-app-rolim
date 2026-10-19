@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dutyChangeNotice, groupDutyUnits, sameDutyState, withDuty, withOpen } from "./dutyState";
+import { dutyChangeNotice, groupDutyUnits, oneUnitPerGroup, sameDutyState, withDuty, withOpen } from "./dutyState";
 
 const closed = { isOpen: false, isOnDuty: false };
 
@@ -61,5 +61,21 @@ describe("groupDutyUnits", () => {
   it("farmácias vêm antes das funerárias", () => {
     const groups = groupDutyUnits([unit("Paz", "FUNERAL"), unit("Centro", "PHARMACY")]);
     expect(groups.map((g) => g.type)).toEqual(["PHARMACY", "FUNERAL"]);
+  });
+});
+
+describe("oneUnitPerGroup", () => {
+  const unit = (name: string, type: "PHARMACY" | "FUNERAL") => ({ name, type });
+
+  it("uma farmácia e uma funerária ficam lado a lado", () => {
+    expect(oneUnitPerGroup(groupDutyUnits([unit("Centro", "PHARMACY"), unit("Paz", "FUNERAL")]))).toBe(true);
+  });
+
+  it("um grupo com várias unidades usa a grade normal", () => {
+    expect(oneUnitPerGroup(groupDutyUnits([unit("A", "PHARMACY"), unit("B", "PHARMACY"), unit("Paz", "FUNERAL")]))).toBe(false);
+  });
+
+  it("sem grupos não há layout compacto", () => {
+    expect(oneUnitPerGroup([])).toBe(false);
   });
 });

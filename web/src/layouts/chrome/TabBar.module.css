@@ -38,7 +38,7 @@
   }
 }
 
-.tab[aria-current="page"] {
+.tab[aria-current] {
   color: light-dark(var(--mantine-color-mata-8), var(--mantine-color-mata-3));
 }
 
@@ -66,7 +66,7 @@
     opacity var(--motion-base) var(--ease-enter),
     transform var(--motion-base) var(--ease-enter);
 
-  .tab[aria-current="page"] & {
+  .tab[aria-current] & {
     opacity: 1;
     transform: none;
   }
@@ -94,7 +94,9 @@
 .label {
   max-width: 100%;
   overflow: hidden;
-  font-size: 13px;
+  /* Acompanha o Tamanho do texto, com teto pela largura: "Solicitar" cabe
+     inteiro na coluna mesmo em 320 px */
+  font-size: clamp(13px, min(0.8125rem, 4vw), 15px);
   font-weight: 600;
   line-height: 1.1;
   white-space: nowrap;

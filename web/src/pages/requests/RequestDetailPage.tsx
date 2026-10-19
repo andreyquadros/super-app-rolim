@@ -26,12 +26,15 @@ function lookupRequest(kind: RequestKind, id: string): Watcher<Lookup> {
     );
 }
 
-/** Barra superior: protocolo como título compacto e "Compartilhar". */
+/** Título compacto curto: o protocolo cortado não serve; ele aparece inteiro no cartão de situação. */
+const COMPACT_TITLE = "Pedido";
+
+/** Barra superior: "Pedido" como título compacto e "Compartilhar". */
 function useDetailChrome(request: CitizenRequest | null) {
   const title = request?.title;
   const protocol = request?.protocol;
   const actions = useMemo(() => (title && protocol ? <ShareButton title={title} protocol={protocol} /> : undefined), [title, protocol]);
-  useChrome({ title: protocol, actions });
+  useChrome({ title: COMPACT_TITLE, actions });
 }
 
 /** /protocolos/:kind/:id (tela empilhada; o Voltar "‹ Pedidos" vem da casca). */

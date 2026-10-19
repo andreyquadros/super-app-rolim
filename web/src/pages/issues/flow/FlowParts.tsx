@@ -2,6 +2,7 @@ import { Button } from "@mantine/core";
 import { IconArrowLeft, IconArrowRight, IconSend } from "@tabler/icons-react";
 import { useCallback, useRef, type ReactNode, type Ref } from "react";
 import { BottomSheet } from "@/components/sheet/BottomSheet";
+import { ConfirmActions } from "@/components/sheet/ConfirmActions";
 import classes from "./flow.module.css";
 
 interface StepHeadingProps {
@@ -87,6 +88,11 @@ export function DiscardSheet({ open, onCancel, onDiscard }: DiscardSheetProps) {
     onDiscard();
   }, [onDiscard]);
 
+  const discard = () => {
+    leaving.current = true;
+    onCancel();
+  };
+
   return (
     <BottomSheet
       open={open}
@@ -95,22 +101,7 @@ export function DiscardSheet({ open, onCancel, onDiscard }: DiscardSheetProps) {
       title="Descartar o pedido?"
       description="O que você preencheu será perdido."
     >
-      <div className={classes.sheetActions}>
-        <button type="button" className={classes.sheetPrimary} onClick={onCancel} data-press>
-          Continuar preenchendo
-        </button>
-        <button
-          type="button"
-          className={classes.sheetDanger}
-          onClick={() => {
-            leaving.current = true;
-            onCancel();
-          }}
-          data-press
-        >
-          Descartar
-        </button>
-      </div>
+      <ConfirmActions keepLabel="Continuar preenchendo" onKeep={onCancel} confirmLabel="Descartar" onConfirm={discard} />
     </BottomSheet>
   );
 }
