@@ -114,8 +114,28 @@ body::before {
   z-index: 1;
 }
 
-/* Avisos flutuantes acima da barra de navegação inferior */
-.mantine-Notifications-root[data-position^="bottom"] {
+/* Campos no tom das superfícies do app (no escuro, sem o cinza neutro do Mantine) */
+.citizen .mantine-Input-input {
+  --input-bg: light-dark(#ffffff, var(--app-paper));
+}
+
+/* Botões do app do cidadão quebram a linha em vez de cortar o texto (texto a 125%) */
+.citizen .mantine-Button-root {
+  height: auto;
+  min-height: var(--button-height);
+  padding-block: 8px;
+}
+
+.citizen .mantine-Button-label {
+  height: auto;
+  overflow: visible;
+  line-height: 1.25;
+  text-align: center;
+  white-space: normal;
+}
+
+/* Avisos flutuantes acima da barra de navegação inferior (só onde ela existe) */
+body:has(.tab-bar-vt) .mantine-Notifications-root[data-position^="bottom"] {
   bottom: calc(var(--app-tabbar-h) + 12px + env(safe-area-inset-bottom)) !important;
 
   @media (min-width: $mantine-breakpoint-sm) {

@@ -1,8 +1,8 @@
-import { Paper, Text, ThemeIcon, Timeline } from "@mantine/core";
-import { IconCheck, IconCircleDashed, IconX } from "@tabler/icons-react";
+import { IconCheck, IconX } from "@tabler/icons-react";
 import { formatDateTime } from "@/domain/format";
-import { HAPPY_PATH, STATUS_META, type RequestStatus } from "@/domain/status";
+import { HAPPY_PATH, isOpenStatus, STATUS_META, type RequestStatus } from "@/domain/status";
 import type { CitizenRequest, HistoryEntry } from "@/domain/types";
+import classes from "./StatusTimeline.module.css";
 
 interface Step {
   status: RequestStatus;
@@ -36,49 +36,71 @@ export function buildSteps(request: CitizenRequest, history: HistoryEntry[], sho
   return HAPPY_PATH.map(step);
 }
 
+type StepState = "done" | "current" | "pending" | "rejected" | "canceled";
+
+const STATE_TEXT: Record<StepState, string> = {
+  done: "etapa concluída",
+  current: "etapa atual",
+  pending: "etapa ainda não alcançada",
+  rejected: "pedido indeferido",
+  canceled: "pedido cancelado",
+};
+
+function stateOf(step: Step, isCurrent: boolean): StepState {
+  if (step.status === "REJECTED") return "rejected";
+  if (step.status === "CANCELED") return "canceled";
+  if (!step.done) return "pending";
+  return isCurrent ? "current" : "done";
+}
+
 interface StatusTimelineProps {
   request: CitizenRequest;
   history: HistoryEntry[];
   showAuthor?: boolean;
+  /** Resposta já exibida em destaque na tela (não repetir aqui) */
+  hideResponse?: string | null;
 }
 
-export function StatusTimeline({ request, history, showAuthor = false }: StatusTimelineProps) {
+/** Histórico do atendimento, etapa por etapa (cidadão e painel). */
+export function StatusTimeline({ request, history, showAuthor = false, hideResponse = null }: StatusTimelineProps) {
   const steps = buildSteps(request, history, showAuthor);
-  const active = steps.reduce((last, s, i) => (s.done ? i : last), 0);
+  const lastDone = steps.reduce((last, s, i) => (s.done ? i : last), 0);
+  const open = isOpenStatus(request.status);
 
   return (
-    <Timeline active={active} bulletSize={28} lineWidth={3} color={STATUS_META[request.status].color}>
-      {steps.map((s) => {
-        const negative = s.status === "REJECTED" || s.status === "CANCELED";
+    <ol className={classes.timeline}>
+      {steps.map((s, i) => {
+        const state = stateOf(s, open && i === lastDone);
+        const next = steps[i + 1];
+        const response = s.response && s.response !== hideResponse ? s.response : null;
         return (
-          <Timeline.Item
-            key={s.status}
-            title={
-              <Text fw={600} c={s.done ? undefined : "dimmed"}>
+          <li key={s.status} className={classes.item} data-state={state} data-next-done={next?.done || undefined}>
+            <span className={classes.bullet} aria-hidden>
+              {state === "rejected" || state === "canceled" ? (
+                <IconX size={16} stroke={3} />
+              ) : state === "pending" ? null : (
+                <IconCheck size={16} stroke={3} />
+              )}
+            </span>
+            <div className={classes.body}>
+              <p className={classes.label}>
                 {STATUS_META[s.status].label}
-              </Text>
-            }
-            bullet={
-              <ThemeIcon size={28} radius="xl" color={s.done ? STATUS_META[s.status].color : "gray"} variant={s.done ? "filled" : "light"}>
-                {negative ? <IconX size={16} /> : s.done ? <IconCheck size={16} /> : <IconCircleDashed size={16} />}
-              </ThemeIcon>
-            }
-          >
-            <Text size="sm" c="dimmed">
-              {s.done ? formatDateTime(s.at) : STATUS_META[s.status].description}
-              {s.by ? ` · ${s.by}` : ""}
-            </Text>
-            {s.response && (
-              <Paper mt="xs" p="sm" radius="md" bg="var(--mantine-color-ipe-light)" style={{ borderLeft: "4px solid var(--mantine-color-ipe-6)" }}>
-                <span className="eyebrow">Resposta da prefeitura</span>
-                <Text size="sm" mt={4} style={{ whiteSpace: "pre-line" }}>
-                  {s.response}
-                </Text>
-              </Paper>
-            )}
-          </Timeline.Item>
+                <span className="visually-hidden">, {STATE_TEXT[state]}</span>
+              </p>
+              <p className={classes.meta}>
+                {s.done ? formatDateTime(s.at) : "Aguardando"}
+                {s.by ? ` · ${s.by}` : ""}
+              </p>
+              {response && (
+                <div className={classes.response}>
+                  <p className={classes.responseLabel}>Resposta da prefeitura</p>
+                  <p className={classes.responseText}>{response}</p>
+                </div>
+              )}
+            </div>
+          </li>
         );
       })}
-    </Timeline>
+    </ol>
   );
 }

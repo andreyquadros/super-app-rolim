@@ -1,0 +1,328 @@
+/* Apresentação dos primeiros acessos: tela cheia, fora da casca do app.
+   Faixa verde sob a barra de status do iPhone, papel embaixo, rodapé fixo. */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--app-paper);
+  color: var(--app-ink);
+  font-size: 1.125rem;
+  outline: none;
+}
+
+/* ---------- Faixa superior (marca + Pular) ---------- */
+.top {
+  flex: none;
+  padding-top: env(safe-area-inset-top);
+  background: var(--app-hero);
+  color: #ffffff;
+}
+
+.topRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: var(--app-content-max);
+  min-height: var(--app-bar-h);
+  margin-inline: auto;
+  padding-inline: 16px 12px;
+}
+
+.brand {
+  display: flex;
+  flex: none;
+}
+
+.skip {
+  flex: none;
+  min-height: 48px;
+  padding: 0 20px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.16);
+  color: #ffffff;
+  font: inherit;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 3px solid #ffffff;
+    outline-offset: 2px;
+  }
+}
+
+/* ---------- Pager horizontal (arrasto nativo com encaixe) ---------- */
+.pager {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Cada slide rola na vertical quando o texto está grande */
+.slide {
+  display: flex;
+  flex: 0 0 100%;
+  flex-direction: column;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+
+  /* Focável para rolar com o teclado quando o texto está grande */
+  &:focus-visible {
+    outline: 3px solid var(--mantine-color-mata-6);
+    outline-offset: -3px;
+  }
+}
+
+/* Mesma altura nos slides 1 a 4: o título não pula de lugar ao trocar */
+.art {
+  display: flex;
+  flex: none;
+  align-items: flex-end;
+  justify-content: center;
+  min-height: min(224px, 36dvh);
+  padding: 4px 24px 44px;
+  background: var(--app-hero);
+
+  svg {
+    display: block;
+    width: min(100%, 340px);
+    height: auto;
+    max-height: 28dvh;
+    /* O chão e os morros somem nas bordas, sem corte reto */
+    mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  }
+
+  &[data-compact] {
+    min-height: 0;
+    padding-top: 0;
+
+    svg {
+      width: min(100%, 260px);
+      max-height: 16dvh;
+    }
+  }
+
+  @media (min-width: $mantine-breakpoint-sm) {
+    min-height: min(288px, 38dvh);
+    padding-top: 16px;
+
+    svg {
+      width: min(100%, 400px);
+    }
+  }
+}
+
+/* Papel por cima da faixa verde, como as telas das abas */
+.sheet {
+  position: relative;
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+  margin-top: -24px;
+  border-radius: 24px 24px 0 0;
+  background: var(--app-paper);
+}
+
+.inner {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 36rem;
+  margin-inline: auto;
+  padding: 28px 20px 24px;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--mantine-font-family-headings);
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1.15;
+  text-wrap: balance;
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.text {
+  margin: 0;
+  font-size: 1.125rem;
+  line-height: 1.5;
+}
+
+.maintainer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: auto 0 0;
+  padding-top: 24px;
+  color: var(--app-ink-soft);
+  font-size: 0.9375rem;
+  line-height: 1.4;
+
+  img {
+    flex: none;
+    border-radius: 8px;
+  }
+}
+
+/* ---------- Slide 3: cartão de pedido com a barra de etapas ---------- */
+.mockStack {
+  position: relative;
+  width: min(100%, 21rem);
+  margin-top: 12px;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.16);
+    transform: translate(10px, -10px) rotate(3deg);
+  }
+}
+
+.mock {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 20px;
+  background: var(--app-surface);
+  color: var(--app-ink);
+  box-shadow: 0 18px 32px -18px rgba(0, 0, 0, 0.55);
+}
+
+.mockProtocol {
+  color: light-dark(var(--mantine-color-mata-8), var(--mantine-color-mata-3));
+  font-size: 0.875rem;
+}
+
+.mockTitle {
+  margin-bottom: 4px;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+/* ---------- Rodapé fixo: pontos, Voltar e Próximo ---------- */
+.footer {
+  flex: none;
+  padding: 10px 16px calc(12px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--app-line);
+  background: var(--app-paper);
+}
+
+.footerInner {
+  display: grid;
+  gap: 10px;
+  max-width: 36rem;
+  margin-inline: auto;
+}
+
+.dots {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 0;
+  padding-block: 4px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: light-dark(var(--mantine-color-mata-8), var(--mantine-color-mata-4));
+  opacity: 0.25;
+  transition:
+    opacity var(--motion-base) var(--ease-standard),
+    transform var(--motion-base) var(--ease-spring);
+
+  &[data-active] {
+    opacity: 1;
+    transform: scale(1.35);
+  }
+}
+
+.buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.back,
+.next {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 56px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 3px solid var(--mantine-color-mata-6);
+    outline-offset: 2px;
+  }
+}
+
+.back {
+  flex: none;
+  padding: 0 20px 0 14px;
+  border: 0;
+  background: light-dark(rgba(23, 36, 28, 0.07), rgba(255, 255, 255, 0.09));
+  color: var(--app-ink);
+}
+
+.next {
+  flex: 1;
+  padding: 8px 16px;
+  border: 0;
+  background: var(--mantine-color-mata-8);
+  color: #ffffff;
+  box-shadow: 0 10px 22px -14px rgba(13, 122, 73, 0.9);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .skip:hover {
+    background: rgba(0, 0, 0, 0.26);
+  }
+
+  .next:hover {
+    background: var(--mantine-color-mata-9);
+  }
+
+  .back:hover {
+    background: light-dark(rgba(23, 36, 28, 0.11), rgba(255, 255, 255, 0.14));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dot {
+    transition: none;
+  }
+}

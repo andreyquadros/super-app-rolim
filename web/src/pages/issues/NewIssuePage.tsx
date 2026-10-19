@@ -1,82 +1,86 @@
-import { Alert, Button, Group, Paper, SimpleGrid, Stack, Stepper, Text, Textarea, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { useMediaQuery } from "@mantine/hooks";
-import { IconArrowLeft, IconArrowRight, IconSend } from "@tabler/icons-react";
-import { useMemo, useState } from "react";
+import { IconAlertTriangle, IconWifiOff } from "@tabler/icons-react";
+import { useCallback, useId, useMemo, useState } from "react";
 import { useAuth } from "@/auth/AuthContext";
-import { useOnline } from "@/hooks/useOnline";
-import { PageHeader } from "@/components/PageHeader";
-import { PhotoPicker } from "@/components/PhotoPicker";
 import { SubmittedPanel } from "@/components/SubmittedPanel";
 import { uploadIssuePhoto } from "@/data/files";
 import { createIssue, newIssueId } from "@/data/requests";
-import { categoryOf } from "@/domain/catalog";
+import type { IssueCategory } from "@/domain/catalog";
+import { useOnline } from "@/hooks/useOnline";
+import { useChrome } from "@/layouts/chrome/chromeContext";
 import { errorMessage } from "@/lib/errors";
 import { CategoryStep } from "./CategoryStep";
-import { INITIAL_ISSUE, issueValidators, STEP_FIELDS, type IssueFormValues } from "./issueForm";
+import { DetailsStep } from "./DetailsStep";
+import { DiscardSheet, FlowFooter, focusFirstError, StepHeading } from "./flow/FlowParts";
+import flow from "./flow/flow.module.css";
+import { useStepFlow } from "./flow/useStepFlow";
+import { INITIAL_ISSUE, ISSUE_TOTAL_STEPS, issueReachableStep, issueValidators, STEP_FIELDS, type IssueFormValues } from "./issueForm";
 import { LocationStep } from "./LocationStep";
-import classes from "./NewIssue.module.css";
+import { ReviewStep } from "./ReviewStep";
 
-const STEP_LABELS = ["O quê", "Onde", "Detalhes", "Enviar"] as const;
+const QUESTIONS = ["Qual é o problema?", "Onde fica?", "Conte o que aconteceu", "Confira e envie"] as const;
+const LEADS = [
+  "Toque no tipo que mais combina. Na dúvida, escolha “Outro problema”.",
+  "Toque no mapa para marcar o lugar exato, ou use sua localização. Dá para arrastar o marcador.",
+  "Quanto mais detalhes, mais fácil para a equipe resolver.",
+  "Veja se está tudo certo antes de enviar.",
+] as const;
 
-interface Result {
+interface Submitted {
   id: string;
   protocol: string;
   pendingSync: boolean;
 }
 
-function Summary({ values, hasPhoto }: { values: IssueFormValues; hasPhoto: boolean }) {
-  const rows = [
-    ["Tipo", values.category ? categoryOf(values.category).label : "—"],
-    ["Setor responsável", values.category ? categoryOf(values.category).department : "—"],
-    ["Endereço", `${values.streetType} ${values.streetName}${values.number ? `, ${values.number}` : ""} — ${values.neighborhood}`],
-    ["Referência", values.complement || "—"],
-    ["Título", values.title],
-    ["Foto", hasPhoto ? "Anexada" : "Sem foto"],
-  ];
-  return (
-    <Paper withBorder p="md">
-      <SimpleGrid cols={{ base: 1, xs: 2 }} spacing="sm">
-        {rows.map(([label, value]) => (
-          <div key={label}>
-            <span className="eyebrow">{label}</span>
-            <Text>{value}</Text>
-          </div>
-        ))}
-      </SimpleGrid>
-      <span className="eyebrow" style={{ display: "block", marginTop: 12 }}>
-        Descrição
-      </span>
-      <Text style={{ whiteSpace: "pre-line" }}>{values.description}</Text>
-    </Paper>
-  );
-}
-
+/** /zeladoria/nova: problema na rua em 4 passos (?passo=N). */
 export default function NewIssuePage() {
   const { user, profile } = useAuth();
   const online = useOnline();
-  const compact = useMediaQuery("(max-width: 36em)") ?? false;
   const issueId = useMemo(() => newIssueId(), []);
-  const [step, setStep] = useState(0);
+  const headingId = useId();
   const [photo, setPhoto] = useState<Blob | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [result, setResult] = useState<Result | null>(null);
+  const [result, setResult] = useState<Submitted | null>(null);
+  const [discardOpen, setDiscardOpen] = useState(false);
 
   const form = useForm<IssueFormValues>({ initialValues: INITIAL_ISSUE, validate: issueValidators });
+  const { step, direction, headingRef, goTo, exit, rewind } = useStepFlow(ISSUE_TOTAL_STEPS, issueReachableStep(form.values));
 
-  if (result) {
-    return <SubmittedPanel protocol={result.protocol} detailPath={`/protocolos/zeladoria/${result.id}`} pendingSync={result.pendingSync} />;
-  }
+  // X da barra: confirma antes de jogar fora o que foi preenchido
+  const dirty = form.isDirty() || photo !== null;
+  const requestClose = useCallback(() => (dirty ? setDiscardOpen(true) : exit()), [dirty, exit]);
+  const keepEditing = useCallback(() => setDiscardOpen(false), []);
+  useChrome({
+    progress: { step: result ? ISSUE_TOTAL_STEPS : step, total: ISSUE_TOTAL_STEPS },
+    onClose: result ? exit : requestClose,
+  });
+
+  const move = (target: number) => {
+    setError(null);
+    goTo(target);
+  };
 
   const next = () => {
-    const fields = STEP_FIELDS[step] ?? [];
-    const invalid = fields.map((f) => form.validateField(f).hasError).some(Boolean);
-    if (!invalid) setStep((s) => s + 1);
+    const fields = STEP_FIELDS[step - 1] ?? [];
+    const invalid = fields.map((field) => form.validateField(field).hasError).some(Boolean);
+    if (invalid) {
+      focusFirstError();
+      return;
+    }
+    move(step + 1);
+  };
+
+  const selectCategory = (category: IssueCategory) => {
+    form.setFieldValue("category", category);
+    move(2);
   };
 
   const submit = async () => {
-    if (!user || !profile) return;
+    if (!user || !profile) {
+      setError("Sua sessão terminou. Entre de novo para enviar o pedido.");
+      return;
+    }
     const { values } = form;
     if (form.validate().hasErrors || !values.category || !values.point) {
       setError("Revise os campos destacados antes de enviar.");
@@ -112,6 +116,8 @@ export default function NewIssuePage() {
       if (online) await created.committed;
       else created.committed.catch(() => undefined);
       setResult({ id: created.id, protocol: created.protocol, pendingSync: !online });
+      // O Voltar depois do envio sai do fluxo em vez de refazer os passos
+      rewind();
     } catch (e: unknown) {
       setError(errorMessage(e, "Não foi possível enviar. Verifique a conexão e tente novamente."));
     } finally {
@@ -119,76 +125,54 @@ export default function NewIssuePage() {
     }
   };
 
-  return (
-    <Stack gap="lg">
-      <PageHeader
-        eyebrow="Zeladoria"
-        title="Nova solicitação"
-        back="/"
-        description={compact && step < STEP_LABELS.length ? `Passo ${step + 1} de ${STEP_LABELS.length} · ${STEP_LABELS[step]}` : undefined}
+  if (result) {
+    return (
+      <SubmittedPanel
+        protocol={result.protocol}
+        detailPath={`/protocolos/zeladoria/${result.id}`}
+        pendingSync={result.pendingSync}
+        kindLabel="Problema na rua"
       />
-      <Stepper active={step} onStepClick={(s) => s < step && setStep(s)} size="sm" allowNextStepsSelect={false}>
-        <Stepper.Step label={compact ? undefined : STEP_LABELS[0]} aria-label={STEP_LABELS[0]}>
-          <Text mb="md" fw={600}>
-            Qual é o problema?
-          </Text>
-          <CategoryStep
-            value={form.values.category}
-            onSelect={(c) => {
-              form.setFieldValue("category", c);
-              setStep(1);
-            }}
-          />
-          {form.errors.category && (
-            <Text c="red" size="sm" mt="sm">
-              {form.errors.category}
-            </Text>
-          )}
-        </Stepper.Step>
-        <Stepper.Step label={compact ? undefined : STEP_LABELS[1]} aria-label={STEP_LABELS[1]}>
-          <LocationStep form={form} />
-        </Stepper.Step>
-        <Stepper.Step label={compact ? undefined : STEP_LABELS[2]} aria-label={STEP_LABELS[2]}>
-          <Stack>
-            <TextInput label="Título" placeholder="Ex.: Poste apagado em frente à escola" maxLength={120} {...form.getInputProps("title")} />
-            <Textarea
-              label="Descrição"
-              placeholder="Conte o que está acontecendo, desde quando e qualquer detalhe que ajude a equipe."
-              autosize
-              minRows={4}
-              maxLength={2000}
-              {...form.getInputProps("description")}
-            />
-            <PhotoPicker value={photo} onChange={setPhoto} onError={setError} />
-          </Stack>
-        </Stepper.Step>
-        <Stepper.Step label={compact ? undefined : STEP_LABELS[3]} aria-label={STEP_LABELS[3]}>
-          <Summary values={form.values} hasPhoto={photo !== null} />
-        </Stepper.Step>
-      </Stepper>
+    );
+  }
+
+  const last = step === ISSUE_TOTAL_STEPS;
+
+  return (
+    <div className={flow.page}>
+      <div key={step} className={flow.step} data-dir={direction === "none" ? undefined : direction}>
+        <StepHeading id={headingId} step={step} total={ISSUE_TOTAL_STEPS} title={QUESTIONS[step - 1]} lead={LEADS[step - 1]} headingRef={headingRef} />
+        {step === 1 && <CategoryStep value={form.values.category} onSelect={selectCategory} labelledBy={headingId} />}
+        {step === 2 && <LocationStep form={form} />}
+        {step === 3 && <DetailsStep form={form} photo={photo} onPhotoChange={setPhoto} onError={setError} online={online} />}
+        {last && <ReviewStep values={form.values} photo={photo} onEdit={move} />}
+        {last && !online && (
+          <p className={flow.note}>
+            <IconWifiOff size={20} aria-hidden />
+            {photo ? (
+              <span>
+                Sem internet não dá para enviar foto.{" "}
+                <button type="button" className={flow.inlineLink} onClick={() => setPhoto(null)}>
+                  Remover a foto
+                </button>{" "}
+                ou espere a conexão voltar.
+              </span>
+            ) : (
+              "Você está sem internet. O pedido fica guardado no celular e é enviado sozinho quando a conexão voltar."
+            )}
+          </p>
+        )}
+      </div>
 
       {error && (
-        <Alert color="barro" variant="light" withCloseButton onClose={() => setError(null)}>
+        <p className={flow.error} role="alert">
+          <IconAlertTriangle size={20} aria-hidden />
           {error}
-        </Alert>
+        </p>
       )}
 
-      {step > 0 && (
-        <Group justify="space-between" className={classes.stickyActions}>
-          <Button variant="default" leftSection={<IconArrowLeft size={16} />} onClick={() => setStep((s) => s - 1)} disabled={submitting}>
-            Voltar
-          </Button>
-          {step < 3 ? (
-            <Button rightSection={<IconArrowRight size={16} />} onClick={next}>
-              Continuar
-            </Button>
-          ) : (
-            <Button rightSection={<IconSend size={16} />} onClick={submit} loading={submitting}>
-              Enviar solicitação
-            </Button>
-          )}
-        </Group>
-      )}
-    </Stack>
+      {step > 1 && <FlowFooter onBack={() => move(step - 1)} onNext={last ? submit : next} submit={last} loading={submitting} />}
+      <DiscardSheet open={discardOpen} onCancel={keepEditing} onDiscard={exit} />
+    </div>
   );
 }

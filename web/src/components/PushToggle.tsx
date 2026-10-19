@@ -1,25 +1,38 @@
-import { Alert, Group, Switch, Text } from "@mantine/core";
+import { Switch } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconBellRinging } from "@tabler/icons-react";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useAuth } from "@/auth/AuthContext";
 import { errorMessage } from "@/lib/errors";
 import { isIos, isStandalone } from "@/lib/platform";
 import { currentPushState, disablePush, enablePush, type PushState } from "@/lib/push";
+import classes from "./PushToggle.module.css";
 
-const HINTS: Partial<Record<PushState, string>> = {
-  denied: "As notificações estão bloqueadas. Libere nas configurações do navegador para este site.",
-  unsupported: isIos() && !isStandalone()
-    ? "No iPhone, instale o app na Tela de Início para receber avisos."
-    : "Este navegador não suporta notificações.",
-};
+/** Este ambiente tem push configurado? (sem chave, não oferece o que não funciona) */
+export function pushAvailable(): boolean {
+  return currentPushState() !== "unconfigured";
+}
 
-export function PushToggle() {
+function hintFor(state: PushState): string | null {
+  if (state === "denied") return "Os avisos estão bloqueados neste celular. Libere as notificações deste site nas configurações do navegador.";
+  if (state !== "unsupported") return null;
+  return isIos() && !isStandalone()
+    ? "No iPhone, coloque o app na tela inicial para receber avisos."
+    : "Este navegador não recebe avisos. Tente pelo Chrome ou instale o app.";
+}
+
+interface PushToggleProps {
+  /** "card": cartão solto; "row": linha de um ListGroup (renderiza <li>) */
+  variant?: "card" | "row";
+}
+
+/** Liga e desliga os avisos (push) neste aparelho. */
+export function PushToggle({ variant = "card" }: PushToggleProps) {
   const { user } = useAuth();
   const [state, setState] = useState<PushState>(currentPushState);
   const [busy, setBusy] = useState(false);
+  const hintId = useId();
 
-  // Sem chave de push configurada neste ambiente: não oferece o que não funciona
   if (!user || state === "unconfigured") return null;
 
   const toggle = async (checked: boolean) => {
@@ -28,44 +41,62 @@ export function PushToggle() {
       if (checked) {
         const result = await enablePush(user.uid);
         setState(result);
-        if (result === "enabled") notifications.show({ message: "Pronto! Você receberá os avisos da prefeitura.", color: "mata" });
+        if (result === "enabled") notifications.show({ message: "Pronto! Você vai receber os avisos no celular.", color: "mata" });
       } else {
         await disablePush();
         setState("disabled");
+        notifications.show({ message: "Avisos desligados neste celular.", color: "slate" });
       }
     } catch (error: unknown) {
-      notifications.show({ title: "Não foi possível ativar", message: errorMessage(error), color: "barro" });
+      notifications.show({
+        title: checked ? "Não foi possível ligar os avisos" : "Não foi possível desligar os avisos",
+        message: errorMessage(error),
+        color: "barro",
+      });
     } finally {
       setBusy(false);
     }
   };
 
-  const hint = HINTS[state];
-  return (
-    <div>
-      <Group justify="space-between" wrap="nowrap">
-        <Group gap="sm" wrap="nowrap">
-          <IconBellRinging size={22} stroke={1.6} />
-          <div>
-            <Text fw={600}>Avisos no celular</Text>
-            <Text size="xs" c="dimmed">
-              Comunicados e andamento das suas solicitações
-            </Text>
-          </div>
-        </Group>
+  const hint = hintFor(state);
+  const content = (
+    <>
+      <div className={classes.line}>
+        <span className={classes.icon} aria-hidden>
+          <IconBellRinging size={22} stroke={1.8} />
+        </span>
         <Switch
-          size="md"
+          size="lg"
+          labelPosition="left"
+          label={variant === "row" ? "Avisos" : "Avisos no celular"}
+          description="Comunicados e o andamento dos seus pedidos"
           checked={state === "enabled"}
           disabled={busy || state === "unsupported" || state === "denied"}
-          onChange={(e) => toggle(e.currentTarget.checked)}
-          aria-label="Ativar avisos no celular"
+          onChange={(event) => void toggle(event.currentTarget.checked)}
+          aria-describedby={hint ? hintId : undefined}
+          classNames={{
+            root: classes.root,
+            body: classes.body,
+            labelWrapper: classes.labelWrapper,
+            label: classes.label,
+            description: classes.description,
+            track: classes.track,
+          }}
         />
-      </Group>
+      </div>
       {hint && (
-        <Alert mt="sm" variant="light" color="gray" p="xs">
-          <Text size="xs">{hint}</Text>
-        </Alert>
+        <p id={hintId} className={classes.hint}>
+          {hint}
+        </p>
       )}
+    </>
+  );
+
+  return variant === "row" ? (
+    <li className={classes.row}>{content}</li>
+  ) : (
+    <div className={classes.card} data-on={state === "enabled" || undefined}>
+      {content}
     </div>
   );
 }

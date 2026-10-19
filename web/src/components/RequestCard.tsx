@@ -1,12 +1,12 @@
-import { Group, Stack, Text, ThemeIcon, UnstyledButton } from "@mantine/core";
 import { IconChevronRight } from "@tabler/icons-react";
-import { Link } from "react-router";
+import { useEffect, useRef, useState } from "react";
 import { categoryOf, ombudsmanTypeOf } from "@/domain/catalog";
 import { relativeTime } from "@/domain/format";
-import { STATUS_META } from "@/domain/status";
+import { isOpenStatus, type RequestStatus } from "@/domain/status";
 import type { CitizenRequest } from "@/domain/types";
+import { AppLink } from "./AppLink";
 import { CATEGORY_ICONS, OMBUDSMAN_ICONS } from "./icons";
-import { StatusBadge } from "./StatusBadge";
+import { StepBar } from "./ui/StepBar";
 import classes from "./RequestCard.module.css";
 
 export function requestPath(request: CitizenRequest): string {
@@ -21,51 +21,85 @@ export function requestSubtitle(request: CitizenRequest): string {
   return `${ombudsmanTypeOf(request.type).label} · ${request.buildingName}`;
 }
 
+const UPDATED_CHIP_MS = 3000;
+const FRESH_CHANGE_MS = 15_000;
+
+function changedJustNow(request: CitizenRequest): boolean {
+  const at = request.statusChangedAt;
+  return request.status !== "RECEIVED" && at !== null && Date.now() - at.getTime() < FRESH_CHANGE_MS;
+}
+
+/**
+ * "Atualizado agora" por 3 s quando a situação muda com a tela aberta
+ * (ou logo antes de o cartão mudar de grupo e ser montado de novo).
+ */
+function useJustUpdated(request: CitizenRequest): boolean {
+  const seen = useRef<RequestStatus>(request.status);
+  const [visible, setVisible] = useState(() => changedJustNow(request));
+  const { status } = request;
+
+  useEffect(() => {
+    if (seen.current === status) return;
+    seen.current = status;
+    setVisible(true);
+  }, [status]);
+
+  useEffect(() => {
+    if (!visible) return undefined;
+    const timer = window.setTimeout(() => setVisible(false), UPDATED_CHIP_MS);
+    return () => window.clearTimeout(timer);
+  }, [visible, status]);
+
+  return visible;
+}
+
+/** "Enviado há 2 dias" ou "Atualizado ontem" */
+function whenLabel(request: CitizenRequest): string {
+  if (request.status === "RECEIVED" || !request.statusChangedAt) return `Enviado ${relativeTime(request.createdAt)}`;
+  return `Atualizado ${relativeTime(request.statusChangedAt)}`;
+}
+
 interface RequestCardProps {
   request: CitizenRequest;
   to?: string;
   onClick?: () => void;
 }
 
+/** Cartão de um pedido: o cartão inteiro é um link (ou botão, no painel). */
 export function RequestCard({ request, to, onClick }: RequestCardProps) {
   const Icon = request.kind === "issues" ? CATEGORY_ICONS[request.category] : OMBUDSMAN_ICONS[request.type];
-  const color = STATUS_META[request.status].color;
-  const content = (
-    <Group wrap="nowrap" gap="md" align="flex-start">
-      <ThemeIcon size={44} radius="md" variant="light" color={color}>
-        <Icon size={24} stroke={1.6} />
-      </ThemeIcon>
-      <Stack gap={4} style={{ flex: 1, minWidth: 0 }}>
-        <Group justify="space-between" gap="xs" wrap="nowrap">
-          <Text size="xs" className="protocol" c="dimmed">
-            {request.protocol}
-          </Text>
-          <StatusBadge status={request.status} size="sm" />
-        </Group>
-        <Text fw={600} lineClamp={1}>
-          {request.title}
-        </Text>
-        <Text size="sm" c="dimmed" lineClamp={1}>
-          {requestSubtitle(request)}
-        </Text>
-        <Text size="xs" c="dimmed">
-          Aberta {relativeTime(request.createdAt)}
-        </Text>
-      </Stack>
-      <IconChevronRight size={18} className={classes.chevron} />
-    </Group>
+  const justUpdated = useJustUpdated(request);
+  const closed = !isOpenStatus(request.status);
+
+  const body = (
+    <>
+      <span className={classes.head}>
+        <span className={classes.title}>{request.title}</span>
+        <IconChevronRight size={22} className={classes.chevron} aria-hidden />
+      </span>
+      <span className={classes.meta}>
+        <Icon size={18} stroke={1.8} className={classes.kindIcon} aria-hidden />
+        <span>{requestSubtitle(request)}</span>
+      </span>
+      <StepBar status={request.status} />
+      <span className={classes.foot}>
+        <span className={classes.protocol}>{request.protocol}</span>
+        <span className={classes.when}>{whenLabel(request)}</span>
+      </span>
+      {justUpdated && <span className={`${classes.updated} bump`}>Atualizado agora</span>}
+    </>
   );
 
   if (onClick) {
     return (
-      <UnstyledButton className={classes.card} onClick={onClick} data-status={request.status}>
-        {content}
-      </UnstyledButton>
+      <button type="button" className={classes.card} onClick={onClick} data-closed={closed || undefined} data-press>
+        {body}
+      </button>
     );
   }
   return (
-    <UnstyledButton component={Link} to={to ?? requestPath(request)} className={classes.card} data-status={request.status}>
-      {content}
-    </UnstyledButton>
+    <AppLink to={to ?? requestPath(request)} className={classes.card} data-closed={closed || undefined} data-press>
+      {body}
+    </AppLink>
   );
 }

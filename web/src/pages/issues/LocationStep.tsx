@@ -1,6 +1,6 @@
-import { Alert, Autocomplete, Button, Grid, Group, Select, Stack, Text, TextInput } from "@mantine/core";
+import { Autocomplete, Button, Select, TextInput } from "@mantine/core";
 import type { UseFormReturnType } from "@mantine/form";
-import { IconCurrentLocation, IconMapPinExclamation } from "@tabler/icons-react";
+import { IconAlertTriangle, IconCurrentLocation, IconMapPinExclamation } from "@tabler/icons-react";
 import { useEffect, useRef } from "react";
 import { MapPicker } from "@/components/map";
 import { CITY_NAME, NEIGHBORHOODS } from "@/config/city";
@@ -8,15 +8,20 @@ import { reverseGeocode } from "@/data/geocoding";
 import { STREET_TYPES } from "@/domain/catalog";
 import { isInsideMunicipality, type LatLng } from "@/domain/geo";
 import { useGeolocation } from "@/hooks/useGeolocation";
+import flow from "./flow/flow.module.css";
 import type { IssueFormValues } from "./issueForm";
+import classes from "./NewIssue.module.css";
 
 const AUTO_FIELDS = ["streetType", "streetName", "number", "neighborhood"] as const;
 type AutoField = (typeof AUTO_FIELDS)[number];
+
+const MAP_HEIGHT = 300;
 
 interface LocationStepProps {
   form: UseFormReturnType<IssueFormValues>;
 }
 
+/** Passo 2: ponto no mapa (ou GPS) e endereço, preenchido sozinho quando possível. */
 export function LocationStep({ form }: LocationStepProps) {
   const { locate, loading, error } = useGeolocation();
   const point = form.values.point;
@@ -56,56 +61,67 @@ export function LocationStep({ form }: LocationStepProps) {
   const outside = point !== null && !isInsideMunicipality(point);
 
   return (
-    <Stack gap="md">
-      <Group justify="space-between" align="center">
-        <Text size="sm" c="dimmed" maw={420}>
-          Toque no mapa para marcar o local exato, ou use o GPS. Você pode arrastar o marcador.
-        </Text>
-        <Button
-          variant="light"
-          leftSection={<IconCurrentLocation size={18} />}
-          loading={loading}
-          onClick={async () => {
-            const found = await locate();
-            if (found) setPoint(found);
-          }}
-        >
-          Usar minha localização
-        </Button>
-      </Group>
+    <>
+      <Button
+        variant="light"
+        size="lg"
+        radius="xl"
+        className={classes.gps}
+        leftSection={<IconCurrentLocation size={22} aria-hidden />}
+        loading={loading}
+        onClick={async () => {
+          const found = await locate();
+          if (found) setPoint(found);
+        }}
+      >
+        Usar minha localização
+      </Button>
       {error && (
-        <Alert color="ipe" variant="light">
+        <p className={flow.note} role="alert">
+          <IconAlertTriangle size={20} aria-hidden />
           {error}
-        </Alert>
+        </p>
       )}
-      <MapPicker value={point} onChange={setPoint} height={300} />
+
+      <div className={classes.map}>
+        <MapPicker value={point} onChange={setPoint} height={MAP_HEIGHT} />
+      </div>
       {form.errors.point && !outside && (
-        <Text c="red" size="sm">
+        <p className={flow.error} data-flow-error tabIndex={-1}>
+          <IconMapPinExclamation size={20} aria-hidden />
           {form.errors.point}
-        </Text>
+        </p>
       )}
       {outside && (
-        <Alert color="barro" icon={<IconMapPinExclamation size={18} />}>
+        <p className={flow.error} data-flow-error tabIndex={-1} role="alert">
+          <IconMapPinExclamation size={20} aria-hidden />
           Este ponto fica fora do município de {CITY_NAME}. A prefeitura só pode atender dentro da linha tracejada.
-        </Alert>
+        </p>
       )}
-      <Grid gutter="sm">
-        <Grid.Col span={{ base: 5, sm: 3 }}>
-          <Select label="Tipo" data={[...STREET_TYPES]} allowDeselect={false} {...form.getInputProps("streetType")} />
-        </Grid.Col>
-        <Grid.Col span={{ base: 7, sm: 6 }}>
-          <TextInput label="Logradouro" placeholder="Ex.: Norte Sul" {...form.getInputProps("streetName")} />
-        </Grid.Col>
-        <Grid.Col span={{ base: 4, sm: 3 }}>
-          <TextInput label="Número" placeholder="S/N" {...form.getInputProps("number")} />
-        </Grid.Col>
-        <Grid.Col span={{ base: 8, sm: 6 }}>
-          <Autocomplete label="Bairro" data={[...NEIGHBORHOODS]} limit={8} {...form.getInputProps("neighborhood")} />
-        </Grid.Col>
-        <Grid.Col span={{ base: 12, sm: 6 }}>
-          <TextInput label="Ponto de referência" placeholder="Opcional" {...form.getInputProps("complement")} />
-        </Grid.Col>
-      </Grid>
-    </Stack>
+
+      <section className={flow.fields} aria-labelledby="endereco-titulo">
+        <h2 id="endereco-titulo" className={flow.sectionTitle}>
+          Endereço
+        </h2>
+        <div className={flow.fieldRow}>
+          <div data-narrow>
+            <Select label="Tipo" data={[...STREET_TYPES]} allowDeselect={false} size="lg" {...form.getInputProps("streetType")} />
+          </div>
+          <TextInput label="Logradouro" placeholder="Ex.: Norte Sul" size="lg" {...form.getInputProps("streetName")} />
+        </div>
+        <div className={flow.fieldRow}>
+          <div data-narrow>
+            <TextInput label="Número" placeholder="S/N" size="lg" {...form.getInputProps("number")} />
+          </div>
+          <Autocomplete label="Bairro" data={[...NEIGHBORHOODS]} limit={8} size="lg" {...form.getInputProps("neighborhood")} />
+        </div>
+        <TextInput
+          label="Ponto de referência"
+          description="Opcional. Ex.: em frente à escola"
+          size="lg"
+          {...form.getInputProps("complement")}
+        />
+      </section>
+    </>
   );
 }

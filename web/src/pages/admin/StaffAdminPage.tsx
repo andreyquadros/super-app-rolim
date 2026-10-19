@@ -3,10 +3,10 @@ import { IconUserPlus, IconUsersGroup } from "@tabler/icons-react";
 import { useState } from "react";
 import { EmptyState } from "@/components/EmptyState";
 import { PageHeader } from "@/components/PageHeader";
-import { ROLE_COLOR, ROLE_LABEL } from "@/domain/roles";
 import type { StaffMember } from "@/domain/types";
 import { useBuildings, useStaffList } from "@/hooks/useAdminData";
 import classes from "./admin.module.css";
+import { RoleBadge } from "./RoleBadge";
 import { StaffEditor } from "./StaffEditor";
 
 export default function StaffAdminPage() {
@@ -58,9 +58,7 @@ export default function StaffAdminPage() {
                   <Table.Td>
                     <Group gap={4}>
                       {s.roles.map((r) => (
-                        <Badge key={r} color={ROLE_COLOR[r]}>
-                          {ROLE_LABEL[r]}
-                        </Badge>
+                        <RoleBadge key={r} role={r} />
                       ))}
                     </Group>
                   </Table.Td>

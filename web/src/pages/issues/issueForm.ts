@@ -1,5 +1,6 @@
 import type { IssueCategory } from "@/domain/catalog";
 import { isInsideMunicipality, type LatLng } from "@/domain/geo";
+import { lastReachableStep } from "./flow/steps";
 
 export interface IssueFormValues {
   category: IssueCategory | null;
@@ -25,6 +26,9 @@ export const INITIAL_ISSUE: IssueFormValues = {
   description: "",
 };
 
+/** O problema, o local, os detalhes e a revisão. */
+export const ISSUE_TOTAL_STEPS = 4;
+
 /** Campos validados em cada passo do assistente. */
 export const STEP_FIELDS: ReadonlyArray<ReadonlyArray<keyof IssueFormValues>> = [
   ["category"],
@@ -44,3 +48,16 @@ export const issueValidators = {
   description: (v: string) =>
     v.trim().length >= 10 && v.trim().length <= 2000 ? null : "Descreva com pelo menos 10 caracteres",
 };
+
+/** Último passo que pode ser aberto com o que já foi preenchido. */
+export function issueReachableStep(values: IssueFormValues): number {
+  return lastReachableStep(values, issueValidators, STEP_FIELDS, ISSUE_TOTAL_STEPS);
+}
+
+/** "Avenida Norte Sul, 1200 – Centro" */
+export function formatIssueAddress(values: Pick<IssueFormValues, "streetType" | "streetName" | "number" | "neighborhood">): string {
+  const number = values.number.trim() ? `, ${values.number.trim()}` : "";
+  const street = `${values.streetType} ${values.streetName.trim()}${number}`;
+  const neighborhood = values.neighborhood.trim();
+  return neighborhood ? `${street} – ${neighborhood}` : street;
+}

@@ -34,6 +34,19 @@ function DeferredNotifications() {
   );
 }
 
+/** Baixa as telas das abas quando o aparelho fica ocioso (menos espera ao tocar). */
+function preloadMainTabs() {
+  // Economia de dados ou aparelho modesto: baixa só quando a pessoa abrir
+  if (document.documentElement.dataset.motion === "lite") return;
+  const idle = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 1500));
+  idle(() => {
+    const ignore = () => undefined;
+    import("./pages/duty/DutyPage").catch(ignore);
+    import("./pages/requests/MyRequestsPage").catch(ignore);
+    import("./pages/notices/NoticesPage").catch(ignore);
+  });
+}
+
 function MissingConfig() {
   return (
     <Center mih="100dvh" p="md">
@@ -75,6 +88,7 @@ async function start() {
       </MantineProvider>
     </StrictMode>,
   );
+  preloadMainTabs();
 }
 
 start().catch((error: unknown) => {

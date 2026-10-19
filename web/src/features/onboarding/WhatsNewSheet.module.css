@@ -1,0 +1,48 @@
+.actions {
+  display: grid;
+  gap: 10px;
+}
+
+.primary,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  padding: 8px 22px;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 3px solid var(--mantine-color-mata-6);
+    outline-offset: 2px;
+  }
+}
+
+/* Funerárias: acento ardósia (mesma cor do seletor no Plantão) */
+.primary {
+  background: var(--mantine-color-slate-8);
+  color: #ffffff;
+}
+
+.secondary {
+  background: light-dark(rgba(23, 36, 28, 0.06), rgba(255, 255, 255, 0.08));
+  color: var(--app-ink);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .primary:hover {
+    background: var(--mantine-color-slate-9);
+  }
+
+  .secondary:hover {
+    background: light-dark(rgba(23, 36, 28, 0.1), rgba(255, 255, 255, 0.13));
+  }
+}

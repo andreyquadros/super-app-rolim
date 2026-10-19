@@ -16,7 +16,7 @@ export function PageHeader({ title, eyebrow, description, back, actions }: PageH
   const goBack = () => (back === true ? navigate(-1) : navigate(back ?? "/"));
 
   return (
-    <Group justify="space-between" align="flex-start" wrap="nowrap" mb="lg" gap="sm">
+    <Group justify="space-between" align="flex-start" wrap="wrap" mb="lg" gap="sm">
       <Group align="flex-start" gap="xs" wrap="nowrap">
         {back && (
           <ActionIcon size="lg" variant="subtle" color="gray" onClick={goBack} aria-label="Voltar" mt={4}>
@@ -33,7 +33,7 @@ export function PageHeader({ title, eyebrow, description, back, actions }: PageH
           )}
         </Stack>
       </Group>
-      {actions}
+      {actions && <div style={{ flexShrink: 0 }}>{actions}</div>}
     </Group>
   );
 }

@@ -2,10 +2,15 @@ import { FirebaseError } from "firebase/app";
 
 const MESSAGES: Record<string, string> = {
   "auth/invalid-credential": "E-mail ou senha incorretos.",
+  "auth/wrong-password": "E-mail ou senha incorretos.",
+  "auth/user-not-found": "E-mail ou senha incorretos.",
+  "auth/invalid-login-credentials": "E-mail ou senha incorretos.",
+  "auth/missing-password": "Digite sua senha.",
+  "auth/cancelled-popup-request": "A janela de login foi fechada antes de concluir.",
   "auth/invalid-email": "E-mail inválido.",
   "auth/user-disabled": "Esta conta foi desativada. Procure a prefeitura.",
   "auth/email-already-in-use": "Já existe uma conta com este e-mail. Tente entrar ou recuperar a senha.",
-  "auth/weak-password": "A senha precisa ter pelo menos 6 caracteres.",
+  "auth/weak-password": "A senha precisa ter pelo menos 8 caracteres.",
   "auth/too-many-requests": "Muitas tentativas. Aguarde alguns minutos e tente de novo.",
   "auth/network-request-failed": "Sem conexão com a internet.",
   "auth/popup-closed-by-user": "A janela de login foi fechada antes de concluir.",

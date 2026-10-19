@@ -15,7 +15,7 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-/** Dados da solicitação (usado pelo cidadão e pelo painel). */
+/** Dados da solicitação no painel da equipe (o cidadão usa DetailsList). */
 export function RequestDetails({ request }: { request: CitizenRequest }) {
   return (
     <Stack gap="md">

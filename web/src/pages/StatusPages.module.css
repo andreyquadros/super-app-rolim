@@ -1,0 +1,86 @@
+.status {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  max-width: 30rem;
+  margin: 16px auto 0;
+  padding: 32px 20px 28px;
+  border: 1px dashed var(--app-line);
+  border-radius: 28px;
+  text-align: center;
+}
+
+/* Círculo com anel: o ícone como "ilustração" leve, sem imagem */
+.art {
+  display: grid;
+  place-items: center;
+  width: 88px;
+  height: 88px;
+  margin-bottom: 4px;
+  border-radius: 50%;
+  background: var(--mantine-color-mata-light);
+  box-shadow: 0 0 0 8px light-dark(rgba(13, 122, 73, 0.06), rgba(74, 175, 121, 0.08));
+  color: light-dark(var(--mantine-color-mata-8), var(--mantine-color-mata-3));
+
+  .status[data-tone="slate"] & {
+    background: var(--mantine-color-slate-light);
+    box-shadow: 0 0 0 8px light-dark(rgba(61, 92, 120, 0.07), rgba(120, 146, 170, 0.1));
+    color: light-dark(var(--mantine-color-slate-8), var(--mantine-color-slate-2));
+  }
+}
+
+.title {
+  margin: 0;
+  font-family: var(--mantine-font-family-headings);
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.text {
+  max-width: 26rem;
+  margin: 0;
+  color: var(--app-ink-soft);
+  font-size: 1.0625rem;
+  line-height: 1.5;
+}
+
+.home {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 56px;
+  margin-top: 8px;
+  padding: 0 28px;
+  border-radius: 999px;
+  background: var(--mantine-color-mata-8);
+  color: #ffffff;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  text-decoration: none;
+
+  &:focus-visible {
+    outline: 3px solid var(--mantine-color-mata-6);
+    outline-offset: 2px;
+  }
+}
+
+/* Fora da casca (painel sem permissão): centralizado na tela */
+.standalone {
+  display: grid;
+  align-content: center;
+  min-height: 70dvh;
+  padding: calc(env(safe-area-inset-top) + 24px) 16px calc(env(safe-area-inset-bottom) + 24px);
+  color: var(--app-ink);
+
+  /* Relógio e bateria do iPhone ficam brancos: nunca papel claro atrás deles */
+  &::before {
+    content: "";
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 200;
+    height: env(safe-area-inset-top);
+    background: var(--app-hero);
+  }
+}

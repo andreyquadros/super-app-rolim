@@ -1,0 +1,131 @@
+.box {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1.5px dashed light-dark(#cfcabb, #3a4740);
+  border-radius: 20px;
+  background: var(--app-surface);
+
+  &[data-filled] {
+    border-style: solid;
+    border-color: var(--app-line);
+  }
+}
+
+.intro {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.badge {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: var(--mantine-color-mata-light);
+  color: light-dark(var(--mantine-color-mata-8), var(--mantine-color-mata-3));
+}
+
+.title {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+}
+
+.hint {
+  margin: 2px 0 0;
+  color: var(--app-ink-soft);
+  font-size: 0.9375rem;
+  line-height: 1.4;
+}
+
+.image {
+  display: block;
+  width: 100%;
+  max-height: 280px;
+  border-radius: 14px;
+  object-fit: cover;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.action {
+  display: inline-flex;
+  flex: 1 1 9rem;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 8px 16px;
+  border: 1px solid var(--app-line);
+  border-radius: 999px;
+  background: var(--app-surface);
+  color: var(--app-ink);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  cursor: pointer;
+
+  &[data-tone="primary"] {
+    border-color: transparent;
+    background: var(--mantine-color-mata-light);
+    color: light-dark(var(--mantine-color-mata-9), var(--mantine-color-mata-2));
+  }
+
+  &[data-tone="danger"] {
+    color: light-dark(var(--mantine-color-barro-8), var(--mantine-color-barro-3));
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+
+  &:focus-visible {
+    outline: 3px solid var(--mantine-color-mata-6);
+    outline-offset: 2px;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .action:not(:disabled):hover {
+    border-color: var(--mantine-color-mata-4);
+  }
+}
+
+.processing,
+.offline {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.45;
+
+  svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+}
+
+.processing {
+  align-items: center;
+  min-height: 52px;
+  font-weight: 600;
+}
+
+.offline {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--mantine-color-ipe-light);
+  color: light-dark(#3a2a00, var(--mantine-color-ipe-2));
+}

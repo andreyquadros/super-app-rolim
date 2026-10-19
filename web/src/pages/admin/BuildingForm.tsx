@@ -7,7 +7,8 @@ import { MapPicker } from "@/components/map";
 import { saveBuilding } from "@/data/buildings";
 import { formatPhone, isValidPhone, onlyDigits } from "@/domain/documents";
 import { isInsideMunicipality, type LatLng } from "@/domain/geo";
-import { isDutyType } from "@/domain/duty";
+import { DUTY_COPY, isDutyType } from "@/domain/duty";
+import { ROLE_LABEL } from "@/domain/roles";
 import type { Building, BuildingType, PhoneType, StaffMember } from "@/domain/types";
 import { errorMessage } from "@/lib/errors";
 
@@ -89,11 +90,18 @@ export function BuildingForm({ building, dutyManagers, defaultType = "PUBLIC", o
 
   const isDuty = isDutyType(form.values.type);
   const isFuneral = form.values.type === "FUNERAL";
+  const openLabel = isDutyType(form.values.type) ? DUTY_COPY[form.values.type].openLabel : "Aberta agora";
+  // Ligar o plantão também liga "aberta" (mesma regra do "Meus plantões")
+  const setOnDuty = (checked: boolean) => form.setValues({ isOnDuty: checked, ...(checked ? { isOpen: true } : {}) });
 
   return (
     <form onSubmit={submit} noValidate>
       <Stack>
+        <Text size="sm" fw={500} mb={-8} id="tipo-cadastro">
+          Tipo
+        </Text>
         <SegmentedControl
+          aria-labelledby="tipo-cadastro"
           value={form.values.type}
           onChange={(v) => form.setFieldValue("type", v as BuildingType)}
           data={[
@@ -115,7 +123,11 @@ export function BuildingForm({ building, dutyManagers, defaultType = "PUBLIC", o
             </Text>
           )}
         </div>
-        <TextInput label="Horário de funcionamento" placeholder={isFuneral ? "Atendimento 24 horas" : "Seg–Sex 7h às 19h"} {...form.getInputProps("openingHours")} />
+        <TextInput
+          label="Horário de funcionamento"
+          placeholder={isDuty ? "Ex.: Atendimento 24 horas" : "Ex.: Seg a sex, 7h às 19h"}
+          {...form.getInputProps("openingHours")}
+        />
         <Stack gap="xs">
           <Text size="sm" fw={500}>
             Telefones
@@ -143,15 +155,27 @@ export function BuildingForm({ building, dutyManagers, defaultType = "PUBLIC", o
         {isDuty && (
           <>
             <MultiSelect
-              label={isFuneral ? "Responsáveis pela funerária" : "Responsáveis pela farmácia"}
-              description="Pessoas com acesso “Plantão” que podem atualizar aberta e plantão."
+              label="Responsáveis pelo plantão"
+              description={`Pessoas ativas com o acesso “${ROLE_LABEL.DUTY_MANAGER}”. Elas ligam e desligam “${openLabel}” e “De plantão” pelo celular.`}
+              placeholder={dutyManagers.length > 0 ? "Escolha uma ou mais pessoas" : undefined}
               data={dutyManagers.map((s) => ({ value: s.id, label: `${s.fullName} (${s.email})` }))}
+              nothingFoundMessage="Ninguém encontrado"
               searchable
               {...form.getInputProps("ownerIds")}
             />
+            {dutyManagers.length === 0 && (
+              <Text size="sm" c="barro.8">
+                Ainda não há ninguém com esse acesso. Dê o acesso em “Equipe e acessos” e volte aqui.
+              </Text>
+            )}
             <Group>
-              <Switch label="Aberta agora" {...form.getInputProps("isOpen", { type: "checkbox" })} />
-              <Switch label="De plantão" color="barro" {...form.getInputProps("isOnDuty", { type: "checkbox" })} />
+              <Switch label={openLabel} {...form.getInputProps("isOpen", { type: "checkbox" })} />
+              <Switch
+                label="De plantão"
+                color="ipe.6"
+                checked={form.values.isOnDuty}
+                onChange={(e) => setOnDuty(e.currentTarget.checked)}
+              />
             </Group>
           </>
         )}

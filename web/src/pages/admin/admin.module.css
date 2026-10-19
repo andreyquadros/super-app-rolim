@@ -26,17 +26,39 @@
   min-width: 0;
 }
 
+/* Barra empilhada: cada fatia cobre a trilha inteira e é posicionada e
+   dimensionada só por transform (sem animar flex-grow nem largura) */
 .stackBar {
-  display: flex;
+  position: relative;
   height: 14px;
   border-radius: 999px;
   overflow: hidden;
-  gap: 2px;
   background: var(--app-line);
+}
 
-  & > span {
-    min-width: 6px;
-    transition: flex-grow var(--duration-normal) var(--ease-out-expo);
+.segment {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  transform: translateX(calc(var(--start) * 100%)) scaleX(var(--size));
+  transition: transform var(--motion-fast) var(--ease-standard);
+}
+
+/* Divisória de 2 px entre fatias, também deslocada por transform */
+.segmentGap {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transform: translateX(calc(var(--start) * 100%));
+  transition: transform var(--motion-fast) var(--ease-standard);
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    left: -1px;
+    width: 2px;
+    background: var(--app-surface);
   }
 }
 
@@ -64,10 +86,15 @@
 
 .row {
   cursor: pointer;
-  transition: background var(--duration-fast);
 
-  &:hover {
+  &:focus-within {
     background: var(--mantine-color-mata-light);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: var(--mantine-color-mata-light);
+    }
   }
 
   &:focus-visible {
@@ -76,11 +103,165 @@
   }
 }
 
-.switchCard {
-  transition: border-color var(--duration-fast), box-shadow var(--duration-fast);
+/* Cartões do painel no mesmo papel do app (o padrão do Mantine destoa no escuro) */
+.panelCard {
+  background: var(--app-surface);
+}
 
-  &[data-on-duty] {
-    border-color: var(--mantine-color-barro-4);
-    box-shadow: 0 0 0 3px var(--mantine-color-barro-light);
+.cardHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin-bottom: 12px;
+}
+
+.cardTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-family: var(--mantine-font-family-headings);
+  font-size: var(--mantine-font-size-lg);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+/* ---------- Plantão agora (Visão geral) ---------- */
+.dutyNowDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--mantine-color-ipe-4);
+  box-shadow: 0 0 0 3px light-dark(rgba(255, 187, 54, 0.25), rgba(255, 187, 54, 0.18));
+}
+
+.dutyNowGrid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+}
+
+.dutyNowColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--app-paper);
+}
+
+.dutyNowType {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: light-dark(var(--mantine-color-mata-9), var(--mantine-color-mata-2));
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+
+  .dutyNowColumn[data-type="FUNERAL"] & {
+    color: light-dark(var(--mantine-color-slate-8), var(--mantine-color-slate-2));
   }
+}
+
+.dutyNowList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dutyNowItem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 12px;
+  padding: 10px 12px;
+  border: 1px solid light-dark(var(--mantine-color-ipe-3), rgba(255, 187, 54, 0.4));
+  border-radius: 12px;
+  background: var(--app-surface);
+}
+
+.dutyNowName {
+  flex: 1 1 12rem;
+  font-weight: 700;
+}
+
+.dutyNowPhone {
+  font-size: var(--mantine-font-size-sm);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.dutyNowUpdated {
+  flex-basis: 100%;
+  color: var(--app-ink-soft);
+  font-size: var(--mantine-font-size-sm);
+
+  &[data-stale] {
+    color: light-dark(var(--mantine-color-barro-8), var(--mantine-color-barro-3));
+    font-weight: 700;
+  }
+}
+
+.dutyNowEmpty {
+  margin: 0;
+  color: light-dark(var(--mantine-color-barro-8), var(--mantine-color-barro-3));
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+}
+
+.dutyNowSkeleton {
+  height: 132px;
+  border-radius: 14px;
+}
+
+/* ---------- Unidades e plantões ---------- */
+.nameButton {
+  display: inline;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  text-align: start;
+  cursor: pointer;
+
+  &:focus-visible {
+    border-radius: 4px;
+    outline: 3px solid var(--mantine-color-mata-6);
+    outline-offset: 2px;
+  }
+}
+
+.cellText {
+  font-size: var(--mantine-font-size-sm);
+  line-height: 1.4;
+}
+
+.muted {
+  color: var(--app-ink-soft);
+}
+
+.problem {
+  color: light-dark(var(--mantine-color-barro-8), var(--mantine-color-barro-3));
+  font-weight: 700;
+}
+
+.tableSkeleton {
+  height: 240px;
+  border-radius: var(--mantine-radius-lg);
+}
+
+.tableCard {
+  border: 1px solid var(--app-line);
+  border-radius: var(--mantine-radius-lg);
+  background: var(--app-surface);
 }

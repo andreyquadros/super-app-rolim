@@ -1,0 +1,102 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.hint {
+  margin: 0;
+  color: var(--app-ink-soft);
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+/* ---------- Grupos ---------- */
+.group {
+  display: grid;
+  gap: 12px;
+
+  & + & {
+    margin-top: 12px;
+  }
+}
+
+.groupHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 12px;
+  padding-inline: 2px;
+}
+
+.groupTitle {
+  margin: 0;
+  font-family: var(--mantine-font-family-headings);
+  font-size: 1.375rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.count {
+  color: var(--app-ink-soft);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.list {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.skeleton {
+  height: 178px;
+  border-radius: 20px;
+}
+
+/* ---------- Erro ---------- */
+.error {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  padding: 16px;
+  border: 1px solid light-dark(var(--mantine-color-barro-2), rgba(214, 104, 75, 0.4));
+  border-radius: 20px;
+  background: var(--app-surface);
+}
+
+.errorTitle {
+  margin: 0;
+  font-weight: 700;
+}
+
+.errorText {
+  margin: 0;
+  color: var(--app-ink-soft);
+  font-size: 0.9375rem;
+}
+
+.retry {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 52px;
+  margin-top: 6px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--mantine-color-mata-8);
+  color: #ffffff;
+  font: inherit;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 3px solid var(--mantine-color-mata-6);
+    outline-offset: 2px;
+  }
+}

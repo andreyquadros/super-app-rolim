@@ -1,46 +1,36 @@
-import { Paper, Stack, Text, Title } from "@mantine/core";
 import type { ReactNode } from "react";
-import { useSearchParams } from "react-router";
+import { MAINTAINER_LINE } from "@/config/city";
+import classes from "./auth.module.css";
 
-/** Moldura das telas de acesso. */
-export function AuthFrame({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
+interface AuthFrameProps {
+  /** Pergunta ou convite da tela (H1) */
+  title: string;
+  /** Texto curto de apoio abaixo do título */
+  lead?: ReactNode;
+  /** Troca o logo por outro símbolo (ex.: o "certo" de link enviado) */
+  icon?: ReactNode;
+  children: ReactNode;
+}
+
+/**
+ * Moldura das telas de acesso: logo, título, apoio e a linha institucional
+ * no rodapé. No celular o conteúdo fica direto no papel; a partir de 768 px,
+ * num cartão.
+ */
+export function AuthFrame({ title, lead, icon, children }: AuthFrameProps) {
   return (
-    <Stack maw={440} mx="auto" gap="lg" pt="md">
-      <Stack gap={6}>
-        <span className="eyebrow">Conta do cidadão</span>
-        <Title order={1}>{title}</Title>
-        {subtitle && <Text c="dimmed">{subtitle}</Text>}
-      </Stack>
-      <Paper withBorder p={{ base: "md", sm: "xl" }} shadow="sm">
+    <div className={classes.frame}>
+      <div className={classes.card}>
+        <header className={classes.head}>
+          {icon ?? <img src="/logo.svg" alt="" width={56} height={56} className={classes.logo} />}
+          <h1 className={classes.title} tabIndex={-1}>
+            {title}
+          </h1>
+          {lead && <p className={classes.lead}>{lead}</p>}
+        </header>
         {children}
-      </Paper>
-    </Stack>
-  );
-}
-
-/** Destino seguro após login: somente caminhos do próprio app. */
-export function safeNextPath(next: string | null, origin: string, fallback = "/"): string {
-  if (!next || !next.startsWith("/")) return fallback;
-  try {
-    const url = new URL(next, origin);
-    return url.origin === origin ? `${url.pathname}${url.search}${url.hash}` : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-export function useNextPath(fallback = "/"): string {
-  const [params] = useSearchParams();
-  return safeNextPath(params.get("next"), window.location.origin, fallback);
-}
-
-export function GoogleIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden>
-      <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z" />
-      <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" />
-      <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z" />
-      <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z" />
-    </svg>
+      </div>
+      <footer className={classes.maintainer}>{MAINTAINER_LINE}</footer>
+    </div>
   );
 }

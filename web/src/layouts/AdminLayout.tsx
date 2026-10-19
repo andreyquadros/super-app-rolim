@@ -1,12 +1,13 @@
-import { AppShell, Avatar, Badge, Burger, Button, Group, Menu, NavLink as MantineNavLink, ScrollArea, Stack, Text } from "@mantine/core";
+import { AppShell, Avatar, Burger, Menu, NavLink as MantineNavLink, ScrollArea, UnstyledButton } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
   IconBell,
   IconBuildingCommunity,
   IconChartBar,
+  IconChevronDown,
+  IconClock24,
   IconLogout,
   IconMessages,
-  IconBuildingStore,
   IconSmartHome,
   IconTools,
   IconUsersGroup,
@@ -14,13 +15,24 @@ import {
 } from "@tabler/icons-react";
 import { Link, Outlet, useLocation } from "react-router";
 import { useAuth } from "@/auth/AuthContext";
-import { ROLE_COLOR, ROLE_LABEL } from "@/domain/roles";
+import { BrandMark } from "@/components/brand/BrandMark";
+import { APP_NAME, MAINTAINER_LINE } from "@/config/city";
+import { firstName } from "@/domain/format";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { RoleBadge } from "@/pages/admin/RoleBadge";
+import classes from "./AdminLayout.module.css";
+
+interface Access {
+  isRoot: boolean;
+  isManager: boolean;
+  isDutyManager: boolean;
+}
 
 interface Item {
   to: string;
   label: string;
   icon: Icon;
-  show: (a: { isRoot: boolean; isManager: boolean; isDutyManager: boolean }) => boolean;
+  show: (a: Access) => boolean;
 }
 
 const ITEMS: Item[] = [
@@ -28,88 +40,108 @@ const ITEMS: Item[] = [
   { to: "/painel/zeladoria", label: "Zeladoria", icon: IconTools, show: (a) => a.isManager },
   { to: "/painel/ouvidoria", label: "Ouvidoria", icon: IconMessages, show: (a) => a.isManager },
   { to: "/painel/comunicados", label: "Comunicados", icon: IconBell, show: (a) => a.isManager },
-  { to: "/painel/meus-plantoes", label: "Meus plantões", icon: IconBuildingStore, show: (a) => a.isDutyManager },
+  { to: "/painel/meus-plantoes", label: "Meus plantões", icon: IconClock24, show: (a) => a.isDutyManager || a.isRoot },
   { to: "/painel/unidades", label: "Unidades e plantões", icon: IconBuildingCommunity, show: (a) => a.isRoot },
   { to: "/painel/equipe", label: "Equipe e acessos", icon: IconUsersGroup, show: (a) => a.isRoot },
 ];
 
+const NAV_CLASSES = { root: classes.navLink, label: classes.navLabel, section: classes.navIcon };
+
+function TeamChip({ className }: { className?: string }) {
+  return <span className={`${classes.chip} ${className ?? ""}`}>Painel da equipe</span>;
+}
+
+function UserMenu() {
+  const { actor, signOut } = useAuth();
+  const name = actor?.name ?? "";
+  return (
+    <Menu position="bottom-end" width={240}>
+      <Menu.Target>
+        <UnstyledButton className={classes.user} aria-label={name ? `Menu do usuário, ${name}` : "Menu do usuário"}>
+          <Avatar name={name} color="initials" size={34} aria-hidden />
+          {name && <span className={classes.userName}>{firstName(name)}</span>}
+          <IconChevronDown size={16} aria-hidden className={classes.userChevron} />
+        </UnstyledButton>
+      </Menu.Target>
+      <Menu.Dropdown>
+        <Menu.Label>{name}</Menu.Label>
+        <Menu.Item component={Link} to="/" leftSection={<IconSmartHome size={18} aria-hidden />}>
+          Abrir o app do cidadão
+        </Menu.Item>
+        <Menu.Item color="barro" leftSection={<IconLogout size={18} aria-hidden />} onClick={() => void signOut()}>
+          Sair
+        </Menu.Item>
+      </Menu.Dropdown>
+    </Menu>
+  );
+}
+
 export function AdminLayout() {
   const [opened, { toggle, close }] = useDisclosure(false);
   const { pathname } = useLocation();
-  const { actor, staff, isRoot, isManager, isDutyManager, signOut } = useAuth();
+  const { staff, isRoot, isManager, isDutyManager } = useAuth();
   const items = ITEMS.filter((i) => i.show({ isRoot, isManager, isDutyManager }));
+  useDocumentTitle("Painel");
 
   return (
     <AppShell
-      header={{ height: 60 }}
-      navbar={{ width: 264, breakpoint: "sm", collapsed: { mobile: !opened } }}
-      padding={{ base: "md", sm: "lg" }}
-      styles={{ main: { background: "var(--app-paper)" } }}
+      header={{ height: 64 }}
+      navbar={{ width: 272, breakpoint: "sm", collapsed: { mobile: !opened } }}
+      padding={{ base: "md", sm: "xl" }}
+      classNames={{ header: classes.header, navbar: classes.navbar, main: classes.main }}
     >
       <AppShell.Header>
-        <Group h="100%" px="md" justify="space-between" wrap="nowrap">
-          <Group gap="sm" wrap="nowrap">
-            <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" aria-label="Abrir menu" />
-            <img src="/logo.svg" alt="" width={32} height={32} />
-            <div>
-              <Text className="eyebrow" lh={1.1}>
-                Painel da prefeitura
-              </Text>
-              <Text ff="heading" fw={600} lh={1.1}>
-                Rolim de Moura
-              </Text>
-            </div>
-          </Group>
-          <Menu position="bottom-end" width={220}>
-            <Menu.Target>
-              <Button variant="subtle" color="gray" px="xs" rightSection={null} aria-label="Menu do usuário">
-                <Avatar name={actor?.name} color="initials" size={32} />
-              </Button>
-            </Menu.Target>
-            <Menu.Dropdown>
-              <Menu.Label>{actor?.name}</Menu.Label>
-              <Menu.Item component={Link} to="/" leftSection={<IconSmartHome size={16} />}>
-                App do cidadão
-              </Menu.Item>
-              <Menu.Item color="red" leftSection={<IconLogout size={16} />} onClick={() => void signOut()}>
-                Sair
-              </Menu.Item>
-            </Menu.Dropdown>
-          </Menu>
-        </Group>
+        <div className={classes.headerRow}>
+          <div className={classes.headerStart}>
+            <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" aria-label={opened ? "Fechar menu" : "Abrir menu"} />
+            <Link to="/painel" className={classes.brandLink} aria-label={`${APP_NAME}, início do painel`}>
+              <BrandMark variant="onPaper" compact />
+            </Link>
+            <TeamChip className={classes.chipHeader} />
+          </div>
+          <UserMenu />
+        </div>
       </AppShell.Header>
 
       <AppShell.Navbar p="sm">
+        <TeamChip className={classes.chipNavbar} />
         <AppShell.Section grow component={ScrollArea}>
-          <Stack gap={2}>
-            {items.map((item) => (
-              <MantineNavLink
-                key={item.to}
-                component={Link}
-                to={item.to}
-                label={item.label}
-                leftSection={<item.icon size={20} stroke={1.6} />}
-                active={pathname.startsWith(item.to)}
-                onClick={close}
-                variant="light"
-                style={{ borderRadius: "var(--mantine-radius-md)" }}
-              />
-            ))}
-          </Stack>
+          <nav aria-label="Áreas do painel">
+            <ul className={classes.navList}>
+              {items.map((item) => (
+                <li key={item.to}>
+                  <MantineNavLink
+                    component={Link}
+                    to={item.to}
+                    label={item.label}
+                    leftSection={<item.icon size={22} stroke={1.7} aria-hidden />}
+                    active={pathname.startsWith(item.to)}
+                    aria-current={pathname.startsWith(item.to) ? "page" : undefined}
+                    onClick={close}
+                    variant="light"
+                    classNames={NAV_CLASSES}
+                  />
+                </li>
+              ))}
+            </ul>
+          </nav>
         </AppShell.Section>
-        <AppShell.Section>
-          <Group gap={6} p="xs">
-            {staff?.roles.map((r) => (
-              <Badge key={r} color={ROLE_COLOR[r]} size="sm">
-                {ROLE_LABEL[r]}
-              </Badge>
-            ))}
-          </Group>
+        <AppShell.Section className={classes.navFooter}>
+          {staff && staff.roles.length > 0 && (
+            <div className={classes.roles}>
+              <span className="visually-hidden">Seus acessos:</span>
+              {staff.roles.map((r) => (
+                <RoleBadge key={r} role={r} size="md" radius="sm" />
+              ))}
+            </div>
+          )}
+          <p className={classes.maintainer}>{MAINTAINER_LINE}</p>
         </AppShell.Section>
       </AppShell.Navbar>
 
       <AppShell.Main>
-        <div style={{ maxWidth: 1200, marginInline: "auto" }}>
+        {/* Painel: só um esmaecer curto na troca de tela */}
+        <div key={pathname} className={classes.content}>
           <Outlet />
         </div>
       </AppShell.Main>

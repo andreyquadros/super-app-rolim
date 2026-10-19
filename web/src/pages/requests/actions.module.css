@@ -1,0 +1,210 @@
+/* Botões do detalhe do pedido: Copiar, Compartilhar, mapa e cancelar. */
+
+/* ---------- Copiar (rótulos sobrepostos, troca com crossfade) ---------- */
+.copy {
+  display: inline-grid;
+  flex-shrink: 0;
+  align-items: center;
+  justify-items: center;
+  min-height: 48px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--mantine-color-mata-light);
+  color: light-dark(var(--mantine-color-mata-9), var(--mantine-color-mata-2));
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 3px solid var(--mantine-color-mata-6);
+    outline-offset: 2px;
+  }
+}
+
+.copyLabel {
+  display: inline-flex;
+  grid-area: 1 / 1;
+  align-items: center;
+  gap: 6px;
+  transition: opacity var(--motion-fast) var(--ease-standard);
+
+  .copy[data-copied] &:first-child,
+  .copy:not([data-copied]) &:last-child {
+    opacity: 0;
+  }
+}
+
+/* ---------- Compartilhar (na barra verde) ---------- */
+.share {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 48px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 3px solid #ffffff;
+    outline-offset: 2px;
+  }
+}
+
+/* Celular com o protocolo visível na barra (data-collapsed da AppBar):
+   o botão fica só com o ícone; o nome acessível continua "Compartilhar" */
+@media (max-width: 479px) {
+  :global([data-collapsed]) .share {
+    padding: 0 13px;
+  }
+
+  :global([data-collapsed]) .shareText {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .share:hover {
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  .mapButton:hover {
+    border-color: light-dark(var(--mantine-color-mata-4), var(--mantine-color-mata-7));
+  }
+
+  .cancelLink:hover {
+    background: var(--mantine-color-barro-light);
+  }
+}
+
+/* ---------- Mapa sob demanda ---------- */
+.mapBlock {
+  display: grid;
+  gap: 12px;
+}
+
+.mapButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 0 20px;
+  border: 1px solid var(--app-line);
+  border-radius: 999px;
+  background: var(--app-surface);
+  color: light-dark(var(--mantine-color-mata-9), var(--mantine-color-mata-2));
+  font: inherit;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 3px solid var(--mantine-color-mata-6);
+    outline-offset: 2px;
+  }
+}
+
+.map {
+  overflow: hidden;
+  border: 1px solid var(--app-line);
+  border-radius: 20px;
+}
+
+/* ---------- Cancelar ---------- */
+.cancelRow {
+  display: grid;
+  justify-items: start;
+  gap: 2px;
+  padding-top: 8px;
+  border-top: 1px solid var(--app-line);
+}
+
+.cancelLink {
+  min-height: 48px;
+  margin-left: -12px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: light-dark(var(--mantine-color-barro-8), var(--mantine-color-barro-3));
+  font: inherit;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 3px solid var(--mantine-color-barro-5);
+    outline-offset: 2px;
+  }
+}
+
+.cancelHint {
+  margin: 0;
+  color: var(--app-ink-soft);
+  font-size: 0.9375rem;
+}
+
+.sheetError {
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: var(--mantine-color-barro-light);
+  color: light-dark(var(--mantine-color-barro-9), var(--mantine-color-barro-2));
+  font-weight: 600;
+}
+
+.sheetActions {
+  display: grid;
+  gap: 10px;
+}
+
+.danger,
+.neutral {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 3px solid var(--mantine-color-mata-6);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: progress;
+    opacity: 0.7;
+  }
+}
+
+.danger {
+  background: var(--mantine-color-barro-8);
+  color: #ffffff;
+}
+
+.neutral {
+  background: light-dark(rgba(23, 36, 28, 0.06), rgba(255, 255, 255, 0.08));
+  color: var(--app-ink);
+}

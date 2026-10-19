@@ -1,4 +1,3 @@
-import { Skeleton } from "@mantine/core";
 import { lazy, Suspense } from "react";
 import type { MapPickerProps, MapViewProps } from "./LeafletMaps";
 
@@ -9,7 +8,7 @@ const LazyView = lazy(() => import("./LeafletMaps").then((m) => ({ default: m.Ma
 
 export function MapPicker(props: MapPickerProps) {
   return (
-    <Suspense fallback={<Skeleton h={props.height ?? 320} radius="lg" />}>
+    <Suspense fallback={<div className="shimmer" style={{ height: props.height ?? 320 }} aria-hidden />}>
       <LazyPicker {...props} />
     </Suspense>
   );
@@ -17,7 +16,7 @@ export function MapPicker(props: MapPickerProps) {
 
 export function MapView(props: MapViewProps) {
   return (
-    <Suspense fallback={<Skeleton h={props.height ?? 300} radius="lg" />}>
+    <Suspense fallback={<div className="shimmer" style={{ height: props.height ?? 300 }} aria-hidden />}>
       <LazyView {...props} />
     </Suspense>
   );

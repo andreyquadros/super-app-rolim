@@ -20,8 +20,9 @@ const slate: MantineColorsTuple = [
 /** Texto secundário ("dimmed") com contraste AA nos dois temas. */
 export const cssVariablesResolver: CSSVariablesResolver = () => ({
   variables: {},
-  light: { "--mantine-color-dimmed": "#56655c" },
-  dark: { "--mantine-color-dimmed": "#a7b5ac" },
+  // Erros de formulário em barro (a paleta do app), com contraste AA
+  light: { "--mantine-color-dimmed": "#56655c", "--mantine-color-error": "#a43012" },
+  dark: { "--mantine-color-dimmed": "#a7b5ac", "--mantine-color-error": "#df8a74" },
 });
 
 export const theme = createTheme({

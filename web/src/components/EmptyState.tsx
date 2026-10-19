@@ -6,16 +6,18 @@ interface EmptyStateProps {
   title: string;
   description?: string;
   action?: ReactNode;
+  /** Nível do título: 2 quando não há outro h2 antes (telas das abas) */
+  order?: 2 | 3 | 4;
 }
 
-export function EmptyState({ icon, title, description, action }: EmptyStateProps) {
+export function EmptyState({ icon, title, description, action, order = 3 }: EmptyStateProps) {
   return (
     <Paper p="xl" withBorder style={{ borderStyle: "dashed", background: "transparent" }}>
       <Stack align="center" gap="xs" ta="center">
         <ThemeIcon size={56} radius="xl" variant="light" color="mata">
           {icon}
         </ThemeIcon>
-        <Title order={3} mt="xs">
+        <Title order={order} mt="xs">
           {title}
         </Title>
         {description && (

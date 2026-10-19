@@ -1,0 +1,41 @@
+/* Partes específicas da Ouvidoria (o resto vem de issues/flow/flow.module.css) */
+
+.retry {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+}
+
+.retryButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 48px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--app-surface);
+  color: var(--app-ink);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 3px solid var(--mantine-color-mata-6);
+    outline-offset: 2px;
+  }
+}
+
+.contact {
+  margin: 0;
+  color: var(--app-ink-soft);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  text-align: center;
+
+  a {
+    color: light-dark(var(--mantine-color-mata-8), var(--mantine-color-mata-3));
+    font-weight: 700;
+  }
+}

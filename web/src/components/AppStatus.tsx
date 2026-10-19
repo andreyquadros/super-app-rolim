@@ -15,7 +15,7 @@ export function OfflineBanner() {
   return (
     <div className={classes.offline} role="status">
       <IconCloudOff size={18} aria-hidden />
-      <span>Sem internet · mostrando dados salvos</span>
+      <span>Sem internet · dados salvos</span>
     </div>
   );
 }

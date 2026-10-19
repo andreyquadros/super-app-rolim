@@ -6,7 +6,7 @@ import { ForegroundPush, OfflineBanner, UpdatePrompt } from "@/components/AppSta
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { RouteError } from "@/components/RouteError";
 import { DUTY_COPY, DUTY_META, dutyTypeFromSlug } from "@/domain/duty";
-import { shouldShowOnboarding } from "@/features/onboarding/onboardingState";
+import { shouldShowOnboarding, withoutIntroParam } from "@/features/onboarding/onboardingState";
 import { CitizenLayout } from "@/layouts/CitizenLayout";
 import type { RouteHandle } from "@/layouts/routeHandle";
 import { lastDutyPath } from "@/lib/dutyMemory";
@@ -69,7 +69,12 @@ export const router = createBrowserRouter([
             element: <HomePage />,
             ...handle({ chrome: "home" }),
             // Primeiro acesso pela tela inicial: apresentação antes (sem piscar a Início)
-            loader: ({ request }) => (shouldShowOnboarding(new URL(request.url)) ? redirect("/boas-vindas") : null),
+            loader: ({ request }) => {
+              const url = new URL(request.url);
+              if (shouldShowOnboarding(url)) return redirect("/boas-vindas");
+              // "?intro=0" já foi atendido: some também da localização do roteador
+              return url.searchParams.has("intro") ? redirect(withoutIntroParam(url)) : null;
+            },
           },
           { path: "entrar", ...page(() => import("@/pages/auth/LoginPage")), ...flow("Entrar") },
           { path: "cadastro", ...page(() => import("@/pages/auth/RegisterPage")), ...flow("Criar conta") },

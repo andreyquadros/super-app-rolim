@@ -1,0 +1,175 @@
+.fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 14px 16px 16px;
+  border: 0;
+}
+
+/* Legend em bloco (sem o recorte padrão da borda do fieldset) */
+.legend {
+  display: flex;
+  float: left;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 0;
+  font-size: 1.0625rem;
+  font-weight: 600;
+
+  & + * {
+    clear: both;
+  }
+}
+
+.legendIcon {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--mantine-color-mata-light);
+  color: light-dark(var(--mantine-color-mata-8), var(--mantine-color-mata-3));
+}
+
+.hint {
+  margin: 4px 0 0 50px;
+  color: var(--app-ink-soft);
+  font-size: 0.9375rem;
+  line-height: 1.4;
+}
+
+/* Mede a largura disponível para decidir entre blocos e linhas */
+.frame {
+  margin-top: 12px;
+  container-type: inline-size;
+}
+
+.options {
+  display: grid;
+  gap: 8px;
+}
+
+.option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 8px 14px 8px 8px;
+  border: 1.5px solid var(--app-line);
+  border-radius: 16px;
+  background: var(--app-surface);
+  color: var(--app-ink);
+  cursor: pointer;
+  transition:
+    border-color var(--motion-fast) var(--ease-standard),
+    background-color var(--motion-fast) var(--ease-standard);
+
+  &[data-checked] {
+    border-color: var(--mantine-color-mata-8);
+    background: var(--mantine-color-mata-light);
+  }
+
+  &:has(.radio:focus-visible) {
+    outline: 3px solid var(--mantine-color-mata-6);
+    outline-offset: 2px;
+  }
+
+  /* Sem a escala do toque: a área é grande, basta a camada de cor */
+  &[data-press]:active {
+    transform: none;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .option:not([data-checked]):hover {
+    border-color: var(--mantine-color-mata-4);
+  }
+}
+
+/* O rádio nativo cobre o bloco inteiro (foco, teclado e leitor de tela) */
+.radio {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.preview {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 44px;
+  height: 40px;
+  border-radius: 12px;
+  background: light-dark(rgba(23, 36, 28, 0.05), rgba(255, 255, 255, 0.06));
+  font-family: var(--mantine-font-family-headings);
+  font-weight: 600;
+  line-height: 1;
+
+  .option[data-checked] & {
+    background: var(--app-surface);
+    color: light-dark(var(--mantine-color-mata-9), var(--mantine-color-mata-2));
+  }
+}
+
+.optionLabel {
+  flex: 1;
+  min-width: 0;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.mark {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--app-line);
+  border-radius: 50%;
+  color: #ffffff;
+
+  .option[data-checked] & {
+    border-color: var(--mantine-color-mata-8);
+    background: var(--mantine-color-mata-8);
+  }
+}
+
+/* Espaço de sobra: três blocos lado a lado */
+@container (min-width: 25rem) {
+  .options {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .option {
+    flex-direction: column;
+    justify-content: center;
+    gap: 8px;
+    min-height: 104px;
+    padding: 14px 8px 12px;
+    text-align: center;
+  }
+
+  .preview {
+    width: 56px;
+    height: 44px;
+  }
+
+  .optionLabel {
+    flex: none;
+  }
+
+  .mark {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 22px;
+    height: 22px;
+  }
+}

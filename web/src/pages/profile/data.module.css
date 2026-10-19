@@ -1,0 +1,176 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ---------- Título da tela empilhada ---------- */
+.intro {
+  display: grid;
+  gap: 6px;
+}
+
+.h1 {
+  margin: 4px 0 0;
+  font-family: var(--mantine-font-family-headings);
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.lead {
+  margin: 0;
+  color: var(--app-ink-soft);
+  font-size: 1.0625rem;
+  line-height: 1.45;
+}
+
+/* ---------- Seções ---------- */
+.section {
+  display: grid;
+  gap: 8px;
+}
+
+.sectionTitle {
+  margin: 0;
+  padding-inline: 4px;
+  color: var(--app-ink-soft);
+  font-family: var(--mantine-font-family);
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.card {
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--app-line);
+  border-radius: 20px;
+  background: var(--app-surface);
+  box-shadow: var(--mantine-shadow-xs);
+
+  &[data-attention] {
+    border-color: light-dark(var(--mantine-color-ipe-3), rgba(255, 187, 54, 0.4));
+  }
+}
+
+.inputLabel {
+  margin-bottom: 4px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* Campos no papel do app (no escuro, o cinza padrão destoava do verde).
+   Só o fundo: a borda continua do Mantine (erro e foco). */
+.input {
+  --input-bg: light-dark(#ffffff, var(--app-paper));
+}
+
+/* ---------- CPF (só leitura) ---------- */
+.readonly {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: light-dark(rgba(23, 36, 28, 0.04), rgba(255, 255, 255, 0.05));
+}
+
+.readonlyLabel {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.readonlyValue {
+  margin: 0;
+  font-family: var(--mantine-font-family-monospace);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.readonlyHint {
+  margin: 2px 0 0;
+  color: var(--app-ink-soft);
+  font-size: 0.9375rem;
+  line-height: 1.4;
+}
+
+/* ---------- E-mail ---------- */
+.emailValue {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: 6px;
+  margin: -8px 0 0;
+  padding: 4px 12px 4px 10px;
+  border-radius: 999px;
+  font-size: 0.9375rem;
+  font-weight: 700;
+
+  &[data-state="ok"] {
+    background: var(--mantine-color-mata-light);
+    color: light-dark(var(--mantine-color-mata-9), var(--mantine-color-mata-2));
+  }
+
+  &[data-state="pending"] {
+    background: var(--mantine-color-ipe-4);
+    color: #3a2a00;
+  }
+}
+
+.help {
+  margin: 0;
+  color: var(--app-ink-soft);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  & > * {
+    flex: 1 1 10rem;
+  }
+}
+
+/* ---------- Excluir conta ---------- */
+.danger {
+  margin-top: 8px;
+  padding-top: 20px;
+  border-top: 1px dashed var(--app-line);
+}
+
+.dangerButton {
+  background: var(--app-surface);
+}
+
+/* ---------- Folha de confirmação ---------- */
+.sheetError {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--mantine-color-barro-light);
+  color: light-dark(var(--mantine-color-barro-9), var(--mantine-color-barro-2));
+  font-weight: 600;
+
+  p {
+    margin: 0;
+  }
+}
+
+.sheetActions {
+  display: grid;
+  gap: 10px;
+}

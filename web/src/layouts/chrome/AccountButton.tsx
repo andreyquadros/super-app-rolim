@@ -16,7 +16,7 @@ export function AccountButton() {
   }
   return (
     <AppLink to="/perfil" nav="tab" className={classes.avatarLink} aria-label="Meu perfil" data-press>
-      <Avatar name={profile?.fullName ?? user.email ?? "?"} color="initials" size={40} className={classes.avatar} />
+      <Avatar name={profile?.fullName ?? user.email ?? "?"} color="mata" variant="white" size={40} className={classes.avatar} />
     </AppLink>
   );
 }

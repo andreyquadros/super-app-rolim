@@ -1,0 +1,139 @@
+.timeline {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  --bullet: 28px;
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--bullet) minmax(0, 1fr);
+  gap: 14px;
+  padding-bottom: 20px;
+
+  &:last-child {
+    padding-bottom: 0;
+  }
+
+  /* Linha até a próxima etapa (verde quando ela já foi alcançada) */
+  &:not(:last-child)::before {
+    content: "";
+    position: absolute;
+    top: calc(var(--bullet) + 4px);
+    bottom: 4px;
+    left: calc(var(--bullet) / 2 - 1.5px);
+    width: 3px;
+    border-radius: 999px;
+    background: var(--app-line);
+  }
+
+  &[data-next-done]::before {
+    background: light-dark(var(--mantine-color-mata-6), var(--mantine-color-mata-7));
+  }
+}
+
+.bullet {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--bullet);
+  height: var(--bullet);
+  border-radius: 50%;
+  background: var(--mantine-color-mata-8);
+  color: #ffffff;
+
+  .item[data-state="pending"] & {
+    border: 2px dashed light-dark(var(--mantine-color-slate-3), var(--mantine-color-slate-6));
+    background: var(--app-surface);
+  }
+
+  .item[data-state="rejected"] & {
+    background: var(--mantine-color-barro-7);
+  }
+
+  .item[data-state="canceled"] & {
+    background: var(--mantine-color-slate-7);
+  }
+
+  /* Etapa atual: o anel pulsa duas vezes e para */
+  .item[data-state="current"] &::after {
+    content: "";
+    position: absolute;
+    inset: -5px;
+    border: 2px solid var(--mantine-color-mata-5);
+    border-radius: 50%;
+    opacity: 0;
+    animation: ring 1.2s var(--ease-standard) 300ms 2;
+  }
+}
+
+@keyframes ring {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.35);
+  }
+}
+
+.body {
+  min-width: 0;
+  padding-top: 2px;
+}
+
+.label {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.3;
+
+  .item[data-state="pending"] & {
+    color: var(--app-ink-soft);
+    font-weight: 600;
+  }
+
+  .item[data-state="rejected"] & {
+    color: light-dark(var(--mantine-color-barro-8), var(--mantine-color-barro-3));
+  }
+}
+
+.meta {
+  margin: 2px 0 0;
+  color: var(--app-ink-soft);
+  font-size: 0.9375rem;
+}
+
+.response {
+  margin-top: 10px;
+  padding: 10px 14px;
+  border-radius: 6px 16px 16px 16px;
+  background: var(--mantine-color-ipe-light);
+  color: light-dark(#3a2a00, var(--mantine-color-ipe-1));
+}
+
+.responseLabel {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.responseText {
+  margin: 4px 0 0;
+  font-size: 1rem;
+  line-height: 1.45;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+:global(html[data-motion="lite"]) .bullet::after {
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bullet::after {
+    animation: none !important;
+  }
+}

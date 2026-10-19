@@ -1,6 +1,6 @@
-import { Alert, Badge, Button, Drawer, Group, SegmentedControl, Skeleton, Stack, Table, Text } from "@mantine/core";
+import { Alert, Button, Drawer, Group, SegmentedControl, Stack } from "@mantine/core";
 import { IconBuildingCommunity, IconPlus } from "@tabler/icons-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { EmptyState } from "@/components/EmptyState";
 import { PageHeader } from "@/components/PageHeader";
 import { isDutyType } from "@/domain/duty";
@@ -8,15 +8,37 @@ import type { Building, BuildingType } from "@/domain/types";
 import { useBuildings, useStaffList } from "@/hooks/useAdminData";
 import classes from "./admin.module.css";
 import { BuildingForm } from "./BuildingForm";
+import { BuildingsTable } from "./BuildingsTable";
+
+const TABS: Array<{ value: BuildingType; label: string }> = [
+  { value: "PUBLIC", label: "Unidades públicas" },
+  { value: "PHARMACY", label: "Farmácias" },
+  { value: "FUNERAL", label: "Funerárias" },
+];
+
+const NEW_LABEL: Record<BuildingType, string> = {
+  PUBLIC: "Nova unidade",
+  PHARMACY: "Nova farmácia",
+  FUNERAL: "Nova funerária",
+};
+
+const EMPTY: Record<BuildingType, { title: string; description: string }> = {
+  PUBLIC: { title: "Nenhuma unidade pública", description: "Cadastre as unidades para liberar a ouvidoria e os comunicados." },
+  PHARMACY: { title: "Nenhuma farmácia", description: "Cadastre as farmácias e escolha quem atualiza o plantão de cada uma." },
+  FUNERAL: { title: "Nenhuma funerária", description: "Cadastre as funerárias e escolha quem atualiza o plantão de cada uma." },
+};
+
+function isBuildingType(value: string): value is BuildingType {
+  return value === "PUBLIC" || isDutyType(value);
+}
 
 export default function BuildingsAdminPage() {
   const [type, setType] = useState<BuildingType>("PUBLIC");
   const { data, loading, error } = useBuildings(type);
   const staff = useStaffList();
   const [editing, setEditing] = useState<Building | "new" | null>(null);
-  const dutyManagers = (staff.data ?? []).filter((s) => s.active && s.roles.includes("DUTY_MANAGER"));
-  const managerName = (id: string) => dutyManagers.find((s) => s.id === id)?.fullName ?? "—";
-  const duty = isDutyType(type);
+  const dutyManagers = useMemo(() => (staff.data ?? []).filter((s) => s.active && s.roles.includes("DUTY_MANAGER")), [staff.data]);
+  const buildings = data ?? [];
 
   return (
     <Stack gap="md">
@@ -24,72 +46,35 @@ export default function BuildingsAdminPage() {
         eyebrow="Cadastros"
         title="Unidades e plantões"
         description="Unidades públicas recebem a ouvidoria e enviam comunicados; farmácias e funerárias aparecem nas listas de plantão."
-        actions={
-          <Button leftSection={<IconPlus size={16} />} onClick={() => setEditing("new")}>
-            Nova
-          </Button>
-        }
       />
-      <SegmentedControl
-        value={type}
-        onChange={(v) => setType(v as BuildingType)}
-        data={[
-          { value: "PUBLIC", label: "Unidades públicas" },
-          { value: "PHARMACY", label: "Farmácias" },
-          { value: "FUNERAL", label: "Funerárias" },
-        ]}
-        style={{ alignSelf: "flex-start" }}
-      />
-      {error && <Alert color="barro">{error}</Alert>}
+      <Group justify="space-between" gap="sm">
+        <SegmentedControl
+          value={type}
+          onChange={(v) => isBuildingType(v) && setType(v)}
+          data={TABS}
+          aria-label="Tipo de cadastro"
+          style={{ maxWidth: "100%" }}
+        />
+        <Button leftSection={<IconPlus size={18} aria-hidden />} onClick={() => setEditing("new")}>
+          {NEW_LABEL[type]}
+        </Button>
+      </Group>
+      {(error || staff.error) && <Alert color="barro">{error ?? staff.error}</Alert>}
       {loading ? (
-        <Skeleton h={240} radius="lg" />
-      ) : (data ?? []).length === 0 ? (
-        <EmptyState icon={<IconBuildingCommunity size={28} />} title="Nenhum cadastro" description="Cadastre as unidades para liberar a ouvidoria e os comunicados." />
+        <div className={`${classes.tableSkeleton} shimmer`} aria-busy="true" aria-label="Carregando cadastros" />
+      ) : buildings.length === 0 ? (
+        <EmptyState icon={<IconBuildingCommunity size={28} />} title={EMPTY[type].title} description={EMPTY[type].description} />
       ) : (
-        <Table.ScrollContainer minWidth={640}>
-          <Table verticalSpacing="sm" bg="var(--app-surface)">
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Nome</Table.Th>
-                <Table.Th>Endereço</Table.Th>
-                <Table.Th>{duty ? "Responsáveis" : "Telefones"}</Table.Th>
-                <Table.Th>Situação</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {(data ?? []).map((b) => (
-                <Table.Tr key={b.id} className={classes.row} onClick={() => setEditing(b)} tabIndex={0} onKeyDown={(e) => e.key === "Enter" && setEditing(b)}>
-                  <Table.Td>
-                    <Text fw={600} size="sm">
-                      {b.name}
-                    </Text>
-                  </Table.Td>
-                  <Table.Td>
-                    <Text size="sm" lineClamp={1}>
-                      {b.address}
-                    </Text>
-                  </Table.Td>
-                  <Table.Td>
-                    <Text size="sm" lineClamp={1}>
-                      {duty ? b.ownerIds.map(managerName).join(", ") || "—" : b.phones.length || "—"}
-                    </Text>
-                  </Table.Td>
-                  <Table.Td>
-                    <Group gap={4}>
-                      {!b.active && <Badge color="gray">Inativa</Badge>}
-                      {duty && b.active && <Badge color={b.isOpen ? "mata" : "gray"}>{b.isOpen ? "Aberta" : "Fechada"}</Badge>}
-                      {duty && b.isOnDuty && <Badge color="barro">Plantão</Badge>}
-                      {b.type === "PUBLIC" && b.active && <Badge color="mata">Ativa</Badge>}
-                    </Group>
-                  </Table.Td>
-                </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
-        </Table.ScrollContainer>
+        <BuildingsTable type={type} buildings={buildings} dutyManagers={dutyManagers} onEdit={setEditing} />
       )}
 
-      <Drawer opened={editing !== null} onClose={() => setEditing(null)} position="right" size="lg" title={editing === "new" ? "Nova unidade" : "Editar unidade"}>
+      <Drawer
+        opened={editing !== null}
+        onClose={() => setEditing(null)}
+        position="right"
+        size="lg"
+        title={editing === "new" ? NEW_LABEL[type] : "Editar cadastro"}
+      >
         {editing !== null && (
           <BuildingForm
             key={editing === "new" ? "new" : editing.id}

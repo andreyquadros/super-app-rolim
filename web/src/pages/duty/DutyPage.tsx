@@ -104,6 +104,7 @@ function DutyList({ type }: { type: DutyType }) {
         </ul>
       ) : list.length === 0 ? (
         <EmptyState
+          order={2}
           icon={type === "FUNERAL" ? <IconFlower size={28} /> : <IconPill size={28} />}
           title={emptyTitle(type, filter)}
           action={

@@ -1,61 +1,115 @@
-import { Alert, Anchor, Button, Stack, TextInput } from "@mantine/core";
+import { Button, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { useState } from "react";
-import { Link } from "react-router";
+import { IconCheck } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
+import { useLocation } from "react-router";
 import { useAuth } from "@/auth/AuthContext";
+import { useBackNavigation } from "@/hooks/useBackNavigation";
 import { errorCode, errorMessage } from "@/lib/errors";
 import { AuthFrame } from "./AuthFrame";
+import { AuthActions, FormError, SubmitButton } from "./authUi";
+import { emailValidator, fieldProps, focusFirstError } from "./fields";
+import { useNextPath, withNext } from "./nextPath";
+import classes from "./auth.module.css";
+
+/** E-mail digitado em "Entrar", trazido para não digitar de novo. */
+function carriedEmail(state: unknown): string {
+  if (typeof state !== "object" || state === null || !("email" in state)) return "";
+  return typeof state.email === "string" ? state.email : "";
+}
 
 export default function ResetPasswordPage() {
   const { resetPassword } = useAuth();
-  const [sent, setSent] = useState(false);
+  const next = useNextPath();
+  const backToLogin = useBackNavigation(withNext("/entrar", next));
+  const initialEmail = carriedEmail(useLocation().state);
+  const [sentTo, setSentTo] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const form = useForm({
-    initialValues: { email: "" },
-    validate: { email: (v) => (/^\S+@\S+\.\S+$/.test(v.trim()) ? null : "Informe um e-mail válido") },
+    initialValues: { email: initialEmail },
+    validate: { email: emailValidator },
   });
 
-  const submit = form.onSubmit(async ({ email }) => {
-    setBusy(true);
-    setError(null);
-    try {
-      await resetPassword(email);
-      setSent(true);
-    } catch (e: unknown) {
-      // Não revelamos se o e-mail existe: tratamos "usuário não encontrado" como enviado
-      if (errorCode(e) === "auth/user-not-found") setSent(true);
-      else setError(errorMessage(e));
-    } finally {
-      setBusy(false);
-    }
-  });
+  // Trocou o conteúdo da tela: o foco vai para o novo título (leitores de tela)
+  useEffect(() => {
+    if (sentTo) document.querySelector<HTMLElement>("main h1")?.focus({ preventScroll: true });
+  }, [sentTo]);
 
-  return (
-    <AuthFrame title="Recuperar senha" subtitle="Enviaremos um link para você criar uma nova senha.">
-      {sent ? (
-        <Stack>
-          <Alert color="mata" variant="light" title="Verifique seu e-mail">
-            Se houver uma conta com esse endereço, o link chegará em alguns minutos. Confira também a caixa de spam.
-          </Alert>
-          <Button component={Link} to="/entrar" variant="default">
+  const submit = form.onSubmit(
+    async ({ email }) => {
+      setBusy(true);
+      setError(null);
+      try {
+        await resetPassword(email);
+        setSentTo(email.trim());
+      } catch (e: unknown) {
+        // Não revelamos se o e-mail existe: tratamos "usuário não encontrado" como enviado
+        if (errorCode(e) === "auth/user-not-found") setSentTo(email.trim());
+        else setError(errorMessage(e));
+      } finally {
+        setBusy(false);
+      }
+    },
+    (errors) => focusFirstError(errors, ["email"]),
+  );
+
+  if (sentTo) {
+    return (
+      <AuthFrame
+        title="Confira seu e-mail"
+        icon={
+          <span className={classes.sentIcon}>
+            <IconCheck size={34} stroke={2.6} aria-hidden />
+          </span>
+        }
+        lead={
+          <>
+            Se houver uma conta com <span className={classes.sentAddress}>{sentTo}</span>, o link para criar uma senha nova
+            chega em alguns minutos.
+          </>
+        }
+      >
+        <p className={classes.lead}>Não chegou? Confira também a caixa de spam ou de lixo eletrônico.</p>
+        <AuthActions>
+          <Button size="lg" h={56} radius="xl" fullWidth className={classes.primary} onClick={backToLogin}>
             Voltar para entrar
           </Button>
-        </Stack>
-      ) : (
-        <form onSubmit={submit} noValidate>
-          <Stack>
-            {error && <Alert color="barro">{error}</Alert>}
-            <TextInput label="E-mail" type="email" inputMode="email" autoComplete="email" {...form.getInputProps("email")} />
-            <Button type="submit" size="md" loading={busy}>
-              Enviar link
-            </Button>
-            <Anchor component={Link} to="/entrar" size="sm" ta="center">
-              Voltar
-            </Anchor>
-          </Stack>
-        </form>
-      )}
+        </AuthActions>
+        <p className={classes.switch}>
+          <span>Digitou errado?</span>
+          <button type="button" className={classes.link} onClick={() => setSentTo(null)}>
+            Usar outro e-mail
+          </button>
+        </p>
+      </AuthFrame>
+    );
+  }
+
+  return (
+    <AuthFrame title="Esqueceu a senha?" lead="Digite o e-mail da sua conta. Vamos enviar um link para você criar uma senha nova.">
+      <form onSubmit={submit} noValidate className={classes.form}>
+        <TextInput
+          {...fieldProps}
+          label="E-mail"
+          type="email"
+          inputMode="email"
+          autoComplete="email"
+          autoCapitalize="none"
+          spellCheck={false}
+          {...form.getInputProps("email")}
+        />
+        <FormError message={error} />
+        <AuthActions>
+          <SubmitButton loading={busy}>Enviar link</SubmitButton>
+        </AuthActions>
+      </form>
+      <p className={classes.switch}>
+        <span>Lembrou a senha?</span>
+        <button type="button" className={classes.link} onClick={backToLogin}>
+          Voltar para entrar
+        </button>
+      </p>
     </AuthFrame>
   );
 }

@@ -15,7 +15,7 @@ test("início mostra os serviços e dados públicos ao vivo", async ({ page }) =
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await expect(page.getByRole("link", { name: /Zeladoria/ })).toBeVisible();
-  await expect(page.getByText(/de plantão agora|Ver abertas agora/)).toBeVisible();
+  await expect(page.getByText(/de plantão agora/i).first()).toBeVisible();
   await expect(page.getByText("Campanha de vacinação neste sábado")).toBeVisible();
 });
 
@@ -51,14 +51,14 @@ test("avisa quando a conexão cai e some quando volta", async ({ page, context }
 test("farmácias de plantão aparecem sem login", async ({ page }) => {
   await page.goto("/farmacias");
   await expect(page.getByText("Farmácia Exemplo Centro")).toBeVisible();
-  await expect(page.getByText("Plantão", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("De plantão", { exact: true }).first()).toBeVisible();
 });
 
 test("cidadão entra e acompanha seus protocolos", async ({ page }) => {
   await signIn(page, "cidadao@rolim.test", "/protocolos");
   await page.getByText("Todos", { exact: true }).click();
   await expect(page.getByText("ZEL-2026-K7Q2MX9P")).toBeVisible();
-  await page.getByText("Poste apagado em frente à escola").click();
+  await page.getByText("Poste apagado em frente à escola", { exact: true }).click();
   await expect(page.getByText("Equipe de iluminação agendada para esta semana.")).toBeVisible();
 });
 

@@ -1,0 +1,42 @@
+.error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  background: light-dark(var(--mantine-color-barro-0), rgba(209, 82, 49, 0.12));
+}
+
+.text {
+  margin: 0;
+  color: light-dark(var(--mantine-color-barro-9), var(--mantine-color-barro-2));
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.retry {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 18px;
+  border: 1px solid var(--app-line);
+  border-radius: 999px;
+  background: var(--app-surface);
+  color: var(--app-ink);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 3px solid var(--mantine-color-mata-6);
+    outline-offset: 2px;
+  }
+}
+
+.skeleton {
+  border-radius: 18px;
+}

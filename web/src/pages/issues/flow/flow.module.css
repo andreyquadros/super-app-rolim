@@ -1,0 +1,251 @@
+/* Fluxos em passos (Problema na rua e Ouvidoria): pergunta, conteúdo do
+   passo e ações fixas no rodapé. Medidas de texto em rem (Tamanho do texto). */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Puxar para atualizar perderia o que foi preenchido */
+:global(html):has(.page) {
+  overscroll-behavior-y: none;
+}
+
+/* ---------- Troca de passo ---------- */
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  &[data-dir="forward"] {
+    animation: step-forward var(--motion-screen) var(--ease-enter) backwards;
+  }
+
+  &[data-dir="back"] {
+    animation: step-back var(--motion-screen) var(--ease-enter) backwards;
+  }
+}
+
+@keyframes step-forward {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+}
+
+@keyframes step-back {
+  from {
+    opacity: 0;
+    transform: translateX(-28px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .step[data-dir] {
+    animation: none;
+  }
+}
+
+:global(html[data-motion="lite"]) .step[data-dir] {
+  animation: none;
+}
+
+/* ---------- Pergunta (H1) ---------- */
+.heading {
+  display: grid;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--mantine-font-family-headings);
+  font-size: 1.625rem;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+.kicker {
+  display: block;
+  margin-bottom: 8px;
+  color: light-dark(var(--mantine-color-mata-8), var(--mantine-color-mata-3));
+  font-family: var(--mantine-font-family);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.3;
+}
+
+.lead {
+  margin: 0;
+  color: var(--app-ink-soft);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.sectionTitle {
+  margin: 4px 0 0;
+  font-family: var(--mantine-font-family);
+  font-size: 1.0625rem;
+  font-weight: 700;
+}
+
+/* ---------- Campos ---------- */
+.fields {
+  display: grid;
+  gap: 16px;
+}
+
+/* Campos lado a lado que se empilham em telas estreitas ou com texto grande */
+.fieldRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 12px;
+
+  > * {
+    flex: 3 1 10rem;
+    min-width: 0;
+  }
+
+  > [data-narrow] {
+    flex: 2 1 8.5rem;
+  }
+}
+
+/* ---------- Avisos dentro do passo ---------- */
+.note,
+.error {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 16px;
+  font-size: 1rem;
+  line-height: 1.45;
+
+  svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+}
+
+.note {
+  background: var(--mantine-color-ipe-light);
+  color: light-dark(#3a2a00, var(--mantine-color-ipe-2));
+}
+
+.error {
+  background: var(--mantine-color-barro-light);
+  color: light-dark(var(--mantine-color-barro-9), var(--mantine-color-barro-2));
+  font-weight: 600;
+  outline: none;
+}
+
+.inlineLink {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ---------- Rodapé fixo ---------- */
+.footer {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 90;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--app-line);
+  background: var(--app-paper);
+  box-shadow: 0 -10px 24px -18px rgba(8, 20, 14, 0.4);
+}
+
+.footerInner {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+  gap: 10px;
+  /* Alinhado com o conteúdo (que tem 16 px de margem de cada lado) */
+  max-width: calc(var(--app-content-max) - 32px);
+  margin-inline: auto;
+  container-type: inline-size;
+
+  /* Tablet e computador: Voltar à esquerda, ação principal à direita */
+  @media (min-width: $mantine-breakpoint-sm) {
+    grid-template-columns: auto minmax(12rem, auto);
+    justify-content: space-between;
+  }
+
+  > :only-child {
+    grid-column: 1 / -1;
+  }
+}
+
+.footerButton {
+  --button-padding-x: 18px;
+  height: auto;
+  min-height: 56px;
+  font-size: 1.0625rem;
+
+  /* "Voltar" com as cores do app (o cinza padrão destoa no escuro) */
+  &[data-variant="default"] {
+    border-color: var(--app-line);
+    background: var(--app-surface);
+    color: var(--app-ink);
+  }
+
+  :global(.mantine-Button-label) {
+    white-space: normal;
+    text-align: center;
+    line-height: 1.2;
+  }
+}
+
+/* Tela estreita ou texto grande: as setas saem e o texto fica inteiro */
+@container (max-width: 20rem) {
+  .footerButton :global(.mantine-Button-section) {
+    display: none;
+  }
+}
+
+/* ---------- Folha de descarte ---------- */
+.sheetActions {
+  display: grid;
+  gap: 10px;
+}
+
+.sheetPrimary,
+.sheetDanger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 3px solid var(--mantine-color-mata-6);
+    outline-offset: 2px;
+  }
+}
+
+.sheetPrimary {
+  background: var(--mantine-color-mata-8);
+  color: #ffffff;
+}
+
+.sheetDanger {
+  background: var(--mantine-color-barro-light);
+  color: light-dark(var(--mantine-color-barro-9), var(--mantine-color-barro-2));
+}

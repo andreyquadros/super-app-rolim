@@ -1,0 +1,197 @@
+/* Painel da equipe: papel claro, sem a barra verde do cidadão; movimento só no esmaecer da tela */
+
+.header {
+  border-bottom: 1px solid var(--app-line);
+  background: var(--app-surface);
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 100%;
+  padding-inline: 16px;
+
+  @media (min-width: $mantine-breakpoint-sm) {
+    padding-inline: 20px 16px;
+  }
+}
+
+.headerStart {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.brandLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  border-radius: 12px;
+  color: inherit;
+  text-decoration: none;
+
+  &:focus-visible {
+    outline: 3px solid var(--mantine-color-mata-6);
+    outline-offset: 2px;
+  }
+}
+
+/* "Painel da equipe": ardósia, o tom neutro do app */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 2px 12px;
+  border-radius: 999px;
+  background: light-dark(var(--mantine-color-slate-0), rgba(151, 171, 189, 0.16));
+  color: light-dark(var(--mantine-color-slate-9), var(--mantine-color-slate-1));
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+/* Telas estreitas: o selo vai para o topo do menu */
+.chipHeader {
+  @media (max-width: 30em) {
+    display: none;
+  }
+}
+
+.chipNavbar {
+  align-self: flex-start;
+  margin: 4px 8px 12px;
+
+  @media (min-width: 30em) {
+    display: none;
+  }
+}
+
+.user {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 4px 8px 4px 4px;
+  border-radius: 999px;
+  color: var(--app-ink);
+  font-size: 0.9375rem;
+  font-weight: 600;
+
+  &:focus-visible {
+    outline: 3px solid var(--mantine-color-mata-6);
+    outline-offset: 2px;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: light-dark(var(--mantine-color-gray-1), rgba(255, 255, 255, 0.06));
+    }
+  }
+}
+
+.userName {
+  @media (max-width: $mantine-breakpoint-xs) {
+    display: none;
+  }
+}
+
+.userChevron {
+  color: var(--app-ink-soft);
+}
+
+/* ---------- Menu lateral ---------- */
+.navbar {
+  border-right: 1px solid var(--app-line);
+  background: var(--app-surface);
+}
+
+.navList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.navLink {
+  min-height: 48px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  color: var(--app-ink);
+
+  &[data-active] {
+    background: var(--mantine-color-mata-light);
+    color: light-dark(var(--mantine-color-mata-9), var(--mantine-color-mata-2));
+  }
+
+  &:focus-visible {
+    outline: 3px solid var(--mantine-color-mata-6);
+    outline-offset: -3px;
+  }
+}
+
+.navLabel {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.3;
+
+  .navLink[data-active] & {
+    font-weight: 700;
+  }
+}
+
+.navIcon {
+  color: var(--app-ink-soft);
+
+  .navLink[data-active] & {
+    color: light-dark(var(--mantine-color-mata-8), var(--mantine-color-mata-3));
+  }
+}
+
+.navFooter {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 14px 8px 4px;
+  border-top: 1px solid var(--app-line);
+}
+
+.roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.maintainer {
+  margin: 0;
+  color: var(--app-ink-soft);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+/* ---------- Conteúdo ---------- */
+.main {
+  background: var(--app-paper);
+}
+
+.content {
+  max-width: 1200px;
+  margin-inline: auto;
+  animation: panel-fade var(--motion-fast) var(--ease-standard) both;
+}
+
+@keyframes panel-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+:global(html[data-motion="lite"]) .content {
+  animation: none;
+}

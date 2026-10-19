@@ -1,79 +1,111 @@
-import { Alert, Anchor, Button, Divider, Group, PasswordInput, Stack, Text, TextInput } from "@mantine/core";
+import { TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router";
+import { Navigate } from "react-router";
 import { useAuth } from "@/auth/AuthContext";
-import { errorMessage } from "@/lib/errors";
-import { AuthFrame, GoogleIcon, useNextPath } from "./AuthFrame";
+import { AppLink, useAppNavigate } from "@/components/AppLink";
+import { completeOnboarding } from "@/features/onboarding/onboardingState";
+import { errorCode, errorMessage } from "@/lib/errors";
+import { AuthFrame } from "./AuthFrame";
+import { AuthActions, FormError, GoogleButton, OrDivider, SubmitButton, SwitchPrompt } from "./authUi";
+import { emailValidator, fieldProps, focusFirstError, PasswordField } from "./fields";
+import { useNextPath, withNext } from "./nextPath";
+import classes from "./auth.module.css";
+
+type Method = "password" | "google";
+
+interface LoginError {
+  method: Method;
+  message: string;
+}
+
+const FIELD_ORDER = ["email", "password"] as const;
+
+/** Códigos de "e-mail ou senha errados" (variam com a proteção contra enumeração). */
+const WRONG_CREDENTIALS = new Set(["auth/invalid-credential", "auth/invalid-login-credentials", "auth/wrong-password", "auth/user-not-found"]);
+
+/** Mesma mensagem para e-mail inexistente e senha errada: não revela quem tem conta. */
+function signInErrorMessage(error: unknown): string {
+  const code = errorCode(error);
+  return code && WRONG_CREDENTIALS.has(code) ? "E-mail ou senha incorretos. Confira e tente de novo." : errorMessage(error);
+}
 
 export default function LoginPage() {
   const { user, loading, signIn, signInWithGoogle } = useAuth();
-  const navigate = useNavigate();
+  const navigate = useAppNavigate();
   const next = useNextPath();
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState<"password" | "google" | null>(null);
+  const [error, setError] = useState<LoginError | null>(null);
+  const [busy, setBusy] = useState<Method | null>(null);
 
   const form = useForm({
     initialValues: { email: "", password: "" },
     validate: {
-      email: (v) => (/^\S+@\S+\.\S+$/.test(v.trim()) ? null : "Informe um e-mail válido"),
-      password: (v) => (v.length > 0 ? null : "Informe a senha"),
+      email: emailValidator,
+      password: (v) => (v.length > 0 ? null : "Digite sua senha"),
     },
   });
 
-  if (!loading && user) return <Navigate to={next} replace />;
+  if (!loading && user && busy === null) return <Navigate to={next} replace />;
 
-  const run = async (kind: "password" | "google", action: () => Promise<void>) => {
-    setBusy(kind);
+  const run = async (method: Method, action: () => Promise<void>) => {
+    setBusy(method);
     setError(null);
     try {
       await action();
-      navigate(next, { replace: true });
+      // Entrou: a apresentação dos primeiros acessos não aparece mais
+      completeOnboarding();
+      navigate(next, { replace: true, nav: "tab" });
     } catch (e: unknown) {
-      setError(errorMessage(e));
-    } finally {
+      setError({ method, message: method === "password" ? signInErrorMessage(e) : errorMessage(e) });
       setBusy(null);
     }
   };
 
+  const submit = form.onSubmit(
+    (values) => run("password", () => signIn(values.email, values.password)),
+    (errors) => focusFirstError(errors, FIELD_ORDER),
+  );
+
   return (
-    <AuthFrame title="Entrar" subtitle="Use seu e-mail ou sua conta Google.">
-      <form onSubmit={form.onSubmit((v) => run("password", () => signIn(v.email, v.password)))} noValidate>
-        <Stack>
-          {error && (
-            <Alert color="barro" variant="light">
-              {error}
-            </Alert>
-          )}
-          <TextInput label="E-mail" type="email" autoComplete="email" inputMode="email" {...form.getInputProps("email")} />
-          <PasswordInput label="Senha" size="md" autoComplete="current-password" {...form.getInputProps("password")} />
-          <Group justify="flex-end" mt={-6}>
-            <Anchor component={Link} to="/recuperar-senha" size="sm">
-              Esqueci minha senha
-            </Anchor>
-          </Group>
-          <Button type="submit" size="md" loading={busy === "password"} disabled={busy !== null}>
-            Entrar
-          </Button>
-          <Divider label="ou" labelPosition="center" />
-          <Button
-            variant="default"
-            size="md"
-            leftSection={<GoogleIcon />}
-            loading={busy === "google"}
-            disabled={busy !== null}
-            onClick={() => run("google", signInWithGoogle)}
+    <AuthFrame title="Entre no SUPER APP" lead="Com a sua conta, você faz pedidos à prefeitura e acompanha cada passo.">
+      <div className={classes.form}>
+        <GoogleButton
+          label="Entrar com Google"
+          loading={busy === "google"}
+          disabled={busy !== null}
+          onClick={() => run("google", signInWithGoogle)}
+        />
+        {error?.method === "google" && <FormError message={error.message} />}
+        <OrDivider />
+        <form onSubmit={submit} noValidate className={classes.form}>
+          <TextInput
+            {...fieldProps}
+            label="E-mail"
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            autoCapitalize="none"
+            spellCheck={false}
+            {...form.getInputProps("email")}
+          />
+          <PasswordField label="Senha" autoComplete="current-password" {...form.getInputProps("password")} />
+          <AppLink
+            to={withNext("/recuperar-senha", next)}
+            state={{ email: form.values.email.trim() }}
+            nav="flow"
+            className={`${classes.link} ${classes.fieldHelp}`}
           >
-            Continuar com Google
-          </Button>
-          <Text size="sm" ta="center" mt="xs">
-            Ainda não tem conta?{" "}
-            <Anchor component={Link} to={`/cadastro?next=${encodeURIComponent(next)}`} fw={600}>
-              Criar conta
-            </Anchor>
-          </Text>
-        </Stack>
-      </form>
+            Esqueci minha senha
+          </AppLink>
+          {error?.method === "password" && <FormError message={error.message} />}
+          <AuthActions>
+            <SubmitButton loading={busy === "password"} disabled={busy === "google"}>
+              Entrar
+            </SubmitButton>
+          </AuthActions>
+        </form>
+        <SwitchPrompt question="Ainda não tem conta?" to={withNext("/cadastro", next)} label="Criar conta" />
+      </div>
     </AuthFrame>
   );
 }

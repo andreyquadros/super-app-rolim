@@ -1,59 +1,126 @@
-import { Alert, Button, Chip, Grid, Group, Select, Stack, Text, Textarea, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { IconSend } from "@tabler/icons-react";
-import { useMemo, useState } from "react";
+import { IconAlertTriangle, IconWifiOff } from "@tabler/icons-react";
+import { useCallback, useId, useMemo, useState } from "react";
 import { useAuth } from "@/auth/AuthContext";
-import { useOnline } from "@/hooks/useOnline";
-import { PageHeader } from "@/components/PageHeader";
 import { SubmittedPanel } from "@/components/SubmittedPanel";
 import { CONTACTS } from "@/config/city";
 import { watchBuildings } from "@/data/buildings";
 import { createOmbudsman } from "@/data/requests";
-import { OMBUDSMAN_TYPES, type OmbudsmanType } from "@/domain/catalog";
+import type { OmbudsmanType } from "@/domain/catalog";
+import { onlyDigits } from "@/domain/documents";
 import { toIsoDate } from "@/domain/format";
+import { useOnline } from "@/hooks/useOnline";
 import { useWatch } from "@/hooks/useWatch";
+import { useChrome } from "@/layouts/chrome/chromeContext";
 import { errorMessage } from "@/lib/errors";
+import { DiscardSheet, FlowFooter, focusFirstError, StepHeading } from "@/pages/issues/flow/FlowParts";
+import flow from "@/pages/issues/flow/flow.module.css";
+import { useStepFlow } from "@/pages/issues/flow/useStepFlow";
+import classes from "./NewOmbudsman.module.css";
+import { OmbudsmanReview, PlaceStep, StoryStep } from "./OmbudsmanSteps";
+import {
+  initialOmbudsman,
+  OMBUDSMAN_STEP_FIELDS,
+  OMBUDSMAN_TOTAL_STEPS,
+  ombudsmanReachableStep,
+  ombudsmanValidators,
+  type OmbudsmanFormValues,
+} from "./ombudsmanForm";
+import { TypeStep } from "./TypeStep";
 
-interface Values {
-  type: OmbudsmanType | "";
-  buildingId: string | null;
-  occurrenceDate: string;
-  occurrenceTime: string;
-  title: string;
-  description: string;
+const QUESTIONS = ["Sobre o que você quer falar?", "Onde foi o atendimento?", "Conte o que aconteceu", "Confira e envie"] as const;
+const LEADS = [
+  "Elogios, sugestões e reclamações sobre o atendimento numa unidade pública.",
+  "Escolha a unidade e o dia em que aconteceu.",
+  "A ouvidoria lê cada relato e encaminha para o setor responsável.",
+  "Veja se está tudo certo antes de enviar.",
+] as const;
+
+interface Submitted {
+  id: string;
+  protocol: string;
+  pendingSync: boolean;
 }
 
+function OtherChannels() {
+  const { ouvidoriaPhone: phone, ouvidoriaEmail: email } = CONTACTS;
+  if (!phone && !email) return null;
+  return (
+    <p className={classes.contact}>
+      Prefere outro canal?{" "}
+      {phone && <a href={`tel:${onlyDigits(phone)}`}>{phone}</a>}
+      {phone && email && " · "}
+      {email && <a href={`mailto:${email}`}>{email}</a>}
+    </p>
+  );
+}
+
+/** /ouvidoria/nova: elogio, sugestão ou reclamação em 4 passos (?passo=N). */
 export default function NewOmbudsmanPage() {
   const { user, profile } = useAuth();
   const online = useOnline();
+  const headingId = useId();
+  const [today] = useState(() => toIsoDate(new Date()));
+  const validators = useMemo(() => ombudsmanValidators(today), [today]);
   const watcher = useMemo(() => watchBuildings("PUBLIC"), []);
   const buildings = useWatch(watcher);
-  const units = (buildings.data ?? []).filter((b) => b.active);
+  const units = useMemo(() => (buildings.data ?? []).filter((b) => b.active), [buildings.data]);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [result, setResult] = useState<{ id: string; protocol: string; pendingSync: boolean } | null>(null);
-  const today = toIsoDate(new Date());
+  const [result, setResult] = useState<Submitted | null>(null);
+  const [discardOpen, setDiscardOpen] = useState(false);
 
-  const form = useForm<Values>({
-    initialValues: { type: "", buildingId: null, occurrenceDate: today, occurrenceTime: "", title: "", description: "" },
-    validate: {
-      type: (v) => (v ? null : "Escolha o assunto"),
-      buildingId: (v) => (v ? null : "Escolha a unidade"),
-      occurrenceDate: (v) => (/^\d{4}-\d{2}-\d{2}$/.test(v) && v <= today ? null : "Informe uma data até hoje"),
-      occurrenceTime: (v) => (!v || /^([01]\d|2[0-3]):[0-5]\d$/.test(v) ? null : "Horário inválido"),
-      title: (v) => (v.trim().length >= 5 && v.trim().length <= 120 ? null : "Resuma em 5 a 120 caracteres"),
-      description: (v) => (v.trim().length >= 10 ? null : "Descreva com pelo menos 10 caracteres"),
-    },
+  const form = useForm<OmbudsmanFormValues>({ initialValues: initialOmbudsman(today), validate: validators });
+  const { step, direction, headingRef, goTo, exit, rewind } = useStepFlow(
+    OMBUDSMAN_TOTAL_STEPS,
+    ombudsmanReachableStep(form.values, today),
+  );
+
+  // X da barra: confirma antes de jogar fora o que foi preenchido
+  const dirty = form.isDirty();
+  const requestClose = useCallback(() => (dirty ? setDiscardOpen(true) : exit()), [dirty, exit]);
+  const keepEditing = useCallback(() => setDiscardOpen(false), []);
+  useChrome({
+    progress: { step: result ? OMBUDSMAN_TOTAL_STEPS : step, total: OMBUDSMAN_TOTAL_STEPS },
+    onClose: result ? exit : requestClose,
   });
 
-  if (result) {
-    return <SubmittedPanel protocol={result.protocol} detailPath={`/protocolos/ouvidoria/${result.id}`} pendingSync={result.pendingSync} />;
-  }
+  const move = (target: number) => {
+    setError(null);
+    goTo(target);
+  };
 
-  const submit = form.onSubmit(async (values) => {
-    if (!user || !profile || !values.type) return;
-    const unit = units.find((b) => b.id === values.buildingId);
-    if (!unit) return;
+  const next = () => {
+    const fields = OMBUDSMAN_STEP_FIELDS[step - 1] ?? [];
+    const invalid = fields.map((field) => form.validateField(field).hasError).some(Boolean);
+    if (invalid) {
+      focusFirstError();
+      return;
+    }
+    move(step + 1);
+  };
+
+  const selectType = (type: OmbudsmanType) => {
+    form.setFieldValue("type", type);
+    move(2);
+  };
+
+  const unit = units.find((b) => b.id === form.values.buildingId) ?? null;
+
+  const submit = async () => {
+    if (!user || !profile) {
+      setError("Sua sessão terminou. Entre de novo para enviar o pedido.");
+      return;
+    }
+    const { values } = form;
+    if (form.validate().hasErrors || !values.type) {
+      setError("Revise os campos destacados antes de enviar.");
+      return;
+    }
+    if (!unit) {
+      setError("Escolha a unidade de novo antes de enviar.");
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
@@ -72,76 +139,70 @@ export default function NewOmbudsmanPage() {
       if (online) await created.committed;
       else created.committed.catch(() => undefined);
       setResult({ id: created.id, protocol: created.protocol, pendingSync: !online });
+      // O Voltar depois do envio sai do fluxo em vez de refazer os passos
+      rewind();
     } catch (e: unknown) {
       setError(errorMessage(e, "Não foi possível enviar. Tente novamente."));
     } finally {
       setSubmitting(false);
     }
-  });
+  };
+
+  if (result) {
+    return (
+      <SubmittedPanel
+        protocol={result.protocol}
+        detailPath={`/protocolos/ouvidoria/${result.id}`}
+        pendingSync={result.pendingSync}
+        kindLabel="Ouvidoria"
+      />
+    );
+  }
+
+  const last = step === OMBUDSMAN_TOTAL_STEPS;
 
   return (
-    <Stack gap="lg">
-      <PageHeader
-        eyebrow="Ouvidoria"
-        title="Fale com a prefeitura"
-        description="Registre elogios, sugestões ou reclamações sobre o atendimento em uma unidade pública."
-        back="/"
-      />
-      <form onSubmit={submit} noValidate>
-        <Stack gap="lg">
-          <div>
-            <Text fw={600} mb="xs">
-              Assunto
-            </Text>
-            <Chip.Group value={form.values.type} onChange={(v) => form.setFieldValue("type", v as OmbudsmanType)}>
-              <Group gap="xs">
-                {OMBUDSMAN_TYPES.map((t) => (
-                  <Chip key={t.value} value={t.value} color={t.tone === "positive" ? "mata" : t.tone === "negative" ? "barro" : "slate"} variant="light">
-                    {t.label}
-                  </Chip>
-                ))}
-              </Group>
-            </Chip.Group>
-            {form.errors.type && (
-              <Text c="red" size="sm" mt={6}>
-                {form.errors.type}
-              </Text>
-            )}
-          </div>
-          <Select
-            label="Unidade"
-            placeholder={buildings.loading ? "Carregando unidades…" : "Escola, UBS, secretaria…"}
-            data={units.map((b) => ({ value: b.id, label: b.name }))}
-            searchable
-            nothingFoundMessage="Nenhuma unidade encontrada"
-            size="md"
-            {...form.getInputProps("buildingId")}
+    <div className={flow.page}>
+      <div key={step} className={flow.step} data-dir={direction === "none" ? undefined : direction}>
+        <StepHeading
+          id={headingId}
+          step={step}
+          total={OMBUDSMAN_TOTAL_STEPS}
+          title={QUESTIONS[step - 1]}
+          lead={LEADS[step - 1]}
+          headingRef={headingRef}
+        />
+        {step === 1 && <TypeStep value={form.values.type} onSelect={selectType} />}
+        {step === 2 && (
+          <PlaceStep
+            form={form}
+            units={units}
+            loading={buildings.loading}
+            error={buildings.error}
+            onRetry={buildings.retry}
+            today={today}
           />
-          <Grid gutter="sm">
-            <Grid.Col span={7}>
-              <TextInput label="Data do ocorrido" type="date" max={today} {...form.getInputProps("occurrenceDate")} />
-            </Grid.Col>
-            <Grid.Col span={5}>
-              <TextInput label="Horário" type="time" description="Opcional" {...form.getInputProps("occurrenceTime")} />
-            </Grid.Col>
-          </Grid>
-          <TextInput label="Título" placeholder="Ex.: Ótimo atendimento na recepção" maxLength={120} {...form.getInputProps("title")} />
-          <Textarea label="Relato" autosize minRows={5} maxLength={2000} placeholder="Conte o que aconteceu com o máximo de detalhes." {...form.getInputProps("description")} />
-          {error && (
-            <Alert color="barro" variant="light">
-              {error}
-            </Alert>
-          )}
-          <Button type="submit" size="md" rightSection={<IconSend size={16} />} loading={submitting}>
-            Enviar para a ouvidoria
-          </Button>
-          {(CONTACTS.ouvidoriaPhone || CONTACTS.ouvidoriaEmail) && (
-            <Text size="sm" c="dimmed" ta="center">
-              Prefere outro canal? {CONTACTS.ouvidoriaPhone} {CONTACTS.ouvidoriaEmail}
-            </Text>
-          )}
-        </Stack>
-      </form>
-    </Stack>
+        )}
+        {step === 3 && <StoryStep form={form} />}
+        {last && <OmbudsmanReview values={form.values} unitName={unit?.name ?? null} onEdit={move} />}
+        {last && !online && (
+          <p className={flow.note}>
+            <IconWifiOff size={20} aria-hidden />
+            Você está sem internet. O pedido fica guardado no celular e é enviado sozinho quando a conexão voltar.
+          </p>
+        )}
+        {(step === 1 || last) && <OtherChannels />}
+      </div>
+
+      {error && (
+        <p className={flow.error} role="alert">
+          <IconAlertTriangle size={20} aria-hidden />
+          {error}
+        </p>
+      )}
+
+      {step > 1 && <FlowFooter onBack={() => move(step - 1)} onNext={last ? submit : next} submit={last} loading={submitting} />}
+      <DiscardSheet open={discardOpen} onCancel={keepEditing} onDiscard={exit} />
+    </div>
   );
 }

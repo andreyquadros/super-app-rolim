@@ -17,6 +17,8 @@ O **SUPER APP Rolim de Moura** é o aplicativo do cidadão de Rolim de Moura (RO
 | Avisos push e e-mail a cada mudança de situação | Equipe e acessos por perfil (Administrador, Servidor, Plantão) |
 | Funciona offline; exclusão de conta (LGPD) | Farmácias e funerárias atualizam o próprio plantão |
 | Confirmação de e-mail para receber avisos por e-mail | Acesso de equipe só para e-mails confirmados |
+| Jeito de app: abas, folhas, animações e apresentação nos primeiros acessos | Painel com a marca do app e o plantão em tempo real |
+| Tamanho do texto ajustável e tema claro/escuro | |
 
 ## Arquitetura em uma imagem
 
@@ -49,8 +51,11 @@ flowchart LR
 web/              PWA (Vite + React + Mantine) — app do cidadão e painel
   src/domain/     regras de negócio puras (status, protocolo, CPF, geografia) + testes
   src/data/       acesso ao Firestore/Storage (substitui as rotas da API antiga)
+  src/layouts/    casca do app (barra verde, abas, trilho lateral, folha "Solicitar")
   src/pages/      telas do cidadão e do painel (admin/)
-  e2e/            testes de ponta a ponta (Playwright)
+  src/features/   apresentação dos primeiros acessos (onboarding)
+  src/theme/      cores, tipografia e sistema de movimento (motion.css)
+  e2e/            testes de ponta a ponta e de acessibilidade (Playwright + axe)
 functions/        Cloud Functions: e-mails, push, comunicados, auditoria, LGPD
 firestore.rules   quem pode ler/escrever o quê (substitui o backend de permissões)
 storage.rules     acesso às fotos

@@ -1,44 +1,29 @@
-.category {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  padding: 14px;
-  min-height: 150px;
-  border: 1.5px solid var(--app-line);
-  border-radius: var(--mantine-radius-lg);
-  background: var(--app-surface);
-  transition:
-    border-color var(--duration-fast),
-    transform var(--duration-fast) var(--ease-out-expo),
-    box-shadow var(--duration-fast);
+/* Partes específicas do "Problema na rua" (o resto vem de flow/flow.module.css) */
 
-  &:hover {
-    border-color: var(--mantine-color-mata-4);
-    transform: translateY(-2px);
+.gps {
+  height: auto;
+  min-height: 52px;
+  font-size: 1.0625rem;
+
+  :global(.mantine-Button-label) {
+    white-space: normal;
+    line-height: 1.2;
   }
 
-  &[data-selected] {
-    border-color: var(--mantine-color-mata-7);
-    box-shadow: 0 0 0 3px var(--mantine-color-mata-light);
-  }
-
-  &:focus-visible {
-    outline: 3px solid var(--mantine-color-ipe-4);
-    outline-offset: 2px;
+  @media (min-width: $mantine-breakpoint-sm) {
+    align-self: flex-start;
   }
 }
 
-.stickyActions {
-  position: sticky;
-  bottom: calc(var(--app-tabbar-h) + env(safe-area-inset-bottom) + 8px);
-  z-index: 5;
-  padding: 10px;
-  margin-inline: -10px;
-  border-radius: var(--mantine-radius-xl);
-  background: light-dark(rgba(246, 244, 238, 0.92), rgba(20, 26, 23, 0.92));
-  backdrop-filter: blur(8px);
+.map {
+  overflow: hidden;
+  border: 1px solid var(--app-line);
+  border-radius: 20px;
+  background: var(--app-line);
+  /* O mapa fica parado durante as transições de tela */
+  view-transition-name: none;
 
-  @media (min-width: $mantine-breakpoint-sm) {
-    bottom: 16px;
+  :global(.leaflet-container) {
+    border-radius: 0;
   }
 }

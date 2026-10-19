@@ -1,0 +1,35 @@
+.page {
+  /* Quanto os serviços sobem por cima do verde no celular */
+  --home-overlap: 28px;
+
+  @media (min-width: $mantine-breakpoint-sm) {
+    --home-overlap: 0px;
+  }
+}
+
+/* Celular: uma coluna (os serviços sobem por cima do cabeçalho) */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+
+  @media (min-width: $mantine-breakpoint-sm) {
+    margin-top: 28px;
+  }
+}
+
+/* Computador: 7/12 (serviços e pedidos) + 5/12 (plantão, aviso, convite) */
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  align-items: start;
+  gap: 28px;
+  margin-top: 28px;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  min-width: 0;
+}

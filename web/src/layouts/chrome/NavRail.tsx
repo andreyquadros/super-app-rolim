@@ -71,7 +71,7 @@ export function NavRail({ sheetOpen, onRequest, hasUnreadNotices }: NavRailProps
         )}
         {user ? (
           <AppLink to="/perfil" nav="tab" className={classes.item} aria-current={pathname.startsWith("/perfil") ? "page" : undefined}>
-            <Avatar name={profile?.fullName ?? user.email ?? "?"} color="initials" size={36} className={classes.avatar} />
+            <Avatar name={profile?.fullName ?? user.email ?? "?"} color="mata" variant="white" size={36} className={classes.avatar} />
             <span className={classes.label}>Perfil</span>
           </AppLink>
         ) : (

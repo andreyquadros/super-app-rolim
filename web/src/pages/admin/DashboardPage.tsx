@@ -1,5 +1,5 @@
-import { Alert, Group, Paper, SimpleGrid, Skeleton, Stack, Text, Title, Tooltip } from "@mantine/core";
-import { useMemo } from "react";
+import { Alert, Group, Paper, SimpleGrid, Skeleton, Stack, Text, Title } from "@mantine/core";
+import { useMemo, type CSSProperties } from "react";
 import { useNavigate } from "react-router";
 import { MapView, STATUS_HEX } from "@/components/map";
 import { PageHeader } from "@/components/PageHeader";
@@ -11,6 +11,7 @@ import { countBy, formatDays, summarize } from "@/domain/stats";
 import type { CitizenRequest, Issue } from "@/domain/types";
 import { useAdminRequests } from "@/hooks/useAdminData";
 import classes from "./admin.module.css";
+import { DutyNowCard } from "./DutyNowCard";
 
 function Kpi({ label, value, hint, tone }: { label: string; value: string | number; hint?: string; tone?: string }) {
   return (
@@ -28,25 +29,47 @@ function Kpi({ label, value, hint, tone }: { label: string; value: string | numb
   );
 }
 
+interface Segment {
+  status: (typeof REQUEST_STATUSES)[number];
+  start: number;
+  size: number;
+}
+
+/** Fatias da barra empilhada como frações de 0 a 1 (início e tamanho). */
+function toSegments(byStatus: Record<string, number>, total: number): Segment[] {
+  return REQUEST_STATUSES.filter((s) => byStatus[s] > 0).reduce<Segment[]>((acc, status) => {
+    const last = acc[acc.length - 1];
+    const start = last ? last.start + last.size : 0;
+    return [...acc, { status, start, size: byStatus[status] / total }];
+  }, []);
+}
+
 function StatusBar({ items }: { items: CitizenRequest[] }) {
   const stats = summarize(items);
-  const visible = REQUEST_STATUSES.filter((s) => stats.byStatus[s] > 0);
   if (stats.total === 0) return <Text c="dimmed" size="sm">Sem solicitações ainda.</Text>;
+  const segments = toSegments(stats.byStatus, stats.total);
+  const description = segments.map((s) => `${STATUS_META[s.status].label}: ${stats.byStatus[s.status]}`).join(", ");
   return (
     <Stack gap="xs">
-      <div className={classes.stackBar} role="img" aria-label="Distribuição por situação">
-        {visible.map((s) => (
-          <Tooltip key={s} label={`${STATUS_META[s].label}: ${stats.byStatus[s]}`}>
-            <span style={{ flexGrow: stats.byStatus[s], background: STATUS_HEX[s] }} />
-          </Tooltip>
+      {/* Fatias por transform (scaleX), nunca por largura: a mudança anima sem refazer o layout */}
+      <div className={classes.stackBar} role="img" aria-label={`Distribuição por situação. ${description}.`}>
+        {segments.map((s) => (
+          <span
+            key={s.status}
+            className={classes.segment}
+            style={{ "--start": s.start, "--size": s.size, background: STATUS_HEX[s.status] } as CSSProperties}
+          />
+        ))}
+        {segments.slice(1).map((s) => (
+          <span key={`gap-${s.status}`} className={classes.segmentGap} style={{ "--start": s.start } as CSSProperties} />
         ))}
       </div>
       <Group gap="md">
-        {visible.map((s) => (
-          <Group key={s} gap={6}>
-            <span className={classes.dot} style={{ background: STATUS_HEX[s] }} />
+        {segments.map(({ status }) => (
+          <Group key={status} gap={6}>
+            <span className={classes.dot} style={{ background: STATUS_HEX[status] }} />
             <Text size="xs">
-              {STATUS_META[s].label} <b>{stats.byStatus[s]}</b>
+              {STATUS_META[status].label} <b>{stats.byStatus[status]}</b>
             </Text>
           </Group>
         ))}
@@ -121,8 +144,10 @@ export default function DashboardPage() {
         <Kpi label="Tempo médio (zeladoria)" value={formatDays(issueStats.avgDaysToResolve)} hint="da abertura à conclusão" />
       </SimpleGrid>
 
+      <DutyNowCard />
+
       <div className={classes.dashGrid}>
-        <Paper withBorder p="md" className={classes.mapCard}>
+        <Paper withBorder p="md" className={`${classes.panelCard} ${classes.mapCard}`}>
           <Group justify="space-between" mb="sm">
             <Title order={2} fz="lg">
               Zeladoria em aberto no mapa
@@ -145,13 +170,13 @@ export default function DashboardPage() {
           />
         </Paper>
         <Stack gap="md">
-          <Paper withBorder p="md">
+          <Paper withBorder p="md" className={classes.panelCard}>
             <Title order={2} fz="lg" mb="sm">
               Zeladoria por situação
             </Title>
             <StatusBar items={issueList} />
           </Paper>
-          <Paper withBorder p="md">
+          <Paper withBorder p="md" className={classes.panelCard}>
             <Title order={2} fz="lg" mb="sm">
               Em aberto por tipo
             </Title>
@@ -161,13 +186,13 @@ export default function DashboardPage() {
       </div>
 
       <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
-        <Paper withBorder p="md">
+        <Paper withBorder p="md" className={classes.panelCard}>
           <Title order={2} fz="lg" mb="sm">
             Bairros com mais pedidos abertos
           </Title>
           <Ranking rows={countBy(openIssues, (i) => i.address.neighborhood || "Sem bairro")} />
         </Paper>
-        <Paper withBorder p="md">
+        <Paper withBorder p="md" className={classes.panelCard}>
           <Title order={2} fz="lg" mb="sm">
             Esperando há mais tempo
           </Title>
