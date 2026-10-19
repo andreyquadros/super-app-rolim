@@ -15,7 +15,8 @@ const loadRuntime = () => import("./authRuntime");
 const signIn = (email: string, password: string) => loadRuntime().then((runtime) => runtime.signIn(email, password));
 const signUp = (input: SignUpInput) => loadRuntime().then((runtime) => runtime.signUp(input));
 const signInWithGoogle = () => loadRuntime().then((runtime) => runtime.signInWithGoogle());
-const signOut = () => loadRuntime().then((runtime) => runtime.signOut());
+const linkGoogle = () => loadRuntime().then((runtime) => runtime.linkGoogle());
+const signOut = (to?: string) => loadRuntime().then((runtime) => runtime.signOut(to));
 const resetPassword = (email: string) => loadRuntime().then((runtime) => runtime.resetPassword(email));
 const resendVerification = () => loadRuntime().then((runtime) => runtime.resendVerification());
 const deleteAccount = () => loadRuntime().then((runtime) => runtime.deleteAccount());
@@ -147,6 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signIn,
       signUp,
       signInWithGoogle,
+      linkGoogle,
       signOut,
       resetPassword,
       resendVerification,

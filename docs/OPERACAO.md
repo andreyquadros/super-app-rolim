@@ -14,6 +14,7 @@ Tudo abaixo é feito pelo painel (`/painel`) ou pelo console do Firebase — sem
 | Cidadão esqueceu a senha | Tela de login → "Esqueci minha senha" |
 | Cidadão quer ver a apresentação de novo | Perfil → **Ver a apresentação de novo** (ela aparece sozinha só nos primeiros acessos) |
 | Letras pequenas / tela escura | Perfil → **Tamanho do texto** (Normal, Grande, Muito grande) e **Aparência** (Automático, Claro, Escuro) |
+| Entrou com Google e o app diz que o CPF já está ligado a outra conta | Costuma ser a mesma pessoa, que antes criou conta com e-mail e senha. Na tela, **Entrar com a outra conta**; depois, Perfil → **Usar também o Google para entrar**. Se aquele Google já tinha entrado no app sem cadastro, o app oferece **Apagar e usar o Google aqui** (só apaga entrada sem CPF). Nada a fazer no console |
 | CPF usado por outra pessoa | Console → Firestore → `cpfs` → apague o documento com o CPF; a pessoa correta completa o cadastro |
 | Pedido de exclusão de dados (LGPD) | A própria pessoa usa **Perfil → Excluir minha conta**; ou o admin apaga o usuário em Authentication (os dados pessoais são removidos automaticamente) |
 

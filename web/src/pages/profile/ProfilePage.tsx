@@ -8,6 +8,7 @@ import { ListGroup, ListRow } from "@/components/ui/ListGroup";
 import { APP_NAME, HOME_PHOTO_CREDIT, MAINTAINER_LINE, PARTNER } from "@/config/city";
 import { version as APP_VERSION } from "../../../package.json";
 import { CompleteProfileInvite } from "./CompleteProfileInvite";
+import { GoogleSignIn } from "./GoogleSignIn";
 import { ProfileLoadError } from "./ProfileLoadError";
 import { AppearanceChoice, TextSizeChoice } from "./ReadingPrefs";
 import { SignOut } from "./SignOut";
@@ -55,6 +56,8 @@ export default function ProfilePage() {
           />
         )}
       </ListGroup>
+
+      <GoogleSignIn />
 
       {(showPush || install.visible) && (
         <ListGroup title="Celular">

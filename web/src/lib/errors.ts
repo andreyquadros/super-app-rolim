@@ -16,6 +16,8 @@ const MESSAGES: Record<string, string> = {
   "auth/popup-closed-by-user": "A janela de login foi fechada antes de concluir.",
   "auth/popup-blocked": "O navegador bloqueou a janela de login. Permita pop-ups e tente novamente.",
   "auth/requires-recent-login": "Por segurança, entre novamente antes de continuar.",
+  "auth/credential-already-in-use": "Esta conta Google já abre outra conta do app.",
+  "auth/provider-already-linked": "Esta conta já tem um Google ligado.",
   "permission-denied": "Você não tem permissão para esta ação ou algum dado está inválido.",
   unavailable: "Serviço indisponível no momento. Verifique sua conexão.",
   "storage/unauthorized": "Sem permissão para enviar este arquivo.",

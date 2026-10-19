@@ -10,6 +10,26 @@ export interface SignUpInput {
   password: string;
 }
 
+/**
+ * A conta Google escolhida já abre outra conta do app
+ * (auth/credential-already-in-use ao tentar ligá-la).
+ */
+export type TakenGoogleAccount =
+  /** Entrou só com o Google e não fez cadastro: dá para juntar */
+  | {
+      kind: "empty";
+      email: string | null;
+      /** Apaga aquela conta vazia e liga o Google a esta; devolve o e-mail do Google */
+      merge: () => Promise<string | null>;
+      /** Desiste sem mudar nada (sem efeito depois de `merge` começar) */
+      dismiss: () => void;
+    }
+  /** Tem cadastro (CPF) ou é da equipe: não apagamos daqui */
+  | { kind: "registered"; email: string | null };
+
+/** Resultado de "Usar também o Google para entrar". */
+export type GoogleLinkResult = { status: "linked"; email: string | null } | { status: "taken"; account: TakenGoogleAccount };
+
 export interface AuthValue {
   user: User | null;
   profile: Profile | null;
@@ -33,7 +53,10 @@ export interface AuthValue {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (input: SignUpInput) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
-  signOut: () => Promise<void>;
+  /** Liga uma conta Google à conta de e-mail e senha atual */
+  linkGoogle: () => Promise<GoogleLinkResult>;
+  /** Sai, apaga os dados locais e abre `to` (caminho do app; padrão: Início) */
+  signOut: (to?: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   resendVerification: () => Promise<void>;
   /** Recarrega a conta; true se o e-mail já foi confirmado */

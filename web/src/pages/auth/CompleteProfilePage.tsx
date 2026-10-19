@@ -1,3 +1,4 @@
+import { Button } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useCallback, useState } from "react";
 import { Navigate, useLocation } from "react-router";
@@ -11,7 +12,7 @@ import { AuthFrame } from "./AuthFrame";
 import { AuthActions, FormError, SubmitButton } from "./authUi";
 import { ConsentLabel } from "./ConsentLabel";
 import { ConsentCheckbox, focusFirstError } from "./fields";
-import { useNextPath } from "./nextPath";
+import { useNextPath, withNext } from "./nextPath";
 import { CPF_CONFLICT_MESSAGE, PROFILE_FIELD_ORDER, ProfileFields, profileValidators } from "./profileFields";
 import { useCloseGuard } from "./useCloseGuard";
 import classes from "./auth.module.css";
@@ -73,10 +74,11 @@ export default function CompleteProfilePage() {
     (errors) => focusFirstError(errors, FIELD_ORDER),
   );
 
+  // Sai desta conta e abre o Entrar, mantendo o destino
   const switchAccount = async () => {
     setLeaving(true);
     try {
-      await signOut();
+      await signOut(withNext("/entrar", next));
     } catch (e: unknown) {
       setError(errorMessage(e, "Não foi possível sair desta conta. Tente de novo."));
       setLeaving(false);
@@ -84,6 +86,9 @@ export default function CompleteProfilePage() {
   };
 
   const who = user.email ?? user.displayName ?? "sua conta Google";
+  const viaGoogle = user.providerData.some((info) => info.providerId === "google.com");
+  // O CPF é de outra conta (1 CPF = 1 conta): o caminho é entrar com ela
+  const cpfTaken = error === CPF_CONFLICT_MESSAGE;
 
   return (
     <AuthFrame title="Complete seu cadastro" lead="Faltam só alguns dados para você fazer pedidos à prefeitura.">
@@ -100,18 +105,32 @@ export default function CompleteProfilePage() {
         <ProfileFields form={form} />
         <ConsentCheckbox label={<ConsentLabel />} {...form.getInputProps("accepted", { type: "checkbox" })} />
         <FormError message={error} />
+        {cpfTaken && (
+          <div className={classes.otherAccount}>
+            {viaGoogle && (
+              <p>
+                Criou antes uma conta com e-mail e senha? Entre com ela e, no Perfil, toque em “Usar também o Google para entrar”.
+              </p>
+            )}
+            <Button variant="default" size="lg" h={56} radius="xl" fullWidth loading={leaving} disabled={busy} onClick={switchAccount}>
+              Entrar com a outra conta
+            </Button>
+          </div>
+        )}
         <AuthActions>
           <SubmitButton loading={busy} disabled={leaving}>
             Salvar e continuar
           </SubmitButton>
         </AuthActions>
       </form>
-      <div className={classes.switch}>
-        <span>Não é você?</span>
-        <button type="button" className={classes.link} disabled={busy || leaving} onClick={switchAccount}>
-          {leaving ? "Saindo…" : "Usar outra conta"}
-        </button>
-      </div>
+      {!cpfTaken && (
+        <div className={classes.switch}>
+          <span>Não é você?</span>
+          <button type="button" className={classes.link} disabled={busy || leaving} onClick={switchAccount}>
+            {leaving ? "Saindo…" : "Usar outra conta"}
+          </button>
+        </div>
+      )}
       {closeSheet}
     </AuthFrame>
   );
