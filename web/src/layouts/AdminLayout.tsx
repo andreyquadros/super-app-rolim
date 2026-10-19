@@ -16,7 +16,8 @@ import {
 import { Link, Outlet, useLocation } from "react-router";
 import { useAuth } from "@/auth/AuthContext";
 import { BrandMark } from "@/components/brand/BrandMark";
-import { APP_NAME, MAINTAINER_LINE } from "@/config/city";
+import { MaintainerCredit } from "@/components/brand/MaintainerCredit";
+import { APP_NAME } from "@/config/city";
 import { firstName } from "@/domain/format";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { RoleBadge } from "@/pages/admin/RoleBadge";
@@ -64,7 +65,7 @@ function PanelFooter({ className }: { className: string }) {
           ))}
         </div>
       )}
-      <p className={classes.maintainer}>{MAINTAINER_LINE}</p>
+      <MaintainerCredit className={classes.maintainer} />
     </div>
   );
 }

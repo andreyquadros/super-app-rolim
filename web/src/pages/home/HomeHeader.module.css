@@ -72,10 +72,16 @@
   white-space: nowrap;
 }
 
-/* Cartão-postal da cidade: parado, só decoração */
+/* Cartão-postal com a foto da cidade: parado */
+.artFrame {
+  display: contents;
+}
+
 .art {
   grid-area: art;
   display: block;
+  aspect-ratio: 11 / 6;
+  object-fit: cover;
   /* Menor no celular estreito: a saudação fica com a maior parte da largura */
   width: clamp(84px, 26vw, 160px);
   height: auto;

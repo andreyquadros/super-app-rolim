@@ -1,6 +1,6 @@
 import { Stack } from "@mantine/core";
 import { createContext, useContext, type ReactNode } from "react";
-import { MAINTAINER_LINE } from "@/config/city";
+import { MAINTAINER_LINE, PARTNER } from "@/config/city";
 
 // As classes .boot* ficam no <style> do index.html: valem antes de qualquer
 // CSS do app e não dependem do tema (verde no claro e no escuro).
@@ -12,6 +12,18 @@ function BootBrand({ children }: { children?: ReactNode }) {
       <p className="boot-kicker">SUPER APP</p>
       <p className="boot-title">Rolim de Moura</p>
       {children}
+    </div>
+  );
+}
+
+/** Pé da abertura: a prefeitura e o Projeto Cidades Inteligentes. */
+function BootFoot() {
+  return (
+    <div className="boot-foot">
+      <span className="boot-partner">
+        <img src={PARTNER.logo} alt="" width={32} height={32} />
+      </span>
+      <p>{MAINTAINER_LINE}</p>
     </div>
   );
 }
@@ -28,7 +40,7 @@ export function BootSplash() {
         </div>
         <span className="boot-sr">Carregando o SUPER APP</span>
       </BootBrand>
-      <p className="boot-foot">{MAINTAINER_LINE}</p>
+      <BootFoot />
     </div>
   );
 }
@@ -46,7 +58,7 @@ export function BootError() {
           Tentar de novo
         </button>
       </BootBrand>
-      <p className="boot-foot">{MAINTAINER_LINE}</p>
+      <BootFoot />
     </div>
   );
 }

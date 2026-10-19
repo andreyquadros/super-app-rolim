@@ -1,6 +1,6 @@
 # Super App Rolim de Moura
 
-O **SUPER APP Rolim de Moura** é o aplicativo do cidadão de Rolim de Moura (RO), mantido pela Prefeitura Municipal: registrar problemas da cidade (zeladoria), falar com a ouvidoria, encontrar farmácias e funerárias de plantão e receber comunicados — e, para a prefeitura, um painel para atender tudo isso.
+O **SUPER APP Rolim de Moura** é o aplicativo do cidadão de Rolim de Moura (RO), mantido pela Prefeitura Municipal junto com o [Projeto Cidades Inteligentes](https://cidadesinteligentes.online/): registrar problemas da cidade (zeladoria), falar com a ouvidoria, encontrar farmácias e funerárias de plantão e receber comunicados — e, para a prefeitura, um painel para atender tudo isso.
 
 É um **PWA** (Progressive Web App): abre no navegador e se instala na tela inicial do celular **sem passar pela Play Store ou App Store**. Funciona sem internet para consulta e envia avisos (push) no Android, no computador e no iPhone (iOS 16.4+, com o app adicionado à Tela de Início).
 

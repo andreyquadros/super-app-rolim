@@ -149,10 +149,5 @@
 
 /* Linha institucional legível (mínimo de 12 px, cresce com o Tamanho do texto) */
 .maintainer {
-  max-width: 84px;
   margin: 8px 0 0;
-  padding-inline: 2px;
-  font-size: 0.75rem;
-  line-height: 1.3;
-  text-align: center;
 }

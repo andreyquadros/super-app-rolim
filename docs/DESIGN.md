@@ -39,7 +39,8 @@ export const APP_NAME = "SUPER APP Rolim de Moura";
 export const APP_SHORT_NAME = "SUPER APP";
 export const APP_KICKER = "SUPER APP";
 export const MAINTAINER = "Prefeitura Municipal de Rolim de Moura"; // = INSTITUTION
-export const MAINTAINER_LINE = "Uma iniciativa da Prefeitura Municipal de Rolim de Moura";
+export const PARTNER = { name: "Projeto Cidades Inteligentes", url: "https://cidadesinteligentes.online/", logo: "/parceiros/cidades-inteligentes.png" };
+export const MAINTAINER_LINE = "Uma iniciativa da Prefeitura de Rolim de Moura junto com o Projeto Cidades Inteligentes";
 // CONTACTS ganha crasPhone: "" (vazio = oculto)
 ```
 Nenhum componente escreve "Prefeitura de" como título.
@@ -55,13 +56,13 @@ Nenhum componente escreve "Prefeitura de" como título.
 **`index.html`**
 - `<title>SUPER APP Rolim de Moura</title>`
 - `apple-mobile-web-app-title`: "SUPER APP"
-- `meta description`: "Problemas na rua, ouvidoria, farmácias e funerárias de plantão e avisos. Uma iniciativa da Prefeitura Municipal de Rolim de Moura."
+- `meta description`: "Problemas na rua, ouvidoria, farmácias e funerárias de plantão e avisos. Uma iniciativa da Prefeitura de Rolim de Moura junto com o Projeto Cidades Inteligentes."
 - viewport: acrescentar `interactive-widget=resizes-content`.
 - Splash `.boot`:
   - fundo #0d7a49 (#0f3b28 no escuro) e logo-mono de 96 px;
   - "SUPER APP" (branco, 13 px, `.2em`) e "Rolim de Moura" (Georgia, 32 px, branco);
   - três pontos piscando só por opacity, com `role=status` e o texto oculto "Carregando o SUPER APP";
-  - no pé, acima da safe-area: "Uma iniciativa da Prefeitura Municipal de Rolim de Moura" (13 px, branco a 85%).
+  - no pé, acima da safe-area: a logo do Projeto Cidades Inteligentes (num quadrado branco de 40 px) e "Uma iniciativa da Prefeitura de Rolim de Moura junto com o Projeto Cidades Inteligentes" (13 px, branco).
 - noscript: "Ative o JavaScript para usar o SUPER APP Rolim de Moura."
 - `og:title`, `og:description` e `og:image` (`/og-image.png`, fora do precache).
 
@@ -85,7 +86,7 @@ Nenhum componente escreve "Prefeitura de" como título.
 - Título da janela: "<Página> · Painel · SUPER APP Rolim de Moura" (ex.: "Zeladoria · Painel · SUPER APP Rolim de Moura").
 - Rodapé do menu: `MAINTAINER_LINE`.
 
-**Rodapé institucional:** sai da Início. A linha `MAINTAINER_LINE` aparece em:
+**Rodapé institucional:** sai da Início. A linha `MAINTAINER_LINE`, sempre com a logo do Projeto Cidades Inteligentes (`components/brand/MaintainerCredit`), aparece em:
 - slide 1 do onboarding;
 - rodapé de Entrar e Criar conta;
 - Perfil › Sobre o app, junto com a versão e "Privacidade e uso de dados";
@@ -185,7 +186,7 @@ Ordem no celular:
 - Celular com menos de 360 px ou texto "Muito grande": a saudação ocupa a largura toda e o cartão-postal fica ao lado da data; "Boa noite," nunca quebra no meio.
 - Linha de 16 px (branco a 88%): a data por extenso.
 - Equipe logada: chip "Você é da equipe · Abrir painel".
-- `<img src="/ilustracoes/cidade.svg" width=220 height=120 aria-hidden>`, estática, com cerca de 2 KB: ipê-amarelo, morros e Av. Norte Sul com postes.
+- Foto da cidade em cartão-postal (`/ilustracoes/rolim-de-moura.webp|jpg`, 440×240, cerca de 10 KB): rotatória do centro, de Franklin Baldo (CC BY 2.5, Wikimedia Commons); o crédito fica em Perfil › Sobre o app. Para trocar por uma foto oficial da prefeitura, substitua os dois arquivos mantendo a proporção 11:6.
 
 **2. `ServiceGrid`** (H2 "Serviços")
 - Grade: `repeat(auto-fit, minmax(min(100%, 8.5rem), 1fr))`, gap 12. Dá 2 colunas em 320 px e 1 coluna com o texto em 125%.

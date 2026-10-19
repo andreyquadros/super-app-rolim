@@ -28,7 +28,7 @@ test("primeiro acesso pela Início mostra a apresentação", async ({ page }) =>
   await page.goto("/");
   await page.waitForURL((url) => url.pathname === "/boas-vindas");
   await expect(page.getByRole("heading", { name: WELCOME })).toBeVisible();
-  await expect(page.getByText("Uma iniciativa da Prefeitura Municipal de Rolim de Moura")).toBeVisible();
+  await expect(page.getByText("Uma iniciativa da Prefeitura de Rolim de Moura junto com o Projeto Cidades Inteligentes")).toBeVisible();
 });
 
 test("Pular leva à Início e recarregar não mostra de novo", async ({ page }) => {

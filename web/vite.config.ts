@@ -83,7 +83,7 @@ export default defineConfig({
       registerType: "prompt",
       injectRegister: false,
       injectManifest: {
-        globPatterns: ["**/*.{js,css,html,svg,png,ico,woff2,webmanifest}"],
+        globPatterns: ["**/*.{js,css,html,svg,png,jpg,webp,ico,woff2,webmanifest}"],
         // Imagem de compartilhamento não precisa ir para o cache offline
         globIgnores: ["og-image.png", "loja/**", "apple-splash-*"],
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
@@ -95,7 +95,7 @@ export default defineConfig({
         name: "SUPER APP Rolim de Moura",
         short_name: "SUPER APP",
         description:
-          "Problemas na rua, ouvidoria, farmácias e funerárias de plantão e avisos. Uma iniciativa da Prefeitura Municipal de Rolim de Moura.",
+          "Problemas na rua, ouvidoria, farmácias e funerárias de plantão e avisos. Uma iniciativa da Prefeitura de Rolim de Moura junto com o Projeto Cidades Inteligentes.",
         lang: "pt-BR",
         dir: "ltr",
         start_url: "/",

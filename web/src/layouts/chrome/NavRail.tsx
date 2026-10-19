@@ -2,7 +2,7 @@ import { IconLayoutDashboard, IconLogin2, IconPlus } from "@tabler/icons-react";
 import { useLocation } from "react-router";
 import { useAuth } from "@/auth/AuthContext";
 import { AppLink } from "@/components/AppLink";
-import { MAINTAINER_LINE } from "@/config/city";
+import { MaintainerCredit } from "@/components/brand/MaintainerCredit";
 import { withNext } from "@/pages/auth/nextPath";
 import { ariaCurrentFor, NAV_ITEMS, PROFILE_ROOT, tabState } from "./navItems";
 import classes from "./NavRail.module.css";
@@ -103,7 +103,7 @@ export function NavRail({ sheetOpen, onRequest, hasUnreadNotices }: NavRailProps
             <span className={classes.label}>Entrar</span>
           </AppLink>
         )}
-        <p className={classes.maintainer}>{MAINTAINER_LINE}</p>
+        <MaintainerCredit variant="rail" className={classes.maintainer} />
       </div>
     </nav>
   );

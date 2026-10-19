@@ -5,7 +5,10 @@ export const REGION = "southamerica-east1";
 
 export const APP_NAME = "SUPER APP Rolim de Moura";
 export const INSTITUTION = "Prefeitura Municipal de Rolim de Moura";
-export const MAINTAINER_LINE = `Uma iniciativa da ${INSTITUTION}`;
+export const PARTNER_NAME = "Projeto Cidades Inteligentes";
+export const MAINTAINER_LINE = `Uma iniciativa da Prefeitura de Rolim de Moura junto com o ${PARTNER_NAME}`;
+/** Logo do parceiro servida pelo próprio app (caminho a partir do endereço público) */
+export const PARTNER_LOGO_PATH = "/parceiros/cidades-inteligentes.png";
 
 /** Tópico FCM no qual todo dispositivo registrado é inscrito. */
 export const BROADCAST_TOPIC = "comunicados";

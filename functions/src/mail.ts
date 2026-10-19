@@ -1,5 +1,5 @@
 import { FieldValue, type Firestore } from "firebase-admin/firestore";
-import { APP_NAME, INSTITUTION, MAINTAINER_LINE } from "./config";
+import { APP_NAME, INSTITUTION, MAINTAINER_LINE, PARTNER_LOGO_PATH } from "./config";
 import { KIND_LABEL, STATUS_LABEL, statusMessage, type RequestKind, type RequestStatus } from "./domain";
 
 export interface MailMessage {
@@ -28,6 +28,15 @@ export function escapeHtml(value: string): string {
 }
 
 /** E-mail enviado ao cidadão quando a solicitação é aberta ou muda de status. */
+/** A logo do parceiro vem do mesmo endereço do app (o link do pedido). */
+function partnerLogoUrl(link: string): string | null {
+  try {
+    return new URL(PARTNER_LOGO_PATH, link).toString();
+  } catch {
+    return null;
+  }
+}
+
 export function buildRequestMail(input: RequestMailInput): MailMessage {
   const kindLabel = KIND_LABEL[input.kind];
   const statusLabel = STATUS_LABEL[input.status];
@@ -62,6 +71,7 @@ export function buildRequestMail(input: RequestMailInput): MailMessage {
        </td></tr>`
     : "";
 
+  const partnerLogo = partnerLogoUrl(input.link);
   const html = `<!doctype html>
 <html lang="pt-BR"><body style="margin:0;background:#f3f5f2;font-family:Arial,Helvetica,sans-serif;color:#1d2a22">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:24px 12px">
@@ -85,7 +95,10 @@ export function buildRequestMail(input: RequestMailInput): MailMessage {
     <a href="${escapeHtml(input.link)}" style="display:inline-block;background:#0d7a49;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:999px;font-weight:bold">Acompanhar no aplicativo</a>
   </td></tr>
 </table>
-<div style="font-size:12px;color:#5b6b61;margin-top:12px">${escapeHtml(MAINTAINER_LINE)} · Mensagem automática, não responda este e-mail.</div>
+<table role="presentation" cellpadding="0" cellspacing="0" style="max-width:560px;margin-top:12px"><tr>
+  ${partnerLogo ? `<td style="padding-right:10px;vertical-align:middle"><img src="${escapeHtml(partnerLogo)}" width="32" height="32" alt="" style="display:block;border:0"></td>` : ""}
+  <td style="font-size:12px;color:#5b6b61;vertical-align:middle">${escapeHtml(MAINTAINER_LINE)} · Mensagem automática, não responda este e-mail.</td>
+</tr></table>
 </td></tr></table>
 </body></html>`;
 

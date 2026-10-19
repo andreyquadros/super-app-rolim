@@ -181,20 +181,11 @@
   line-height: 1.5;
 }
 
+/* Crédito da prefeitura e do Projeto Cidades Inteligentes no pé do slide 1 */
 .maintainer {
-  display: flex;
-  align-items: center;
-  gap: 10px;
   margin: auto 0 0;
   padding-top: 24px;
-  color: var(--app-ink-soft);
   font-size: 0.9375rem;
-  line-height: 1.4;
-
-  img {
-    flex: none;
-    border-radius: 8px;
-  }
 }
 
 /* ---------- Slide 3: cartão de pedido com a barra de etapas ---------- */

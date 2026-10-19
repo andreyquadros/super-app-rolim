@@ -17,7 +17,8 @@ describe("buildRequestMail", () => {
     expect(mail.text).toContain("Olá, Maria!");
     expect(mail.html).toContain(base.link);
     expect(mail.html).toContain("SUPER APP ROLIM DE MOURA");
-    expect(mail.text).toContain("Uma iniciativa da Prefeitura Municipal de Rolim de Moura");
+    expect(mail.text).toContain("Uma iniciativa da Prefeitura de Rolim de Moura junto com o Projeto Cidades Inteligentes");
+    expect(mail.html).toContain("https://app.exemplo.gov.br/parceiros/cidades-inteligentes.png");
   });
 
   it("inclui a resposta oficial quando existe", () => {

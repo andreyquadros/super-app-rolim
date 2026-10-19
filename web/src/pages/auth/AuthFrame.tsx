@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { MAINTAINER_LINE } from "@/config/city";
+import { MaintainerCredit } from "@/components/brand/MaintainerCredit";
 import classes from "./auth.module.css";
 
 interface AuthFrameProps {
@@ -30,7 +30,9 @@ export function AuthFrame({ title, lead, icon, children }: AuthFrameProps) {
         </header>
         {children}
       </div>
-      <footer className={classes.maintainer}>{MAINTAINER_LINE}</footer>
+      <footer className={classes.maintainer}>
+        <MaintainerCredit align="center" />
+      </footer>
     </div>
   );
 }

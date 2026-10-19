@@ -4,7 +4,8 @@ import { useSearchParams } from "react-router";
 import { useAuth } from "@/auth/AuthContext";
 import { useAppNavigate } from "@/components/AppLink";
 import { BrandMark } from "@/components/brand/BrandMark";
-import { APP_NAME, MAINTAINER_LINE } from "@/config/city";
+import { MaintainerCredit } from "@/components/brand/MaintainerCredit";
+import { APP_NAME } from "@/config/city";
 import { useBackNavigation } from "@/hooks/useBackNavigation";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { completeOnboarding } from "./onboardingState";
@@ -120,10 +121,7 @@ export default function OnboardingPage() {
             }}
           >
             {i === 0 && (
-              <p className={classes.maintainer}>
-                <img src="/logo.svg" alt="" width={28} height={28} />
-                <span>{MAINTAINER_LINE}</span>
-              </p>
+              <MaintainerCredit className={classes.maintainer} />
             )}
             {i === LAST && <SettingsPanel />}
           </Slide>

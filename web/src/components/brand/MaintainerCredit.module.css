@@ -1,0 +1,52 @@
+.credit {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  color: var(--app-ink-soft);
+  font-size: 0.875rem;
+  line-height: 1.4;
+
+  &[data-align="center"] {
+    justify-content: center;
+    text-align: left;
+  }
+
+  &[data-variant="green"],
+  &[data-variant="rail"] {
+    color: #ffffff;
+  }
+
+  &[data-variant="rail"] {
+    justify-content: center;
+  }
+}
+
+/* No verde, a logo colorida ganha um fundo branco para não se misturar */
+.badge {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 0 0 1px var(--app-line);
+
+  .credit[data-variant="green"] &,
+  .credit[data-variant="rail"] & {
+    box-shadow: none;
+  }
+}
+
+.logo {
+  display: block;
+  width: 32px;
+  height: 32px;
+}
+
+.text {
+  min-width: 0;
+  max-width: 34ch;
+  text-wrap: pretty;
+}

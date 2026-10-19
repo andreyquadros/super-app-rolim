@@ -9,7 +9,7 @@ interface HomeHeaderProps {
   now: Date;
 }
 
-/** Saudação, data por extenso e o cartão-postal da cidade (continua o verde da barra). */
+/** Saudação, data por extenso e a foto da cidade em cartão-postal (continua o verde da barra). */
 export function HomeHeader({ now }: HomeHeaderProps) {
   const { user, profile, staff, loading } = useAuth();
   const name = firstName(profile?.fullName ?? user?.displayName);
@@ -21,7 +21,18 @@ export function HomeHeader({ now }: HomeHeaderProps) {
         <span className={classes.lead}>{title.lead}</span>
         {title.rest}
       </h1>
-      <img src="/ilustracoes/cidade.svg" width={220} height={120} alt="" aria-hidden className={classes.art} />
+      {/* Foto: Franklin Baldo, CC BY 2.5, via Wikimedia Commons (créditos em Perfil › Sobre o app) */}
+      <picture className={classes.artFrame}>
+        <source srcSet="/ilustracoes/rolim-de-moura.webp" type="image/webp" />
+        <img
+          src="/ilustracoes/rolim-de-moura.jpg"
+          width={220}
+          height={120}
+          alt="Rotatória no centro de Rolim de Moura"
+          decoding="async"
+          className={classes.art}
+        />
+      </picture>
       <p className={classes.date}>
         <time dateTime={toIsoDate(now)}>{longDate(now)}</time>
       </p>

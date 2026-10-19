@@ -8,7 +8,21 @@ export const APP_KICKER = "SUPER APP";
 export const CITY_NAME = "Rolim de Moura";
 export const STATE = "RO";
 export const INSTITUTION = "Prefeitura Municipal de Rolim de Moura";
-export const MAINTAINER_LINE = `Uma iniciativa da ${INSTITUTION}`;
+
+/** Parceiro do app; a logo fica em public/parceiros. */
+export const PARTNER = {
+  name: "Projeto Cidades Inteligentes",
+  url: "https://cidadesinteligentes.online/",
+  logo: "/parceiros/cidades-inteligentes.png",
+} as const;
+
+export const MAINTAINER_LINE = `Uma iniciativa da Prefeitura de Rolim de Moura junto com o ${PARTNER.name}`;
+
+/** Crédito da foto da cidade no topo da Início (licença CC BY 2.5 pede a autoria). */
+export const HOME_PHOTO_CREDIT = {
+  text: "Foto da rotatória no centro: Franklin Baldo, CC BY 2.5, via Wikimedia Commons",
+  url: "https://commons.wikimedia.org/wiki/File:Rolim_de_moura_-_foto_da_rotat%C3%B3ria.JPG",
+} as const;
 export const IBGE_CODE = "1100288";
 
 export const CITY_CENTER = { lat: -11.7271, lng: -61.7782 } as const;

@@ -5,7 +5,7 @@ import { useAuth } from "@/auth/AuthContext";
 import { InstallHowToSheet } from "@/components/install/InstallHowToSheet";
 import { PushToggle, pushAvailable } from "@/components/PushToggle";
 import { ListGroup, ListRow } from "@/components/ui/ListGroup";
-import { APP_NAME, MAINTAINER_LINE } from "@/config/city";
+import { APP_NAME, HOME_PHOTO_CREDIT, MAINTAINER_LINE, PARTNER } from "@/config/city";
 import { version as APP_VERSION } from "../../../package.json";
 import { CompleteProfileInvite } from "./CompleteProfileInvite";
 import { ProfileLoadError } from "./ProfileLoadError";
@@ -85,6 +85,12 @@ export default function ProfilePage() {
         />
         <ListRow icon={<IconShieldLock size={22} stroke={1.8} />} label="Privacidade e uso de dados" to="/privacidade" />
         <ListRow
+          icon={<img src={PARTNER.logo} alt="" width={28} height={28} />}
+          label={PARTNER.name}
+          description="Conheça o projeto parceiro do app"
+          href={PARTNER.url}
+        />
+        <ListRow
           icon={<IconInfoCircle size={22} stroke={1.8} />}
           label="Sobre o app"
           description={
@@ -93,6 +99,7 @@ export default function ProfilePage() {
                 {APP_NAME}, versão {APP_VERSION}
               </span>
               <span className={classes.aboutLine}>{MAINTAINER_LINE}</span>
+              <span className={classes.aboutLine}>{HOME_PHOTO_CREDIT.text}</span>
             </>
           }
         />
