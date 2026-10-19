@@ -3,6 +3,7 @@ import { createBrowserRouter, Navigate, Outlet, useNavigation, type RouteObject 
 import { useAuth } from "@/auth/AuthContext";
 import { RequireCitizen, RequireStaff, RequireUser } from "@/auth/guards";
 import { ForegroundPush, OfflineBanner, UpdatePrompt } from "@/components/AppStatus";
+import { LoadingScreen } from "@/components/LoadingScreen";
 import { RouteError } from "@/components/RouteError";
 import { CitizenLayout } from "@/layouts/CitizenLayout";
 import HomePage from "@/pages/HomePage";
@@ -39,6 +40,8 @@ export const router = createBrowserRouter([
   {
     element: <Root />,
     errorElement: <RouteError />,
+    // Exibido enquanto a primeira tela (carregada sob demanda) chega
+    hydrateFallbackElement: <LoadingScreen />,
     children: [
       {
         element: <CitizenLayout />,
