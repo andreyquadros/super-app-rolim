@@ -185,13 +185,39 @@ describe("unidades e farmácias", () => {
     await assertFails(updateDoc(doc(db(UIDS.citizen), "buildings", BUILDINGS.ubs), { name: "X", updatedAt: serverTimestamp() }));
   });
 
-  it("farmacêutico alterna plantão da própria farmácia, e só isso", async () => {
-    const ref = doc(db(UIDS.pharmacist), "buildings", BUILDINGS.pharmacy);
-    await assertSucceeds(updateDoc(ref, { isOnDuty: true, isOpen: true, updatedAt: serverTimestamp() }));
-    await assertFails(updateDoc(ref, { name: "Outro nome", updatedAt: serverTimestamp() }));
+  it("responsável por plantão alterna farmácia e funerária próprias, e só isso", async () => {
+    const pharmacy = doc(db(UIDS.dutyManager), "buildings", BUILDINGS.pharmacy);
+    const funeral = doc(db(UIDS.dutyManager), "buildings", BUILDINGS.funeral);
+    await assertSucceeds(updateDoc(pharmacy, { isOnDuty: true, isOpen: true, updatedAt: serverTimestamp() }));
+    await assertSucceeds(updateDoc(funeral, { isOnDuty: true, isOpen: true, updatedAt: serverTimestamp() }));
+    await assertFails(updateDoc(funeral, { name: "Outro nome", updatedAt: serverTimestamp() }));
     await assertFails(
-      updateDoc(doc(db(UIDS.pharmacist), "buildings", BUILDINGS.ubs), { isOnDuty: true, updatedAt: serverTimestamp() }),
+      updateDoc(doc(db(UIDS.dutyManager), "buildings", BUILDINGS.otherFuneral), { isOnDuty: true, updatedAt: serverTimestamp() }),
     );
+    await assertFails(
+      updateDoc(doc(db(UIDS.dutyManager), "buildings", BUILDINGS.ubs), { isOnDuty: true, updatedAt: serverTimestamp() }),
+    );
+  });
+
+  it("admin cadastra funerária com responsável; unidade pública não tem responsável", async () => {
+    const base = {
+      name: "Funerária Nova",
+      type: "FUNERAL",
+      address: "Rua Exemplo, 10",
+      lat: -11.7271,
+      lng: -61.7782,
+      isOpen: true,
+      isOnDuty: true,
+      ownerIds: [UIDS.dutyManager],
+      phones: [],
+      openingHours: "24 horas",
+      active: true,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    await assertSucceeds(setDoc(doc(db(UIDS.root), "buildings", "nova-funeraria"), base));
+    await assertFails(setDoc(doc(db(UIDS.root), "buildings", "nova-publica"), { ...base, type: "PUBLIC" }));
+    await assertFails(setDoc(doc(db(UIDS.root), "buildings", "tipo-invalido"), { ...base, type: "CEMETERY" }));
   });
 
   it("admin não cria unidade fora do município", async () => {

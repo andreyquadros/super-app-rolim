@@ -93,7 +93,7 @@ Particularidades da **primeira** publicação:
 node scripts/grant-admin.mjs superapp-rolim email@rolimdemoura.ro.gov.br
 ```
 
-3. Daqui em diante, tudo é feito pelo painel em `/painel`: cadastre as **unidades públicas** e **farmácias** e libere a **equipe** (Equipe e acessos).
+3. Daqui em diante, tudo é feito pelo painel em `/painel`: cadastre as **unidades públicas**, **farmácias** e **funerárias** e libere a **equipe** (Equipe e acessos).
 
 ## 8. Publicação automática pelo GitHub (opcional)
 

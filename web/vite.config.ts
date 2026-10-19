@@ -15,6 +15,8 @@ export default defineConfig({
   build: {
     target: "es2022",
     chunkSizeWarningLimit: 700,
+    // Usado por scripts/check-bundle.mjs para medir o JavaScript inicial
+    manifest: true,
   },
   plugins: [
     react(),

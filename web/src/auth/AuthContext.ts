@@ -18,7 +18,8 @@ export interface AuthValue {
   loading: boolean;
   isRoot: boolean;
   isManager: boolean;
-  isPharmacist: boolean;
+  /** Responsável por plantão (farmácias/funerárias) */
+  isDutyManager: boolean;
   /** null = todas as unidades (ROOT); lista = unidades do servidor */
   buildingScope: string[] | null;
   actor: Actor | null;

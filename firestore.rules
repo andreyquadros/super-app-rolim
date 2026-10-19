@@ -12,7 +12,8 @@ rules_version = '2';
 //   - CIVIL_SERVANT: servidor; vê toda a zeladoria e a ouvidoria/comunicados
 //     apenas das unidades (buildingIds) que lhe foram atribuídas
 //   - somente ROOT concede ou retira acessos da equipe
-//   - PHARMACY_MANAGER: atualiza "aberta/plantão" das farmácias que gerencia
+//   - DUTY_MANAGER: responsável por plantão; atualiza "aberta/plantão" das
+//     farmácias e funerárias em que é responsável
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -151,7 +152,7 @@ service cloud.firestore {
     function validStaff(d) {
       return d.keys().hasOnly(['roles', 'buildingIds', 'fullName', 'email', 'cpf', 'active', 'createdAt', 'updatedAt', 'updatedBy'])
         && d.roles is list && d.roles.size() > 0
-        && d.roles.hasOnly(['ROOT', 'CIVIL_SERVANT', 'PHARMACY_MANAGER'])
+        && d.roles.hasOnly(['ROOT', 'CIVIL_SERVANT', 'DUTY_MANAGER'])
         && d.buildingIds is list && d.buildingIds.size() <= 30
         && d.active is bool
         && isStr(d.fullName, 1, 120)
@@ -170,25 +171,25 @@ service cloud.firestore {
       allow delete: if false; // desative com active=false
     }
 
-    // ---------- Unidades (prédios públicos e farmácias) ----------
+    // ---------- Unidades (prédios públicos, farmácias e funerárias) ----------
     function validBuilding(d) {
       return d.keys().hasOnly(['name', 'type', 'address', 'lat', 'lng', 'isOpen', 'isOnDuty', 'ownerIds', 'phones', 'openingHours', 'active', 'createdAt', 'updatedAt'])
         && isStr(d.name, 2, 200)
-        && d.type in ['PUBLIC', 'PHARMACY']
+        && d.type in ['PUBLIC', 'PHARMACY', 'FUNERAL']
         && isStr(d.address, 3, 255)
         && inMunicipality(d.lat, d.lng)
         && d.isOpen is bool && d.isOnDuty is bool && d.active is bool
-        && d.ownerIds is list && (d.type == 'PHARMACY' || d.ownerIds.size() == 0)
+        && d.ownerIds is list && (d.type != 'PUBLIC' || d.ownerIds.size() == 0)
         && d.phones is list && d.phones.size() <= 5
         && optStr(d.get('openingHours', null), 120)
         && stampedNow(d);
     }
 
     match /buildings/{buildingId} {
-      allow read: if true; // informação pública (farmácias de plantão, unidades)
+      allow read: if true; // informação pública (plantões, unidades)
       allow create, update: if isRoot() && validBuilding(request.resource.data);
-      allow update: if hasRole('PHARMACY_MANAGER')
-        && resource.data.type == 'PHARMACY'
+      allow update: if hasRole('DUTY_MANAGER')
+        && resource.data.type in ['PHARMACY', 'FUNERAL']
         && uid() in resource.data.ownerIds
         && onlyChanged(['isOpen', 'isOnDuty', 'updatedAt'])
         && request.resource.data.isOpen is bool

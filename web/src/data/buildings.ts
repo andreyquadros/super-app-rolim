@@ -1,4 +1,5 @@
 import { collection, doc, query, serverTimestamp, setDoc, updateDoc, where, type DocumentData } from "firebase/firestore";
+import { isDutyType } from "@/domain/duty";
 import type { Building, BuildingType, Phone } from "@/domain/types";
 import { db } from "@/lib/firebase";
 import { bool, num, optionalStr, str, strList, toDate } from "./convert";
@@ -39,11 +40,11 @@ export function watchBuildings(type?: BuildingType): Watcher<Building[]> {
   return (onData, onError) => watcher((items) => onData([...items].sort(byName)), onError);
 }
 
-/** Farmácias que um responsável pode atualizar. */
-export function watchOwnedPharmacies(uid: string): Watcher<Building[]> {
+/** Farmácias e funerárias que um responsável por plantão pode atualizar. */
+export function watchOwnedDutyUnits(uid: string): Watcher<Building[]> {
   const q = query(collection(db, "buildings"), where("ownerIds", "array-contains", uid));
   const watcher = watchQuery(q, parseBuilding);
-  return (onData, onError) => watcher((items) => onData(items.filter((b) => b.type === "PHARMACY").sort(byName)), onError);
+  return (onData, onError) => watcher((items) => onData(items.filter((b) => isDutyType(b.type)).sort(byName)), onError);
 }
 
 export type BuildingInput = Omit<Building, "id" | "updatedAt">;
@@ -54,7 +55,7 @@ export async function saveBuilding(id: string | null, input: BuildingInput): Pro
     ...input,
     name: input.name.trim(),
     address: input.address.trim(),
-    ownerIds: input.type === "PHARMACY" ? input.ownerIds : [],
+    ownerIds: isDutyType(input.type) ? input.ownerIds : [],
     openingHours: input.openingHours?.trim() || null,
     updatedAt: serverTimestamp(),
     ...(id ? {} : { createdAt: serverTimestamp() }),
@@ -63,6 +64,6 @@ export async function saveBuilding(id: string | null, input: BuildingInput): Pro
   return ref.id;
 }
 
-export async function setPharmacyState(id: string, state: { isOpen: boolean; isOnDuty: boolean }): Promise<void> {
+export async function setDutyState(id: string, state: { isOpen: boolean; isOnDuty: boolean }): Promise<void> {
   await updateDoc(doc(db, "buildings", id), { ...state, updatedAt: serverTimestamp() });
 }

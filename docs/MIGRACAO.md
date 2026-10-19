@@ -7,7 +7,7 @@ Mapa de equivalência entre o backend FastAPI/PostgreSQL + Keycloak e o novo mod
 | v1 (PostgreSQL / Keycloak) | v2 (Firestore) | Observações |
 | --- | --- | --- |
 | Usuário Keycloak (`cpf`, `phone`, `full_name`, `email`) | Authentication + `users/{uid}` + `cpfs/{cpf}` | Senhas do Keycloak não são exportáveis: cada pessoa cria a senha de novo (ou "Esqueci minha senha" após importação via Admin SDK) |
-| `users` (`keycloak_id`, `roles`, `policies.where`) | `staff/{uid}` (`roles`, `buildingIds`) | As quatro políticas (`canManage*`) usavam a mesma lista de prédios → viraram `buildingIds` |
+| `users` (`keycloak_id`, `roles`, `policies.where`) | `staff/{uid}` (`roles`, `buildingIds`) | As quatro políticas (`canManage*`) usavam a mesma lista de prédios → viraram `buildingIds`. `PHARMACY_MANAGER` → `DUTY_MANAGER` (farmácias e funerárias) |
 | `buildings` (`latitude`/`longitude` texto) | `buildings/{id}` (`lat`/`lng` número) | `owner_ids` (ids internos) → `ownerIds` (uids do Firebase) |
 | `urban_issues` + `urban_issue_address` | `issues/{id}` com `address` embutido | `photo_path` (MinIO) → `photoPath` no Storage em `issues/{uid}/{id}/foto.jpg` |
 | `issue_status_updates` | `issues/{id}/history/{status}` + `notes` | `observation` (interna) → `notes`; `official_response` → `history.officialResponse` |

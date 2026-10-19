@@ -7,11 +7,11 @@ import { RequestCard } from "@/components/RequestCard";
 import { INSTITUTION } from "@/config/city";
 import { firstName, greeting, relativeTime } from "@/domain/format";
 import { isOpenStatus } from "@/domain/status";
-import { useMyRequests, usePharmacies, useSentNotifications } from "@/hooks/useCitizenData";
+import { useDutyUnits, useMyRequests, useSentNotifications } from "@/hooks/useCitizenData";
 import classes from "./HomePage.module.css";
 
 function OnDutyTile() {
-  const { data, loading } = usePharmacies();
+  const { data, loading } = useDutyUnits("PHARMACY");
   const onDuty = data.filter((p) => p.isOnDuty).length;
   return (
     <Link to="/farmacias" className={`${classes.tile} ${classes.tilePharmacy}`}>

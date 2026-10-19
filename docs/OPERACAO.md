@@ -7,7 +7,7 @@ Tudo abaixo é feito pelo painel (`/painel`) ou pelo console do Firebase — sem
 | Tarefa | Como |
 | --- | --- |
 | Liberar um servidor | A pessoa cria a conta no app e **confirma o e-mail** (link enviado no cadastro; Perfil → Reenviar e-mail) → o administrador abre Painel → **Equipe e acessos** → Adicionar → busca por CPF ou e-mail → perfil *Servidor* + unidades que atende |
-| Liberar uma farmácia | Mesmo caminho com perfil *Farmácia*; depois, em **Unidades e farmácias**, inclua a pessoa como responsável pela farmácia |
+| Liberar uma farmácia ou funerária | Mesmo caminho com o perfil *Plantão*; depois, em **Unidades e plantões**, inclua a pessoa como responsável pelo estabelecimento. Ela atualiza "aberta/de plantão" em **Meus plantões** |
 | Retirar acesso | Equipe e acessos → abrir a pessoa → desmarcar **Acesso ativo** |
 | Quem pode mexer na equipe | Somente **administradores**. Servidores atendem, mas não concedem acessos |
 | Cidadão esqueceu a senha | Tela de login → "Esqueci minha senha" |

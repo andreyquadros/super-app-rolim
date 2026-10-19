@@ -13,7 +13,7 @@ import { errorMessage } from "@/lib/errors";
 const ROLE_HELP: Record<Role, string> = {
   ROOT: "Acesso total: unidades, equipe e todas as solicitações.",
   CIVIL_SERVANT: "Atende zeladoria e a ouvidoria/comunicados das unidades marcadas.",
-  PHARMACY_MANAGER: "Atualiza aberta/plantão das farmácias em que for responsável.",
+  DUTY_MANAGER: "Atualiza aberta/plantão das farmácias e funerárias em que for responsável.",
 };
 
 interface Person {
@@ -43,7 +43,7 @@ export function StaffEditor({ editing, onClose }: StaffEditorProps) {
   const [active, setActive] = useState(existing?.active ?? true);
   const [busy, setBusy] = useState(false);
 
-  const grantable: Role[] = ["ROOT", "CIVIL_SERVANT", "PHARMACY_MANAGER"];
+  const grantable: Role[] = ["ROOT", "CIVIL_SERVANT", "DUTY_MANAGER"];
 
   const search = async () => {
     setSearching(true);

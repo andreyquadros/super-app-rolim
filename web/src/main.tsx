@@ -5,12 +5,29 @@ import "@mantine/notifications/styles.css";
 import "./theme/global.css";
 
 import { Center, MantineProvider, Stack, Text, Title } from "@mantine/core";
-import { Notifications } from "@mantine/notifications";
-import { StrictMode } from "react";
+import { lazy, StrictMode, Suspense, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { RouterProvider } from "react-router";
+import { RouterProvider } from "react-router/dom";
 import { isFirebaseConfigured } from "./config/env";
 import { cssVariablesResolver, theme } from "./theme/theme";
+
+const Notifications = lazy(() => import("@mantine/notifications").then((m) => ({ default: m.Notifications })));
+
+/** Monta o contêiner de avisos flutuantes depois que o app abriu (fora do pacote inicial). */
+function DeferredNotifications() {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const idle = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 300));
+    idle(() => setReady(true));
+  }, []);
+  if (!ready) return null;
+  return (
+    <Suspense fallback={null}>
+      {/* Embaixo, acima da barra de navegação: não cobre o cabeçalho no celular */}
+      <Notifications position="bottom-center" zIndex={1000} />
+    </Suspense>
+  );
+}
 
 function MissingConfig() {
   return (
@@ -41,8 +58,7 @@ async function start() {
   root.render(
     <StrictMode>
       <MantineProvider theme={theme} defaultColorScheme="auto" cssVariablesResolver={cssVariablesResolver}>
-        {/* Embaixo, acima da barra de navegação: não cobre o cabeçalho no celular */}
-        <Notifications position="bottom-center" zIndex={1000} />
+        <DeferredNotifications />
         <AuthProvider>
           <RouterProvider router={router} />
         </AuthProvider>

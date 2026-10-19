@@ -3,6 +3,7 @@ import { IconBuildingCommunity, IconPlus } from "@tabler/icons-react";
 import { useState } from "react";
 import { EmptyState } from "@/components/EmptyState";
 import { PageHeader } from "@/components/PageHeader";
+import { isDutyType } from "@/domain/duty";
 import type { Building, BuildingType } from "@/domain/types";
 import { useBuildings, useStaffList } from "@/hooks/useAdminData";
 import classes from "./admin.module.css";
@@ -13,15 +14,16 @@ export default function BuildingsAdminPage() {
   const { data, loading, error } = useBuildings(type);
   const staff = useStaffList();
   const [editing, setEditing] = useState<Building | "new" | null>(null);
-  const pharmacyManagers = (staff.data ?? []).filter((s) => s.active && s.roles.includes("PHARMACY_MANAGER"));
-  const managerName = (id: string) => pharmacyManagers.find((s) => s.id === id)?.fullName ?? "—";
+  const dutyManagers = (staff.data ?? []).filter((s) => s.active && s.roles.includes("DUTY_MANAGER"));
+  const managerName = (id: string) => dutyManagers.find((s) => s.id === id)?.fullName ?? "—";
+  const duty = isDutyType(type);
 
   return (
     <Stack gap="md">
       <PageHeader
         eyebrow="Cadastros"
-        title="Unidades e farmácias"
-        description="Unidades públicas recebem a ouvidoria e enviam comunicados; farmácias aparecem na lista de plantão."
+        title="Unidades e plantões"
+        description="Unidades públicas recebem a ouvidoria e enviam comunicados; farmácias e funerárias aparecem nas listas de plantão."
         actions={
           <Button leftSection={<IconPlus size={16} />} onClick={() => setEditing("new")}>
             Nova
@@ -34,6 +36,7 @@ export default function BuildingsAdminPage() {
         data={[
           { value: "PUBLIC", label: "Unidades públicas" },
           { value: "PHARMACY", label: "Farmácias" },
+          { value: "FUNERAL", label: "Funerárias" },
         ]}
         style={{ alignSelf: "flex-start" }}
       />
@@ -49,7 +52,7 @@ export default function BuildingsAdminPage() {
               <Table.Tr>
                 <Table.Th>Nome</Table.Th>
                 <Table.Th>Endereço</Table.Th>
-                <Table.Th>{type === "PHARMACY" ? "Responsáveis" : "Telefones"}</Table.Th>
+                <Table.Th>{duty ? "Responsáveis" : "Telefones"}</Table.Th>
                 <Table.Th>Situação</Table.Th>
               </Table.Tr>
             </Table.Thead>
@@ -68,14 +71,14 @@ export default function BuildingsAdminPage() {
                   </Table.Td>
                   <Table.Td>
                     <Text size="sm" lineClamp={1}>
-                      {type === "PHARMACY" ? b.ownerIds.map(managerName).join(", ") || "—" : b.phones.length || "—"}
+                      {duty ? b.ownerIds.map(managerName).join(", ") || "—" : b.phones.length || "—"}
                     </Text>
                   </Table.Td>
                   <Table.Td>
                     <Group gap={4}>
                       {!b.active && <Badge color="gray">Inativa</Badge>}
-                      {b.type === "PHARMACY" && b.active && <Badge color={b.isOpen ? "mata" : "gray"}>{b.isOpen ? "Aberta" : "Fechada"}</Badge>}
-                      {b.type === "PHARMACY" && b.isOnDuty && <Badge color="barro">Plantão</Badge>}
+                      {duty && b.active && <Badge color={b.isOpen ? "mata" : "gray"}>{b.isOpen ? "Aberta" : "Fechada"}</Badge>}
+                      {duty && b.isOnDuty && <Badge color="barro">Plantão</Badge>}
                       {b.type === "PUBLIC" && b.active && <Badge color="mata">Ativa</Badge>}
                     </Group>
                   </Table.Td>
@@ -91,7 +94,8 @@ export default function BuildingsAdminPage() {
           <BuildingForm
             key={editing === "new" ? "new" : editing.id}
             building={editing === "new" ? null : editing}
-            pharmacyManagers={pharmacyManagers}
+            dutyManagers={dutyManagers}
+            defaultType={type}
             onDone={() => setEditing(null)}
           />
         )}

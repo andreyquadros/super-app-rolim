@@ -16,13 +16,15 @@ export const UIDS = {
   otherCitizen: "cidadao-2",
   root: "admin-1",
   servant: "servidor-1",
-  pharmacist: "farmacia-1",
+  dutyManager: "plantao-1",
 } as const;
 
 export const BUILDINGS = {
   ubs: "ubs-centro",
   hospital: "hospital-municipal",
   pharmacy: "farmacia-exemplo",
+  funeral: "funeraria-exemplo",
+  otherFuneral: "funeraria-outra",
 } as const;
 
 export async function createEnv(): Promise<RulesTestEnvironment> {
@@ -80,7 +82,7 @@ export async function seedBase(env: RulesTestEnvironment) {
     });
     await setDoc(doc(db, "staff", UIDS.root), staff(["ROOT"], [], "Admin Geral"));
     await setDoc(doc(db, "staff", UIDS.servant), staff(["CIVIL_SERVANT"], [BUILDINGS.ubs], "Servidora Ana"));
-    await setDoc(doc(db, "staff", UIDS.pharmacist), staff(["PHARMACY_MANAGER"], [], "Farmacêutico"));
+    await setDoc(doc(db, "staff", UIDS.dutyManager), staff(["DUTY_MANAGER"], [], "Responsável Plantão"));
 
     const building = (name: string, type: string, ownerIds: string[] = []) => ({
       name,
@@ -99,7 +101,9 @@ export async function seedBase(env: RulesTestEnvironment) {
     });
     await setDoc(doc(db, "buildings", BUILDINGS.ubs), building("UBS Centro", "PUBLIC"));
     await setDoc(doc(db, "buildings", BUILDINGS.hospital), building("Hospital Municipal", "PUBLIC"));
-    await setDoc(doc(db, "buildings", BUILDINGS.pharmacy), building("Farmácia Exemplo", "PHARMACY", [UIDS.pharmacist]));
+    await setDoc(doc(db, "buildings", BUILDINGS.pharmacy), building("Farmácia Exemplo", "PHARMACY", [UIDS.dutyManager]));
+    await setDoc(doc(db, "buildings", BUILDINGS.funeral), building("Funerária Exemplo", "FUNERAL", [UIDS.dutyManager]));
+    await setDoc(doc(db, "buildings", BUILDINGS.otherFuneral), building("Funerária de Outra Pessoa", "FUNERAL", ["outra-pessoa"]));
   });
 }
 

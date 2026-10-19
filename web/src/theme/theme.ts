@@ -1,17 +1,4 @@
-import {
-  ActionIcon,
-  type CSSVariablesResolver,
-  Badge,
-  Button,
-  Card,
-  createTheme,
-  Drawer,
-  Modal,
-  Paper,
-  SegmentedControl,
-  TextInput,
-  type MantineColorsTuple,
-} from "@mantine/core";
+import { createTheme, type CSSVariablesResolver, type MantineColorsTuple } from "@mantine/core";
 
 // Verde "Zona da Mata" — cor institucional principal
 const mata: MantineColorsTuple = [
@@ -62,15 +49,17 @@ export const theme = createTheme({
   },
   cursorType: "pointer",
   focusRing: "auto",
+  // Objetos simples (sem Componente.extend): importar o componente aqui o
+  // colocaria no pacote inicial mesmo em telas que não o usam.
   components: {
-    Button: Button.extend({ defaultProps: { radius: "xl" } }),
-    ActionIcon: ActionIcon.extend({ defaultProps: { radius: "xl", variant: "subtle" } }),
-    Badge: Badge.extend({ defaultProps: { radius: "sm", variant: "light" } }),
-    Card: Card.extend({ defaultProps: { radius: "lg", withBorder: true } }),
-    Paper: Paper.extend({ defaultProps: { radius: "lg" } }),
-    TextInput: TextInput.extend({ defaultProps: { size: "md" } }),
-    SegmentedControl: SegmentedControl.extend({ defaultProps: { radius: "xl" } }),
-    Modal: Modal.extend({ defaultProps: { radius: "lg", centered: true } }),
-    Drawer: Drawer.extend({ defaultProps: { radius: 0 } }),
+    Button: { defaultProps: { radius: "xl" } },
+    ActionIcon: { defaultProps: { radius: "xl", variant: "subtle" } },
+    Badge: { defaultProps: { radius: "sm", variant: "light" } },
+    Card: { defaultProps: { radius: "lg", withBorder: true } },
+    Paper: { defaultProps: { radius: "lg" } },
+    TextInput: { defaultProps: { size: "md" } },
+    PasswordInput: { defaultProps: { size: "md" } },
+    SegmentedControl: { defaultProps: { radius: "xl" } },
+    Modal: { defaultProps: { radius: "lg", centered: true } },
   },
 });

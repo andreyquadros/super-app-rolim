@@ -7,7 +7,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { formatPhone, onlyDigits, whatsappLink } from "@/domain/documents";
 import { directionsUrl, distanceMeters, formatDistance } from "@/domain/geo";
 import type { Building } from "@/domain/types";
-import { usePharmacies } from "@/hooks/useCitizenData";
+import { useDutyUnits } from "@/hooks/useCitizenData";
 import { useGeolocation } from "@/hooks/useGeolocation";
 
 type Filter = "duty" | "open" | "all";
@@ -69,7 +69,7 @@ function PharmacyCard({ pharmacy, distance }: { pharmacy: Building; distance: nu
 }
 
 export default function PharmaciesPage() {
-  const { data, loading, error } = usePharmacies();
+  const { data, loading, error } = useDutyUnits("PHARMACY");
   const geo = useGeolocation();
   const [filter, setFilter] = useState<Filter>("duty");
   const [showMap, setShowMap] = useState(false);

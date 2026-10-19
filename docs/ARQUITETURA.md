@@ -21,7 +21,7 @@ Resultado: **nenhum servidor para instalar, atualizar ou proteger** via RDP/Linu
 ## Componentes
 
 - **PWA (`web/`)** — React 19 + Vite + Mantine. Uma só base de código para o cidadão e o painel; telas carregadas sob demanda. O *service worker* (`web/src/sw.ts`) guarda o app para uso offline e recebe os avisos push. O Firestore usa cache persistente: protocolos ficam disponíveis sem internet e solicitações sem foto são enviadas quando a conexão volta.
-- **Regras (`firestore.rules`, `storage.rules`)** — são o "backend" de autorização. Validam quem escreve, quais campos, formatos (CPF, protocolo, datas), se o local está dentro do município e o fluxo de status. Têm 39 testes automatizados, incluindo tentativas de ataque.
+- **Regras (`firestore.rules`, `storage.rules`)** — são o "backend" de autorização. Validam quem escreve, quais campos, formatos (CPF, protocolo, datas), se o local está dentro do município e o fluxo de status. Têm 40 testes automatizados, incluindo tentativas de ataque.
 - **Cloud Functions (`functions/`)** — reagem a mudanças no banco: e-mail ao abrir e a cada mudança de status, aviso push ao cidadão, envio de comunicados para todos, auditoria de equipe/unidades e limpeza de dados ao excluir conta.
 
 ## Modelo de dados (Firestore)
@@ -30,8 +30,8 @@ Resultado: **nenhum servidor para instalar, atualizar ou proteger** via RDP/Linu
 | --- | --- | --- |
 | `users/{uid}` | nome, CPF, celular, e-mail, e-mail confirmado | a própria pessoa; equipe abre um cadastro por vez (sem listar a base) |
 | `cpfs/{cpf}` | `{ uid }` — garante 1 CPF por conta | criado no cadastro; equipe consulta um CPF por vez |
-| `staff/{uid}` | perfis (`ROOT`, `CIVIL_SERVANT`, `PHARMACY_MANAGER`), unidades, ativo | somente admin; só ativa contas com e-mail confirmado |
-| `buildings/{id}` | unidades públicas e farmácias, local, telefones, aberta/plantão | público lê; admin edita; farmácia altera só aberta/plantão |
+| `staff/{uid}` | perfis (`ROOT`, `CIVIL_SERVANT`, `DUTY_MANAGER` = responsável por plantão), unidades, ativo | somente admin; só ativa contas com e-mail confirmado |
+| `buildings/{id}` | unidades públicas (`PUBLIC`), farmácias (`PHARMACY`) e funerárias (`FUNERAL`), local, telefones, aberta/plantão | público lê; admin edita; responsável por plantão altera só aberta/plantão das que gerencia |
 | `issues/{id}` | zeladoria: categoria, local, endereço, foto, status, protocolo `ZEL-AAAA-XXXXXXXX` | autor e equipe |
 | `issues/{id}/history/{status}` | cada mudança de status com resposta oficial | autor e equipe; equipe cria |
 | `issues/{id}/notes/{id}` | observações internas | só equipe |

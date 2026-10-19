@@ -7,6 +7,7 @@ import { MapPicker } from "@/components/map";
 import { saveBuilding } from "@/data/buildings";
 import { formatPhone, isValidPhone, onlyDigits } from "@/domain/documents";
 import { isInsideMunicipality, type LatLng } from "@/domain/geo";
+import { isDutyType } from "@/domain/duty";
 import type { Building, BuildingType, PhoneType, StaffMember } from "@/domain/types";
 import { errorMessage } from "@/lib/errors";
 
@@ -31,16 +32,18 @@ interface Values {
 
 interface BuildingFormProps {
   building: Building | null;
-  pharmacyManagers: StaffMember[];
+  dutyManagers: StaffMember[];
+  /** Tipo sugerido ao criar (aba aberta no painel) */
+  defaultType?: BuildingType;
   onDone: () => void;
 }
 
-export function BuildingForm({ building, pharmacyManagers, onDone }: BuildingFormProps) {
+export function BuildingForm({ building, dutyManagers, defaultType = "PUBLIC", onDone }: BuildingFormProps) {
   const [busy, setBusy] = useState(false);
   const form = useForm<Values>({
     initialValues: {
       name: building?.name ?? "",
-      type: building?.type ?? "PUBLIC",
+      type: building?.type ?? defaultType,
       address: building?.address ?? "",
       point: building ? { lat: building.lat, lng: building.lng } : null,
       phones: building?.phones.map((p) => ({ type: p.type, number: formatPhone(p.number) })) ?? [],
@@ -84,7 +87,8 @@ export function BuildingForm({ building, pharmacyManagers, onDone }: BuildingFor
     }
   });
 
-  const isPharmacy = form.values.type === "PHARMACY";
+  const isDuty = isDutyType(form.values.type);
+  const isFuneral = form.values.type === "FUNERAL";
 
   return (
     <form onSubmit={submit} noValidate>
@@ -95,9 +99,10 @@ export function BuildingForm({ building, pharmacyManagers, onDone }: BuildingFor
           data={[
             { value: "PUBLIC", label: "Unidade pública" },
             { value: "PHARMACY", label: "Farmácia" },
+            { value: "FUNERAL", label: "Funerária" },
           ]}
         />
-        <TextInput label="Nome" placeholder={isPharmacy ? "Farmácia…" : "UBS Centro, Escola…"} {...form.getInputProps("name")} />
+        <TextInput label="Nome" placeholder={isFuneral ? "Funerária…" : isDuty ? "Farmácia…" : "UBS Centro, Escola…"} {...form.getInputProps("name")} />
         <TextInput label="Endereço" {...form.getInputProps("address")} />
         <div>
           <Text size="sm" fw={500} mb={4}>
@@ -110,7 +115,7 @@ export function BuildingForm({ building, pharmacyManagers, onDone }: BuildingFor
             </Text>
           )}
         </div>
-        <TextInput label="Horário de funcionamento" placeholder="Seg–Sex 7h às 19h" {...form.getInputProps("openingHours")} />
+        <TextInput label="Horário de funcionamento" placeholder={isFuneral ? "Atendimento 24 horas" : "Seg–Sex 7h às 19h"} {...form.getInputProps("openingHours")} />
         <Stack gap="xs">
           <Text size="sm" fw={500}>
             Telefones
@@ -135,12 +140,12 @@ export function BuildingForm({ building, pharmacyManagers, onDone }: BuildingFor
             </Button>
           )}
         </Stack>
-        {isPharmacy && (
+        {isDuty && (
           <>
             <MultiSelect
-              label="Responsáveis pela farmácia"
-              description="Pessoas com acesso “Farmácia” que podem atualizar plantão e horário."
-              data={pharmacyManagers.map((s) => ({ value: s.id, label: `${s.fullName} (${s.email})` }))}
+              label={isFuneral ? "Responsáveis pela funerária" : "Responsáveis pela farmácia"}
+              description="Pessoas com acesso “Plantão” que podem atualizar aberta e plantão."
+              data={dutyManagers.map((s) => ({ value: s.id, label: `${s.fullName} (${s.email})` }))}
               searchable
               {...form.getInputProps("ownerIds")}
             />

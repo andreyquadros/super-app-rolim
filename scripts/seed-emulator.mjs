@@ -41,7 +41,7 @@ const PEOPLE = [
   { key: "citizen", email: "cidadao@rolim.test", name: "Maria da Silva Souza", cpf: cpfFrom("123456789"), phone: "69999990001" },
   { key: "root", email: "admin@rolim.test", name: "Administração Prefeitura", cpf: cpfFrom("987654321"), phone: "69999990002", staff: { roles: ["ROOT"] } },
   { key: "servant", email: "servidor@rolim.test", name: "Ana Paula Ribeiro", cpf: cpfFrom("111222333"), phone: "69999990003", staff: { roles: ["CIVIL_SERVANT"], units: ["ubs-centro", "secretaria-obras"] } },
-  { key: "pharmacist", email: "farmacia@rolim.test", name: "José Carlos Lima", cpf: cpfFrom("444555666"), phone: "69999990004", staff: { roles: ["PHARMACY_MANAGER"] } },
+  { key: "dutyManager", email: "plantao@rolim.test", name: "José Carlos Lima", cpf: cpfFrom("444555666"), phone: "69999990004", staff: { roles: ["DUTY_MANAGER"] } },
 ];
 
 async function upsertUser(person) {
@@ -100,7 +100,7 @@ const BUILDINGS = {
   "farmacia-centro": building("Farmácia Exemplo Centro", "PHARMACY", near(0.0015, -0.0012), {
     address: "Av. Norte Sul, 1200 - Centro",
     isOnDuty: true,
-    ownerIds: [uids.pharmacist],
+    ownerIds: [uids.dutyManager],
     phones: [{ type: "LANDLINE", number: "6934420001" }, { type: "WHATSAPP", number: "69999991001" }],
     openingHours: "Plantão 24h nesta semana",
   }),
@@ -116,6 +116,18 @@ const BUILDINGS = {
     openingHours: "Seg–Sex 8h às 18h",
   }),
 };
+BUILDINGS["funeraria-central"] = building("Funerária Exemplo Central", "FUNERAL", near(-0.0021, -0.0035), {
+  address: "Av. Exemplo, 900 - Centro",
+  isOnDuty: true,
+  ownerIds: [uids.dutyManager],
+  phones: [{ type: "LANDLINE", number: "6934420010" }, { type: "WHATSAPP", number: "69999991010" }],
+  openingHours: "Atendimento 24 horas",
+});
+BUILDINGS["funeraria-paz"] = building("Funerária Exemplo Paz", "FUNERAL", near(0.0052, 0.0061), {
+  address: "Rua Exemplo, 77 - Jardim Tropical",
+  phones: [{ type: "MOBILE", number: "69999991011" }],
+  openingHours: "Seg–Sáb 7h às 19h",
+});
 for (const [id, data] of Object.entries(BUILDINGS)) await db.doc(`buildings/${id}`).set(data);
 
 const citizen = { citizenId: uids.citizen, citizenName: "Maria da Silva Souza" };

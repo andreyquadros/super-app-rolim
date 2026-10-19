@@ -4,7 +4,7 @@ import { watchBuildings } from "@/data/buildings";
 import { watchSentNotifications } from "@/data/notifications";
 import { watchMyRequests } from "@/data/requests";
 import { mergeWatchers } from "@/data/watch";
-import type { CitizenRequest } from "@/domain/types";
+import type { CitizenRequest, DutyType } from "@/domain/types";
 import { useWatch } from "./useWatch";
 
 const newestFirst = (a: CitizenRequest, b: CitizenRequest) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0);
@@ -22,8 +22,9 @@ export function useMyRequests() {
   return useWatch(watcher);
 }
 
-export function usePharmacies() {
-  const watcher = useMemo(() => watchBuildings("PHARMACY"), []);
+/** Farmácias ou funerárias ativas (lista pública de plantão). */
+export function useDutyUnits(type: DutyType) {
+  const watcher = useMemo(() => watchBuildings(type), [type]);
   const state = useWatch(watcher);
   const active = useMemo(() => (state.data ?? []).filter((b) => b.active), [state.data]);
   return { ...state, data: active };

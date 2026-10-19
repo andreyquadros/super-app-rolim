@@ -6,7 +6,7 @@ import {
   IconChartBar,
   IconLogout,
   IconMessages,
-  IconPill,
+  IconBuildingStore,
   IconSmartHome,
   IconTools,
   IconUsersGroup,
@@ -20,7 +20,7 @@ interface Item {
   to: string;
   label: string;
   icon: Icon;
-  show: (a: { isRoot: boolean; isManager: boolean; isPharmacist: boolean }) => boolean;
+  show: (a: { isRoot: boolean; isManager: boolean; isDutyManager: boolean }) => boolean;
 }
 
 const ITEMS: Item[] = [
@@ -28,16 +28,16 @@ const ITEMS: Item[] = [
   { to: "/painel/zeladoria", label: "Zeladoria", icon: IconTools, show: (a) => a.isManager },
   { to: "/painel/ouvidoria", label: "Ouvidoria", icon: IconMessages, show: (a) => a.isManager },
   { to: "/painel/comunicados", label: "Comunicados", icon: IconBell, show: (a) => a.isManager },
-  { to: "/painel/minhas-farmacias", label: "Minhas farmácias", icon: IconPill, show: (a) => a.isPharmacist },
-  { to: "/painel/unidades", label: "Unidades e farmácias", icon: IconBuildingCommunity, show: (a) => a.isRoot },
+  { to: "/painel/meus-plantoes", label: "Meus plantões", icon: IconBuildingStore, show: (a) => a.isDutyManager },
+  { to: "/painel/unidades", label: "Unidades e plantões", icon: IconBuildingCommunity, show: (a) => a.isRoot },
   { to: "/painel/equipe", label: "Equipe e acessos", icon: IconUsersGroup, show: (a) => a.isRoot },
 ];
 
 export function AdminLayout() {
   const [opened, { toggle, close }] = useDisclosure(false);
   const { pathname } = useLocation();
-  const { actor, staff, isRoot, isManager, isPharmacist, signOut } = useAuth();
-  const items = ITEMS.filter((i) => i.show({ isRoot, isManager, isPharmacist }));
+  const { actor, staff, isRoot, isManager, isDutyManager, signOut } = useAuth();
+  const items = ITEMS.filter((i) => i.show({ isRoot, isManager, isDutyManager }));
 
   return (
     <AppShell

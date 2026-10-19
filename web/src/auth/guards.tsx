@@ -27,11 +27,11 @@ export function RequireUser({ children }: { children: ReactNode }) {
   return children;
 }
 
-type Access = "staff" | "manager" | "root" | "pharmacist";
+type Access = "staff" | "manager" | "root" | "duty";
 
 /** Área da prefeitura: verifica o perfil de acesso da equipe. */
 export function RequireStaff({ access, children }: { access: Access; children: ReactNode }) {
-  const { user, staff, isRoot, isManager, isPharmacist, loading } = useAuth();
+  const { user, staff, isRoot, isManager, isDutyManager, loading } = useAuth();
   const next = useNextParam();
   if (loading) return <LoadingScreen />;
   if (!user) return <Navigate to={`/entrar?next=${next}`} replace />;
@@ -39,6 +39,6 @@ export function RequireStaff({ access, children }: { access: Access; children: R
     (access === "staff" && staff !== null) ||
     (access === "manager" && isManager) ||
     (access === "root" && isRoot) ||
-    (access === "pharmacist" && (isPharmacist || isRoot));
+    (access === "duty" && (isDutyManager || isRoot));
   return allowed ? children : <ForbiddenPage />;
 }

@@ -31,7 +31,7 @@ function Root() {
 /** /painel → primeira área disponível para o perfil. */
 function AdminIndex() {
   const { isManager } = useAuth();
-  return <Navigate to={isManager ? "/painel/inicio" : "/painel/minhas-farmacias"} replace />;
+  return <Navigate to={isManager ? "/painel/inicio" : "/painel/meus-plantoes"} replace />;
 }
 
 const citizen = (element: ReactNode) => <RequireCitizen>{element}</RequireCitizen>;
@@ -129,14 +129,15 @@ export const router = createBrowserRouter([
             children: [{ index: true, ...page(() => import("@/pages/admin/BuildingsAdminPage")) }],
           },
           {
-            path: "minhas-farmacias",
+            path: "meus-plantoes",
             element: (
-              <RequireStaff access="pharmacist">
+              <RequireStaff access="duty">
                 <Outlet />
               </RequireStaff>
             ),
-            children: [{ index: true, ...page(() => import("@/pages/admin/MyPharmaciesPage")) }],
+            children: [{ index: true, ...page(() => import("@/pages/admin/MyDutyUnitsPage")) }],
           },
+          { path: "minhas-farmacias", element: <Navigate to="/painel/meus-plantoes" replace /> },
         ],
       },
     ],

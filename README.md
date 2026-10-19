@@ -1,6 +1,6 @@
 # Super App Rolim de Moura
 
-Aplicativo da **Prefeitura Municipal de Rolim de Moura (RO)** para o cidadão registrar problemas da cidade (zeladoria), falar com a ouvidoria, encontrar farmácias de plantão e receber comunicados — e para a prefeitura atender tudo isso em um painel.
+O **SUPER APP Rolim de Moura** é o aplicativo do cidadão de Rolim de Moura (RO), mantido pela Prefeitura Municipal: registrar problemas da cidade (zeladoria), falar com a ouvidoria, encontrar farmácias e funerárias de plantão e receber comunicados — e, para a prefeitura, um painel para atender tudo isso.
 
 É um **PWA** (Progressive Web App): abre no navegador e se instala na tela inicial do celular **sem passar pela Play Store ou App Store**. Funciona sem internet para consulta e envia avisos (push) no Android, no computador e no iPhone (iOS 16.4+, com o app adicionado à Tela de Início).
 
@@ -13,9 +13,9 @@ Aplicativo da **Prefeitura Municipal de Rolim de Moura (RO)** para o cidadão re
 | Zeladoria com mapa, GPS, endereço automático e foto | Visão geral com indicadores, mapa e ranking por bairro |
 | Ouvidoria: elogio, sugestão ou reclamação sobre uma unidade | Filas de zeladoria e ouvidoria com resposta oficial e notas internas |
 | Protocolo com linha do tempo e resposta da prefeitura | Comunicados enviados como aviso push para toda a cidade |
-| Farmácias de plantão ordenadas pela distância | Cadastro de unidades públicas e farmácias |
-| Avisos push e e-mail a cada mudança de situação | Equipe e acessos por perfil (Administrador, Servidor, Farmácia) |
-| Funciona offline; exclusão de conta (LGPD) | Farmácias atualizam o próprio plantão |
+| Farmácias e funerárias de plantão, pela distância | Cadastro de unidades públicas, farmácias e funerárias |
+| Avisos push e e-mail a cada mudança de situação | Equipe e acessos por perfil (Administrador, Servidor, Plantão) |
+| Funciona offline; exclusão de conta (LGPD) | Farmácias e funerárias atualizam o próprio plantão |
 | Confirmação de e-mail para receber avisos por e-mail | Acesso de equipe só para e-mails confirmados |
 
 ## Arquitetura em uma imagem
@@ -101,7 +101,7 @@ npm run test:e2e
 | --- | --- |
 | `web` (Vitest) | status, protocolo, CPF/telefone, limite do município, indicadores, endereço |
 | `functions` (Vitest) | conteúdo e segurança dos e-mails |
-| `test:rules` | 39 cenários de permissão e de ataque: cidadão, servidor por unidade, farmácia, admin, fotos |
+| `test:rules` | 40 cenários de permissão e de ataque: cidadão, servidor por unidade, plantão, admin, fotos |
 | `test:e2e` (Playwright) | PWA instalável, service worker, abertura offline, login, escopos, bloqueios e atendimento completo |
 
 ## Publicar

@@ -157,7 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading: !(ready.auth && ready.profile && ready.staff),
       isRoot,
       isManager,
-      isPharmacist: roles.includes("PHARMACY_MANAGER"),
+      isDutyManager: roles.includes("DUTY_MANAGER"),
       buildingScope: isRoot ? null : (staff?.buildingIds ?? []),
       actor: user ? { uid: user.uid, name } : null,
       signIn,

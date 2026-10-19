@@ -1,7 +1,7 @@
 import type { IssueCategory, OmbudsmanType, StreetType } from "./catalog";
 import type { RequestStatus } from "./status";
 
-export type Role = "ROOT" | "CIVIL_SERVANT" | "PHARMACY_MANAGER";
+export type Role = "ROOT" | "CIVIL_SERVANT" | "DUTY_MANAGER";
 
 export interface Profile {
   fullName: string;
@@ -24,7 +24,10 @@ export interface StaffMember {
   updatedAt: Date | null;
 }
 
-export type BuildingType = "PUBLIC" | "PHARMACY";
+export type BuildingType = "PUBLIC" | "PHARMACY" | "FUNERAL";
+
+/** Estabelecimentos com plantão (lista pública, responsável atualiza). */
+export type DutyType = Extract<BuildingType, "PHARMACY" | "FUNERAL">;
 export type PhoneType = "WHATSAPP" | "MOBILE" | "LANDLINE";
 
 export interface Phone {
