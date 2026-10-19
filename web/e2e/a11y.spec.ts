@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
-import { signIn } from "./helpers";
+import { signIn, waitForSettled } from "./helpers";
 
 const PUBLIC_PAGES = ["/", "/plantao/farmacias", "/plantao/funerarias", "/comunicados", "/entrar", "/cadastro", "/privacidade"];
 const CITIZEN_PAGES = ["/protocolos", "/perfil", "/perfil/dados", "/zeladoria/nova", "/ouvidoria/nova"];
@@ -8,8 +8,8 @@ const CITIZEN_PAGES = ["/protocolos", "/perfil", "/perfil/dados", "/zeladoria/no
 async function expectNoViolations(page: Page, path: string) {
   await page.goto(path);
   await expect(page.locator("main h1, main [role=heading][aria-level='1']").first()).toBeVisible();
-  // Espera as entradas animadas terminarem (o axe mede contraste do estado final)
-  await page.waitForTimeout(600);
+  // O axe mede o contraste do estado final: dados na tela e entradas concluídas
+  await waitForSettled(page);
   const results = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
     .exclude(".leaflet-container")
