@@ -21,8 +21,10 @@ import { cssVariablesResolver, theme } from "./theme/theme";
 
 /**
  * Monta o contêiner de avisos flutuantes depois que o app abriu (fora do pacote
- * inicial). Sem React.lazy: se a conexão cair antes de o pedaço chegar, o erro
- * derrubaria o app inteiro; aqui ele só tenta de novo quando a conexão voltar.
+ * inicial). Sem React.lazy: se o pedaço não chegar, o erro derrubaria o app
+ * inteiro; aqui só os avisos faltam. Tentar de novo não adianta (o navegador
+ * guarda a falha do módulo até recarregar): o app oferece recarregar
+ * (lib/staleChunks e UpdatePrompt).
  */
 function DeferredNotifications() {
   const [Notifications, setNotifications] = useState<ComponentType<NotificationsProps> | null>(null);
@@ -31,13 +33,12 @@ function DeferredNotifications() {
     const load = () =>
       import("@mantine/notifications").then(
         (m) => !cancelled && setNotifications(() => m.Notifications),
-        () => !cancelled && window.addEventListener("online", load, { once: true }),
+        () => undefined,
       );
     const idle = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 300));
     idle(load);
     return () => {
       cancelled = true;
-      window.removeEventListener("online", load);
     };
   }, []);
   // Embaixo, acima da barra de navegação: não cobre o cabeçalho no celular

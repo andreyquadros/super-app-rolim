@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 
 /** Pedaço da tela "Criar conta", baixado só quando a pessoa a abre. */
@@ -8,6 +9,12 @@ function countLoads(page: Page): () => number {
   let loads = 0;
   page.on("load", () => (loads += 1));
   return () => loads;
+}
+
+/** Arquivo de um pedaço no build que o teste usa (dist/.vite/manifest.json). */
+function builtChunk(source: string): string {
+  const manifest = JSON.parse(readFileSync(new URL("../dist/.vite/manifest.json", import.meta.url), "utf8"));
+  return manifest[source].file;
 }
 
 test("sair da página com um pedaço ainda baixando não volta para a página antiga", async ({ page }) => {
@@ -68,5 +75,40 @@ test.describe("versão nova no ar", () => {
     await expect(page).toHaveURL(/\/cadastro$/);
     expect(versionChecks).toBe(1);
     expect(loads()).toBe(1);
+  });
+});
+
+test.describe("rede instável", () => {
+  // Sem service worker, como na primeira visita (com ele, os pedaços vêm da cópia offline)
+  test.use({ serviceWorkers: "block" });
+
+  test("pedaço que não chegou: o app oferece recarregar e volta inteiro", async ({ page, context, browserName }) => {
+    // Os avisos flutuantes descem logo depois da abertura. O navegador guarda a
+    // falha do módulo, então tentar o import() de novo não adianta
+    const chunk = builtChunk("node_modules/@mantine/notifications/esm/index.mjs");
+    let requests = 0;
+    await context.route(`**/${chunk}`, (route) => (++requests === 1 ? route.fulfill({ status: 503, body: "" }) : route.continue()));
+    const notifications = (target: Page) => target.locator('.mantine-Notifications-root[data-position="bottom-center"]');
+
+    await page.goto("/");
+    const notice = page.getByRole("status").filter({ hasText: "Uma parte do app não carregou." });
+    await expect(notice).toBeVisible();
+    await expect(notifications(page)).not.toBeAttached();
+    await notice.getByRole("button", { name: "Recarregar" }).click();
+
+    if (browserName !== "webkit") {
+      await expect(notifications(page)).toBeAttached();
+      await expect(notice).toBeHidden();
+      expect(requests).toBe(2);
+      return;
+    }
+    // O Safari guarda o pedaço que veio com erro mesmo depois de recarregar
+    // (só um processo novo o baixa de novo): o aviso pede para fechar e abrir
+    await expect(page.getByRole("status").filter({ hasText: "Feche e abra o app de novo." })).toBeVisible();
+    expect(requests).toBe(1);
+    const reopened = await context.newPage();
+    await reopened.goto("/");
+    await expect(notifications(reopened)).toBeAttached();
+    expect(requests).toBe(2);
   });
 });

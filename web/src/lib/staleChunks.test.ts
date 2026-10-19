@@ -1,5 +1,19 @@
-import { describe, expect, it, vi } from "vitest";
-import { CHUNK_RELOAD_KEY, CHUNK_RELOAD_WINDOW_MS, entryScriptSrc, shouldReloadForNewVersion, type StaleChunkCheck } from "./staleChunks";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  CHUNK_RELOAD_KEY,
+  CHUNK_RELOAD_WINDOW_MS,
+  dismissFailedPart,
+  entryScriptSrc,
+  FAILED_NOTICE_DELAY_MS,
+  hasFailedPart,
+  onFailedPartChange,
+  PART_RELOAD_WINDOW_MS,
+  recoverFromStaleChunks,
+  reloadDidNotHelp,
+  reloadForFailedPart,
+  shouldReloadForNewVersion,
+  type StaleChunkCheck,
+} from "./staleChunks";
 
 const indexHtml = (entry: string) => `<!doctype html>
 <html lang="pt-BR">
@@ -100,5 +114,80 @@ describe("shouldReloadForNewVersion", () => {
       setItem: () => undefined,
     };
     expect(await shouldReloadForNewVersion(check({ storage: blocked }))).toBe(false);
+  });
+});
+
+describe("recoverFromStaleChunks", () => {
+  let preloadError: (() => void) | undefined;
+  let served: string;
+  const reload = vi.fn();
+  const fetchIndex = vi.fn(async () => ({ ok: true, status: 200, text: async () => indexHtml(served) }));
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    dismissFailedPart();
+    preloadError = undefined;
+    served = "/assets/index-Antiga1.js";
+    reload.mockClear();
+    fetchIndex.mockClear();
+    vi.stubGlobal("window", {
+      addEventListener: (type: string, listener: () => void) => {
+        if (type === "vite:preloadError") preloadError = listener;
+      },
+      location: { reload },
+      sessionStorage: memoryStorage(),
+      setTimeout: (callback: () => void, ms: number) => setTimeout(callback, ms),
+      clearTimeout: (id: number) => clearTimeout(id),
+    });
+    vi.stubGlobal("document", { querySelector: () => ({ getAttribute: () => "/assets/index-Antiga1.js" }) });
+    vi.stubGlobal("navigator", { onLine: true });
+    vi.stubGlobal("fetch", fetchIndex);
+    recoverFromStaleChunks();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
+
+  it("mesma versão: não recarrega e, se a página continua aberta, avisa que só recarregar resolve", async () => {
+    const changed = vi.fn();
+    const stop = onFailedPartChange(changed);
+    preloadError!();
+    await vi.advanceTimersByTimeAsync(FAILED_NOTICE_DELAY_MS - 1);
+    expect(hasFailedPart()).toBe(false);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(hasFailedPart()).toBe(true);
+    expect(changed).toHaveBeenCalledTimes(1);
+    expect(reload).not.toHaveBeenCalled();
+
+    dismissFailedPart();
+    expect(hasFailedPart()).toBe(false);
+    stop();
+  });
+
+  it("versão nova no ar: recarrega sozinho, sem aviso", async () => {
+    served = "/assets/index-Nova22.js";
+    preloadError!();
+    await vi.advanceTimersByTimeAsync(FAILED_NOTICE_DELAY_MS);
+    expect(reload).toHaveBeenCalledTimes(1);
+    expect(hasFailedPart()).toBe(false);
+  });
+
+  it("falhou de novo logo depois de \"Recarregar\": recarregar não bastou (Safari)", () => {
+    expect(reloadDidNotHelp()).toBe(false);
+    reloadForFailedPart();
+    expect(reload).toHaveBeenCalledTimes(1);
+    expect(reloadDidNotHelp()).toBe(true);
+    expect(reloadDidNotHelp(Date.now() + PART_RELOAD_WINDOW_MS)).toBe(false);
+  });
+
+  it("várias falhas juntas perguntam ao servidor uma vez só", async () => {
+    preloadError!();
+    preloadError!();
+    preloadError!();
+    await vi.advanceTimersByTimeAsync(FAILED_NOTICE_DELAY_MS);
+    expect(fetchIndex).toHaveBeenCalledTimes(1);
+    expect(fetchIndex).toHaveBeenCalledWith("/", expect.objectContaining({ cache: "no-store" }));
   });
 });
