@@ -17,34 +17,12 @@ export async function waitForScreen(page: Page): Promise<void> {
   });
 }
 
-/** Abas que o app baixa sozinho depois do load (preloadMainTabs em src/main.tsx). */
-const BACKGROUND_CHUNKS = ["DutyPage", "MyRequestsPage", "NoticesPage"];
-
 /**
- * Espera o app baixar as abas principais em segundo plano: logo depois do
- * load, ou 1,5 s depois no Safari (sem requestIdleCallback). No WebKit, sair
- * da página com um import() pendente o cancela, e o app (vite:preloadError em
- * src/main.tsx) recarrega a página antiga por cima do page.goto seguinte.
- */
-export async function waitForBackgroundImports(page: Page): Promise<void> {
-  const chunks = await page.waitForFunction((names) => {
-    // Economia de dados ou aparelho modesto: o app não baixa nada antes da hora
-    if (document.documentElement.dataset.motion === "lite") return [];
-    const loaded = performance.getEntriesByType("resource").map((entry) => entry.name);
-    const urls = names.map((name) => loaded.find((url) => new RegExp(`^/assets/${name}-[\\w-]+\\.js$`).test(new URL(url).pathname)));
-    return urls.every(Boolean) && urls;
-  }, BACKGROUND_CHUNKS);
-  const urls = (await chunks.jsonValue()) as string[];
-  // O mesmo import() do app: só termina quando o módulo e as dependências chegaram
-  await page.evaluate((list) => Promise.all(list.map((url) => import(url))), urls);
-}
-
-/**
- * Espera a tela assentar: dados carregados (sem os blocos `.shimmer`), as
- * entradas animadas concluídas e os downloads em segundo plano terminados. Os
- * cartões entram com `.enter-rise` (opacidade 0 → 1) quando os dados chegam,
- * o que pode ser bem depois do título. As animações sem fim (ponto "ao vivo",
- * indicadores de carregamento) não contam.
+ * Espera a tela assentar: dados carregados (sem os blocos `.shimmer`) e as
+ * entradas animadas concluídas. Os cartões entram com `.enter-rise`
+ * (opacidade 0 → 1) quando os dados chegam, o que pode ser bem depois do
+ * título. As animações sem fim (ponto "ao vivo", indicadores de carregamento)
+ * não contam.
  */
 export async function waitForSettled(page: Page): Promise<void> {
   await waitForScreen(page);
@@ -53,7 +31,6 @@ export async function waitForSettled(page: Page): Promise<void> {
       !document.querySelector(".shimmer") &&
       document.getAnimations().every((a) => a.playState !== "running" || a.effect?.getComputedTiming().endTime === Infinity),
   );
-  await waitForBackgroundImports(page);
 }
 
 /** Entra pela tela de login e espera a tela de `next` assentar. */
