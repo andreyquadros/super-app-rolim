@@ -30,7 +30,11 @@
          cor própria: o CSS do app (papel claro) chega depois e não a cobre */
       html { background: #0d7a49; color: #ffffff; }
       html:has(.boot), html:has(.boot) body { background: #0d7a49; color: #ffffff; }
-      .boot { min-height: 100dvh; display: grid; grid-template-rows: 1fr auto; justify-items: center; background: #0d7a49; color: #ffffff; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; text-align: center; padding: env(safe-area-inset-top) 24px calc(24px + env(safe-area-inset-bottom)); }
+      /* O CSS do app não bloqueia a abertura e chega depois: o que ele mudaria
+         nela (margem do body, box-sizing, entrelinha) já vale aqui, sem deslocar nada */
+      body { margin: 0; }
+      .boot, .boot * { box-sizing: border-box; }
+      .boot { min-height: 100dvh; display: grid; grid-template-rows: 1fr auto; justify-items: center; background: #0d7a49; color: #ffffff; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; line-height: 1.55; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; text-align: center; padding: env(safe-area-inset-top) 24px calc(24px + env(safe-area-inset-bottom)); }
       @media (prefers-color-scheme: dark) {
         html, html:has(.boot), html:has(.boot) body, .boot { background: #0f3b28; }
       }

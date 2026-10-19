@@ -83,8 +83,9 @@ O local do bucket padrão não pode ser alterado. Se no futuro a prefeitura quis
 - **Privacidade no aparelho:** ao sair ou excluir a conta, o cache local do app é apagado (computadores e celulares compartilhados).
 - **CPF:** validado pelos dígitos verificadores e único por conta. Como no sistema antigo, o cadastro é autodeclarado; se alguém registrar um CPF que não é seu, o administrador apaga `cpfs/{cpf}` pelo console.
 - **iPhone:** avisos push exigem iOS 16.4+ e o app adicionado à Tela de Início (o app mostra as instruções).
-- **Firebase JS SDK fixado em 12.14.0:** a partir da 12.15 o Firestore inclui a biblioteca `re2js` (+59 KB gzip no carregamento inicial) sem benefício para este app. Ao atualizar, compare o tamanho do build.
-- **Tamanho:** ~304 KB gzip de JavaScript na primeira visita; depois o app abre do cache do aparelho.
+- **Firebase JS SDK fixado em 12.14.0:** a partir da 12.15 o Firestore inclui a biblioteca `re2js` (+59 KB gzip no carregamento inicial) sem benefício para este app. Ao atualizar, compare o tamanho do build e confira `prepareGoogleSignIn` em `web/src/lib/firebase.ts`, que usa uma API interna do Auth (`_getInstance`).
+- **Abertura em rede lenta:** a abertura verde do `index.html` aparece sem esperar CSS nem JavaScript (o CSS do app é pré-carregado e aplicado pelo `main.tsx` antes de montar o React). A Início pinta antes do Firebase: o login (`auth/authRuntime.ts`) e os dados da Início (`data/lazy.ts`) carregam o SDK logo depois da primeira pintura. O Auth é criado com `initializeAuth` sem o resolvedor de popup, que no celular baixava o iframe do Google (~95 KB) na abertura; o login com Google recebe o resolvedor na hora e prepara o iframe quando o botão aparece.
+- **Tamanho:** ~292 KB gzip de JavaScript na primeira visita, dos quais ~160 KB antes da primeira tela (o `npm run build` mostra a divisão); depois o app abre do cache do aparelho.
 
 ## Custos
 

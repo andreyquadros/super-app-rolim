@@ -1,10 +1,64 @@
 /// <reference types="vitest/config" />
 import { fileURLToPath, URL } from "node:url";
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import type { OutputChunk } from "rollup";
+import { defineConfig, type HtmlTagDescriptor, type Plugin } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
 const THEME_COLOR = "#0d7a49";
+
+/** Importados pelo main.tsx logo ao abrir (os mesmos de scripts/check-bundle.mjs) */
+const STARTUP_MODULES = [/\/src\/router\.tsx$/, /\/src\/auth\/AuthProvider\.tsx$/];
+
+/**
+ * Primeira visita em rede lenta:
+ * - o CSS do app não bloqueia mais a abertura verde: vira preload e o main.tsx
+ *   o aplica antes de montar o React (nada aparece sem estilo);
+ * - os pedaços que o main.tsx importa ao abrir (rotas e Firebase) começam a
+ *   baixar junto com a entrada, e não só depois que ela é executada.
+ */
+function startupAssets(): Plugin {
+  return {
+    name: "rolim-startup-assets",
+    apply: "build",
+    transformIndexHtml: {
+      order: "post",
+      handler(html, { bundle, chunk: entry }) {
+        if (!bundle || !entry) return html;
+        const chunks = new Map(
+          Object.values(bundle)
+            .filter((c): c is OutputChunk => c.type === "chunk")
+            .map((c) => [c.fileName, c]),
+        );
+        const startup = new Set<string>();
+        const visit = (file: string) => {
+          if (file === entry.fileName || startup.has(file) || !chunks.has(file)) return;
+          startup.add(file);
+          chunks.get(file)!.imports.forEach(visit);
+        };
+        for (const file of entry.dynamicImports) {
+          if (chunks.get(file)?.moduleIds.some((id) => STARTUP_MODULES.some((re) => re.test(id)))) visit(file);
+        }
+
+        const tags: HtmlTagDescriptor[] = [];
+        for (const file of startup) {
+          tags.push({ tag: "link", attrs: { rel: "modulepreload", crossorigin: true, href: `/${file}` }, injectTo: "head" });
+          for (const css of chunks.get(file)!.viteMetadata?.importedCss ?? []) {
+            tags.push({ tag: "link", attrs: { rel: "preload", as: "style", crossorigin: true, href: `/${css}` }, injectTo: "head" });
+          }
+        }
+
+        let appCss = 0;
+        const out = html.replace(/<link rel="stylesheet" crossorigin href="(\/assets\/index-[\w-]+\.css)">/g, (_, href: string) => {
+          appCss += 1;
+          return `<link rel="preload" as="style" crossorigin href="${href}" data-app-css>`;
+        });
+        if (appCss !== 1) throw new Error(`startupAssets: esperava 1 CSS de entrada no index.html, achou ${appCss}`);
+        return { html: out, tags };
+      },
+    },
+  };
+}
 
 export default defineConfig({
   resolve: {
@@ -20,6 +74,7 @@ export default defineConfig({
   },
   plugins: [
     react(),
+    startupAssets(),
     VitePWA({
       // Service worker próprio: cache offline (Workbox) + push (FCM) num só arquivo.
       strategies: "injectManifest",

@@ -1,24 +1,24 @@
-import {
-  createUserWithEmailAndPassword,
-  deleteUser,
-  GoogleAuthProvider,
-  onAuthStateChanged,
-  sendEmailVerification,
-  sendPasswordResetEmail,
-  signInWithEmailAndPassword,
-  signInWithPopup,
-  signOut as firebaseSignOut,
-  updateProfile as updateAuthProfile,
-  type User,
-} from "firebase/auth";
-import { clearIndexedDbPersistence, terminate } from "firebase/firestore";
+import type { User } from "firebase/auth";
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import { useEmulators } from "@/config/env";
-import { createProfile, updateProfile, watchProfile, watchStaffMember } from "@/data/people";
+import { BootError } from "@/components/LoadingScreen";
+import { lazyWatcher } from "@/data/lazy";
 import type { Profile, StaffMember } from "@/domain/types";
-import { auth, db } from "@/lib/firebase";
-import { disablePush } from "@/lib/push";
 import { AuthContext, type AuthValue, type SignUpInput } from "./AuthContext";
+
+/**
+ * O Firebase do login vem em pedaço à parte (authRuntime.ts), pedido depois da
+ * primeira pintura: a Início aparece sem esperar o SDK. Até ele responder,
+ * `loading` fica true, como antes enquanto o Auth lia a sessão salva.
+ */
+const loadRuntime = () => import("./authRuntime");
+
+const signIn = (email: string, password: string) => loadRuntime().then((runtime) => runtime.signIn(email, password));
+const signUp = (input: SignUpInput) => loadRuntime().then((runtime) => runtime.signUp(input));
+const signInWithGoogle = () => loadRuntime().then((runtime) => runtime.signInWithGoogle());
+const signOut = () => loadRuntime().then((runtime) => runtime.signOut());
+const resetPassword = (email: string) => loadRuntime().then((runtime) => runtime.resetPassword(email));
+const resendVerification = () => loadRuntime().then((runtime) => runtime.resendVerification());
+const deleteAccount = () => loadRuntime().then((runtime) => runtime.deleteAccount());
 
 interface Session {
   user: User | null;
@@ -42,33 +42,48 @@ function forUser(uid: string, update: (s: Session) => Session) {
   return (s: Session): Session => (s.user?.uid === uid ? update(s) : s);
 }
 
-/**
- * Ao sair, apaga o cache local do Firestore (CPFs, telefones e solicitações)
- * para não deixar dados pessoais em computadores e celulares compartilhados.
- * Recarrega a página porque a instância do banco é encerrada.
- */
-async function wipeLocalDataAndReload(): Promise<void> {
-  if (!useEmulators) {
-    await terminate(db).catch(() => undefined);
-    await clearIndexedDbPersistence(db).catch(() => undefined);
-  }
-  window.location.replace("/");
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session>(INITIAL);
   const [profileAttempt, setProfileAttempt] = useState(0);
+  const [runtimeFailed, setRuntimeFailed] = useState(false);
 
   useEffect(() => {
-    return onAuthStateChanged(auth, (user) => {
-      setSession({
-        user,
-        profile: null,
-        staff: null,
-        profileError: false,
-        ready: { auth: true, profile: user === null, staff: user === null },
-      });
-    });
+    let cancelled = false;
+    let stop: (() => void) | undefined;
+    const start = () =>
+      loadRuntime().then(
+        (runtime) => {
+          if (cancelled) return;
+          stop = runtime.observeUser((user) => {
+            setSession({
+              user,
+              profile: null,
+              staff: null,
+              profileError: false,
+              ready: { auth: true, profile: user === null, staff: user === null },
+            });
+          });
+        },
+        (error: unknown) => {
+          if (cancelled) return;
+          // A conexão caiu logo depois da primeira tela: ela continua (com o
+          // aviso "Sem internet") e o login carrega quando a conexão voltar
+          if (!navigator.onLine) {
+            window.addEventListener("online", start, { once: true });
+            return;
+          }
+          // Sem o login nada funciona: a mesma abertura com "Tentar de novo" de
+          // quando o app não abre (detalhe técnico só no console)
+          console.error("Falha ao carregar o login", error);
+          setRuntimeFailed(true);
+        },
+      );
+    start();
+    return () => {
+      cancelled = true;
+      window.removeEventListener("online", start);
+      stop?.();
+    };
   }, []);
 
   const uid = session.user?.uid ?? null;
@@ -76,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!uid) return undefined;
     // `null` aqui é confirmado pelo servidor; sem resposta, chega o erro
-    return watchProfile(uid)(
+    return lazyWatcher(() => loadRuntime().then((runtime) => runtime.watchProfile(uid)))(
       (profile) => setSession(forUser(uid, (s) => ({ ...s, profile, profileError: false, ready: { ...s.ready, profile: true } }))),
       () => setSession(forUser(uid, (s) => ({ ...s, profileError: true, ready: { ...s.ready, profile: true } }))),
     );
@@ -84,7 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!uid) return undefined;
-    return watchStaffMember(uid)(
+    return lazyWatcher(() => loadRuntime().then((runtime) => runtime.watchStaffMember(uid)))(
       (staff) => setSession(forUser(uid, (s) => ({ ...s, staff: staff?.active ? staff : null, ready: { ...s.ready, staff: true } }))),
       () => setSession(forUser(uid, (s) => ({ ...s, ready: { ...s.ready, staff: true } }))),
     );
@@ -102,65 +117,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user || !profile || profile.emailVerified === user.emailVerified) return;
     user
       .getIdToken(true)
-      .then(() => updateProfile(user.uid, { fullName: profile.fullName, phone: profile.phone, email: profile.email }))
+      .then(loadRuntime)
+      .then((runtime) => runtime.updateProfile(user.uid, { fullName: profile.fullName, phone: profile.phone, email: profile.email }))
       .catch(() => undefined);
   }, [user, profile]);
 
-  const signIn = useCallback(async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email.trim(), password);
-  }, []);
-
-  const signUp = useCallback(async (input: SignUpInput) => {
-    const credential = await createUserWithEmailAndPassword(auth, input.email.trim(), input.password);
-    await updateAuthProfile(credential.user, { displayName: input.fullName.trim() });
-    sendEmailVerification(credential.user).catch(() => undefined);
-    await createProfile(credential.user.uid, {
-      fullName: input.fullName,
-      cpf: input.cpf,
-      phone: input.phone,
-      email: credential.user.email ?? input.email.trim().toLowerCase(),
-    });
-  }, []);
-
-  const signInWithGoogle = useCallback(async () => {
-    const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: "select_account" });
-    await signInWithPopup(auth, provider);
-  }, []);
-
-  const signOut = useCallback(async () => {
-    await disablePush();
-    await firebaseSignOut(auth);
-    await wipeLocalDataAndReload();
-  }, []);
-
-  const resetPassword = useCallback(async (email: string) => {
-    await sendPasswordResetEmail(auth, email.trim());
-  }, []);
-
-  const resendVerification = useCallback(async () => {
-    if (auth.currentUser) await sendEmailVerification(auth.currentUser);
-  }, []);
-
   /** Depois de clicar no link do e-mail: atualiza o token e o cadastro. */
-  const refreshVerification = useCallback(async () => {
-    const current = auth.currentUser;
-    if (!current) return false;
-    await current.reload();
-    await current.getIdToken(true);
-    if (current.emailVerified && profile && !profile.emailVerified) {
-      await updateProfile(current.uid, { fullName: profile.fullName, phone: profile.phone, email: profile.email });
-    }
-    return current.emailVerified;
-  }, [profile]);
-
-  const deleteAccount = useCallback(async () => {
-    const current = auth.currentUser;
-    if (!current) return;
-    await disablePush();
-    await deleteUser(current);
-    await wipeLocalDataAndReload();
-  }, []);
+  const refreshVerification = useCallback(() => loadRuntime().then((runtime) => runtime.refreshVerification(profile)), [profile]);
 
   const value = useMemo<AuthValue>(() => {
     const { staff, ready, profileError } = session;
@@ -190,20 +153,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       refreshVerification,
       deleteAccount,
     };
-  }, [
-    session,
-    user,
-    profile,
-    retryProfile,
-    signIn,
-    signUp,
-    signInWithGoogle,
-    signOut,
-    resetPassword,
-    resendVerification,
-    refreshVerification,
-    deleteAccount,
-  ]);
+  }, [session, user, profile, retryProfile, refreshVerification]);
 
+  if (runtimeFailed) return <BootError />;
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

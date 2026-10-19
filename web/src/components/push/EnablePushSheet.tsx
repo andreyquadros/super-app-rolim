@@ -1,9 +1,8 @@
 import { notifications, type NotificationData } from "@mantine/notifications";
-import { FirebaseError } from "firebase/app";
 import { useCallback, useRef, useState } from "react";
 import { useAuth } from "@/auth/AuthContext";
 import { BottomSheet } from "@/components/sheet/BottomSheet";
-import { errorMessage } from "@/lib/errors";
+import { errorMessage, isFirebaseError } from "@/lib/errors";
 import { currentPushState, enablePush } from "@/lib/push";
 import classes from "@/components/install/InstallHowToSheet.module.css";
 
@@ -18,7 +17,7 @@ const RETRY = "Verifique a internet e tente de novo.";
 
 /** Texto para a pessoa: erros do navegador vêm em inglês e técnicos */
 function failureText(error: unknown): string {
-  return error instanceof FirebaseError ? errorMessage(error, RETRY) : RETRY;
+  return isFirebaseError(error) ? errorMessage(error, RETRY) : RETRY;
 }
 
 /** Pode oferecer "Ligar avisos"? (logado, suportado e ainda desligado) */

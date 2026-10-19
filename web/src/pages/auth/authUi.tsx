@@ -2,6 +2,7 @@ import { Button } from "@mantine/core";
 import { IconAlertCircle } from "@tabler/icons-react";
 import { useEffect, useRef, type ReactNode } from "react";
 import { AppLink } from "@/components/AppLink";
+import { prepareGoogleSignIn } from "@/lib/firebase";
 import { motionAllowed } from "@/lib/navMotion";
 import classes from "./auth.module.css";
 
@@ -25,6 +26,8 @@ interface GoogleButtonProps {
 
 /** Botão "Entrar com Google" (vem antes do e-mail: é o caminho mais curto). */
 export function GoogleButton({ label, loading, disabled, onClick }: GoogleButtonProps) {
+  // A janela do Google precisa abrir logo após o toque: prepara antes
+  useEffect(prepareGoogleSignIn, []);
   return (
     <Button
       type="button"

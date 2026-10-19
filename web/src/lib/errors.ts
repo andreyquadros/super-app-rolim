@@ -1,4 +1,4 @@
-import { FirebaseError } from "firebase/app";
+// Sem importar o SDK: este arquivo está na primeira tela, que abre antes do Firebase.
 
 const MESSAGES: Record<string, string> = {
   "auth/invalid-credential": "E-mail ou senha incorretos.",
@@ -22,12 +22,17 @@ const MESSAGES: Record<string, string> = {
   "storage/retry-limit-exceeded": "A conexão caiu durante o envio da foto. Tente novamente.",
 };
 
+/** Erro do Firebase (Auth, Firestore, Storage, Messaging): o mesmo que `instanceof FirebaseError`. */
+export function isFirebaseError(error: unknown): error is Error & { code: string } {
+  return error instanceof Error && error.name === "FirebaseError" && typeof (error as { code?: unknown }).code === "string";
+}
+
 export function errorMessage(error: unknown, fallback = "Algo deu errado. Tente novamente."): string {
-  if (error instanceof FirebaseError) return MESSAGES[error.code] ?? fallback;
+  if (isFirebaseError(error)) return MESSAGES[error.code] ?? fallback;
   if (error instanceof Error && error.message) return error.message;
   return fallback;
 }
 
 export function errorCode(error: unknown): string | null {
-  return error instanceof FirebaseError ? error.code : null;
+  return isFirebaseError(error) ? error.code : null;
 }
