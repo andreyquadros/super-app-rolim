@@ -1,5 +1,5 @@
 import { FieldValue, type Firestore } from "firebase-admin/firestore";
-import { INSTITUTION } from "./config";
+import { APP_NAME, INSTITUTION, MAINTAINER_LINE } from "./config";
 import { KIND_LABEL, STATUS_LABEL, statusMessage, type RequestKind, type RequestStatus } from "./domain";
 
 export interface MailMessage {
@@ -49,6 +49,8 @@ export function buildRequestMail(input: RequestMailInput): MailMessage {
     "",
     "Atenciosamente,",
     INSTITUTION,
+    "",
+    `${APP_NAME} · ${MAINTAINER_LINE}`,
   ].join("\n");
 
   const responseBlock = response
@@ -66,7 +68,7 @@ export function buildRequestMail(input: RequestMailInput): MailMessage {
 <tr><td align="center">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:12px;overflow:hidden">
   <tr><td style="background:#0d7a49;color:#ffffff;padding:20px 24px">
-    <div style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;opacity:.85">${escapeHtml(INSTITUTION)}</div>
+    <div style="font-size:12px;letter-spacing:.14em;font-weight:bold;opacity:.9">${escapeHtml(APP_NAME.toUpperCase())}</div>
     <div style="font-size:20px;font-weight:bold;margin-top:4px">${escapeHtml(kindLabel)} · ${escapeHtml(statusLabel)}</div>
   </td></tr>
   <tr><td style="padding:24px 24px 0;font-size:16px;line-height:1.5">${escapeHtml(message.intro)}</td></tr>
@@ -83,7 +85,7 @@ export function buildRequestMail(input: RequestMailInput): MailMessage {
     <a href="${escapeHtml(input.link)}" style="display:inline-block;background:#0d7a49;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:999px;font-weight:bold">Acompanhar no aplicativo</a>
   </td></tr>
 </table>
-<div style="font-size:12px;color:#7d8b82;margin-top:12px">Mensagem automática — não responda este e-mail.</div>
+<div style="font-size:12px;color:#5b6b61;margin-top:12px">${escapeHtml(MAINTAINER_LINE)} · Mensagem automática, não responda este e-mail.</div>
 </td></tr></table>
 </body></html>`;
 

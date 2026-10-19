@@ -1,0 +1,40 @@
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.2;
+
+  &[data-tone="duty"] {
+    background: var(--mantine-color-ipe-4);
+    color: #3a2a00;
+  }
+
+  &[data-tone="open"] {
+    background: var(--mantine-color-mata-light);
+    color: light-dark(var(--mantine-color-mata-9), var(--mantine-color-mata-2));
+  }
+
+  &[data-tone="closed"] {
+    background: light-dark(var(--mantine-color-slate-0), rgba(151, 171, 189, 0.16));
+    color: light-dark(var(--mantine-color-slate-9), var(--mantine-color-slate-2));
+  }
+}
+
+.distance {
+  margin-left: auto;
+  color: var(--app-ink-soft);
+  font-size: 0.9375rem;
+  font-weight: 700;
+}

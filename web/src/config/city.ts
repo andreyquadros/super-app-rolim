@@ -1,10 +1,14 @@
 // Identidade e geografia do município. Para reaproveitar o app em outra
 // cidade, ajuste este arquivo e as constantes de firestore.rules.
 
-export const APP_NAME = "Super App Rolim de Moura";
+/** Nome do app. A prefeitura é a mantenedora, não o nome do app. */
+export const APP_NAME = "SUPER APP Rolim de Moura";
+export const APP_SHORT_NAME = "SUPER APP";
+export const APP_KICKER = "SUPER APP";
 export const CITY_NAME = "Rolim de Moura";
 export const STATE = "RO";
 export const INSTITUTION = "Prefeitura Municipal de Rolim de Moura";
+export const MAINTAINER_LINE = `Uma iniciativa da ${INSTITUTION}`;
 export const IBGE_CODE = "1100288";
 
 export const CITY_CENTER = { lat: -11.7271, lng: -61.7782 } as const;
@@ -15,7 +19,22 @@ export const CONTACTS = {
   ouvidoriaPhone: "",
   ouvidoriaEmail: "",
   website: "",
+  /** Centro de Referência de Assistência Social (orientação em caso de falecimento) */
+  crasPhone: "",
 } as const;
+
+/**
+ * Orientação "Em caso de falecimento" na lista de funerárias. Só aparece com
+ * enabled: true, depois de validada pelas secretarias de Saúde e Assistência Social.
+ */
+export const FUNERAL_GUIDE: { readonly enabled: boolean; readonly steps: readonly string[] } = {
+  enabled: false,
+  steps: [
+    "Em casa ou na rua, ligue 192 (SAMU). Se houver suspeita de violência ou acidente, ligue 190.",
+    "No hospital, a equipe orienta e entrega a declaração de óbito.",
+    "A funerária orienta o registro no cartório e o sepultamento.",
+  ],
+};
 
 /**
  * Bairros sugeridos no formulário de zeladoria (o OpenStreetMap não tem os

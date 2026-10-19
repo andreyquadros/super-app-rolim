@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { RequestCard } from "@/components/RequestCard";
 import { isOpenStatus } from "@/domain/status";
 import { useMyRequests } from "@/hooks/useCitizenData";
-import { useOpenNewRequest } from "@/layouts/newRequestSheet";
+import { useOpenNewRequest } from "@/layouts/requestSheetContext";
 
 type Filter = "open" | "all" | "issues" | "ombudsman";
 

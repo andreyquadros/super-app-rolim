@@ -8,8 +8,11 @@
   --app-hero-ink: #f4fbf6;
   --app-accent: #ffbb36;
   --app-header-h: 60px;
-  --app-tabbar-h: 68px;
-  --app-content-max: 760px;
+  --app-bar-h: 56px;
+  --app-tabbar-h: 72px;
+  --app-rail-w: 88px;
+  --app-content-max: 720px;
+  --app-home-max: 1040px;
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --duration-fast: 150ms;
   --duration-normal: 280ms;
@@ -30,6 +33,63 @@ body {
   background: var(--app-paper);
   color: var(--app-ink);
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Tamanho do texto escolhido no Perfil (as medidas do app são em rem) */
+html[data-text-size="grande"] {
+  font-size: 112.5%;
+}
+
+html[data-text-size="muito-grande"] {
+  font-size: 125%;
+}
+
+/* Folha aberta: a tela de trás não rola */
+html.sheet-open {
+  overflow: hidden;
+}
+
+/* App do cidadão: corpo de 17 px, pensado para leitura confortável */
+.citizen {
+  --mantine-font-size-xs: 0.8125rem;
+  --mantine-font-size-sm: 0.9375rem;
+  --mantine-font-size-md: 1.0625rem;
+  --mantine-font-size-lg: 1.1875rem;
+  --mantine-font-size-xl: 1.375rem;
+  font-size: var(--mantine-font-size-md);
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.skip-link {
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + 8px);
+  left: 8px;
+  z-index: 1100;
+  padding: 12px 18px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--mantine-color-mata-9);
+  font-weight: 700;
+  transform: translateY(-200%);
+
+  &:focus {
+    transform: none;
+    outline: 3px solid var(--mantine-color-ipe-4);
+  }
+}
+
+/* Títulos que recebem foco ao trocar de tela não ganham contorno */
+h1[tabindex="-1"]:focus,
+main[tabindex="-1"]:focus {
+  outline: none;
 }
 
 body {
@@ -57,6 +117,10 @@ body::before {
 /* Avisos flutuantes acima da barra de navegação inferior */
 .mantine-Notifications-root[data-position^="bottom"] {
   bottom: calc(var(--app-tabbar-h) + 12px + env(safe-area-inset-bottom)) !important;
+
+  @media (min-width: $mantine-breakpoint-sm) {
+    bottom: 24px !important;
+  }
 }
 
 .protocol {
@@ -81,7 +145,8 @@ body::before {
   z-index: 1000;
   background: linear-gradient(90deg, var(--mantine-color-mata-6), var(--app-accent));
   transform-origin: left;
-  animation: route-progress 1.2s var(--ease-out-expo) infinite;
+  /* Só aparece se a tela demorar: navegações rápidas não piscam */
+  animation: route-progress 1.2s var(--ease-out-expo) 250ms infinite backwards;
 }
 
 @keyframes route-progress {

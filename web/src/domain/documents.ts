@@ -47,7 +47,8 @@ export function formatPhone(value: string): string {
   return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
 }
 
-/** Link de WhatsApp com DDI do Brasil. */
-export function whatsappLink(phone: string): string {
-  return `https://wa.me/55${onlyDigits(phone)}`;
+/** Link de WhatsApp com DDI do Brasil e, opcionalmente, mensagem pronta. */
+export function whatsappLink(phone: string, text?: string): string {
+  const base = `https://wa.me/55${onlyDigits(phone)}`;
+  return text ? `${base}?text=${encodeURIComponent(text)}` : base;
 }

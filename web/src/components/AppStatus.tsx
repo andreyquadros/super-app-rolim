@@ -14,8 +14,8 @@ export function OfflineBanner() {
   if (online) return null;
   return (
     <div className={classes.offline} role="status">
-      <IconCloudOff size={16} />
-      <span>Sem internet. Você ainda pode consultar seus protocolos e abrir solicitações sem foto.</span>
+      <IconCloudOff size={18} aria-hidden />
+      <span>Sem internet · mostrando dados salvos</span>
     </div>
   );
 }

@@ -1,0 +1,42 @@
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #ffffff;
+
+  &[data-variant="onPaper"] {
+    color: var(--app-ink);
+  }
+}
+
+.logo {
+  flex-shrink: 0;
+  display: block;
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.05;
+}
+
+.kicker {
+  font-family: var(--mantine-font-family);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+
+  .brand[data-variant="onPaper"] & {
+    color: light-dark(var(--mantine-color-mata-8), var(--mantine-color-mata-3));
+  }
+}
+
+.city {
+  font-family: var(--mantine-font-family-headings);
+  font-size: 19px;
+  font-weight: 600;
+
+  .brand[data-compact] & {
+    font-size: 17px;
+  }
+}

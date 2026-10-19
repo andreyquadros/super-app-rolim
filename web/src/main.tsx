@@ -3,12 +3,15 @@ import "@fontsource-variable/fraunces";
 import "@mantine/core/styles.css";
 import "@mantine/notifications/styles.css";
 import "./theme/global.css";
+import "./theme/motion.css";
 
 import { Center, MantineProvider, Stack, Text, Title } from "@mantine/core";
 import { lazy, StrictMode, Suspense, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { RouterProvider } from "react-router/dom";
 import { isFirebaseConfigured } from "./config/env";
+import { initNavMotion } from "./lib/navMotion";
+import { applyTextSize, getTextSize } from "./lib/preferences";
 import { cssVariablesResolver, theme } from "./theme/theme";
 
 const Notifications = lazy(() => import("@mantine/notifications").then((m) => ({ default: m.Notifications })));
@@ -44,6 +47,10 @@ function MissingConfig() {
 }
 
 async function start() {
+  // Antes do roteador: o "voltar" do navegador vira transição "pop" e o
+  // tamanho de texto escolhido já vale na primeira pintura
+  initNavMotion();
+  applyTextSize(getTextSize());
   const root = createRoot(document.getElementById("root")!);
   if (!isFirebaseConfigured) {
     root.render(

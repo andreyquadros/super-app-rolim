@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="SUPER APP Rolim de Moura">
+  <path d="M256 60c-80 0-144 62-144 141 0 104 144 231 144 231s144-127 144-231c0-79-64-141-144-141z" fill="#ffffff"/>
+  <circle cx="256" cy="200" r="60" fill="#ffbb36"/>
+  <circle cx="256" cy="200" r="22" fill="#0d7a49"/>
+</svg>

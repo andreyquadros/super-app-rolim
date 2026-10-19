@@ -52,7 +52,7 @@ As Cloud Functions colocam os e-mails na coleção `mail`; a extensão oficial o
 2. Configure:
    - *Email documents collection*: `mail`
    - *SMTP connection URI*: por exemplo `smtps://usuario%40rolimdemoura.ro.gov.br@smtp.servidor.com.br:465` (a senha vai no campo de senha/segredo).
-   - *Default FROM address*: `Prefeitura de Rolim de Moura <naoresponda@rolimdemoura.ro.gov.br>`
+   - *Default FROM address*: `SUPER APP Rolim de Moura <naoresponda@rolimdemoura.ro.gov.br>`
    - Região: `southamerica-east1`.
 3. Sem servidor de e-mail próprio? Serviços como Brevo, Amazon SES ou Gmail (senha de app) funcionam; confira os limites diários.
 

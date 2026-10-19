@@ -64,6 +64,11 @@ export async function saveBuilding(id: string | null, input: BuildingInput): Pro
   return ref.id;
 }
 
+/** "Continua de plantão": só renova a data de atualização. */
+export async function confirmDutyState(id: string): Promise<void> {
+  await updateDoc(doc(db, "buildings", id), { updatedAt: serverTimestamp() });
+}
+
 export async function setDutyState(id: string, state: { isOpen: boolean; isOnDuty: boolean }): Promise<void> {
   await updateDoc(doc(db, "buildings", id), { ...state, updatedAt: serverTimestamp() });
 }

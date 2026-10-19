@@ -1,16 +1,29 @@
+/* Pílula logo abaixo da barra superior (não cobre o relógio do iPhone) */
 .offline {
-  position: sticky;
-  top: 0;
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + var(--app-bar-h) + 8px);
+  left: 50%;
   z-index: 200;
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 8px;
+  max-width: calc(100vw - 32px);
   padding: 8px 16px;
-  font-size: var(--mantine-font-size-sm);
-  font-weight: 500;
-  color: #3a2a00;
+  border-radius: 999px;
   background: var(--mantine-color-ipe-3);
+  color: #3a2a00;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  box-shadow: var(--mantine-shadow-md);
+  transform: translateX(-50%);
+  animation: offline-in var(--motion-base) var(--ease-enter);
+}
+
+@keyframes offline-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -8px);
+  }
 }
 
 .update {
@@ -18,6 +31,10 @@
   left: 16px;
   right: 16px;
   bottom: calc(var(--app-tabbar-h) + 16px + env(safe-area-inset-bottom));
+
+  @media (min-width: $mantine-breakpoint-sm) {
+    bottom: 24px;
+  }
   z-index: 300;
   max-width: 480px;
   margin-inline: auto;

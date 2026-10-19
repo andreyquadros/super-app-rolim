@@ -2,41 +2,64 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>Super App Rolim de Moura</title>
-    <meta name="description" content="Zeladoria, ouvidoria, farmácias de plantão e comunicados da Prefeitura Municipal de Rolim de Moura." />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content" />
+    <title>SUPER APP Rolim de Moura</title>
+    <meta
+      name="description"
+      content="Problemas na rua, ouvidoria, farmácias e funerárias de plantão e avisos. Uma iniciativa da Prefeitura Municipal de Rolim de Moura."
+    />
     <meta name="theme-color" content="#0d7a49" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0f3b28" media="(prefers-color-scheme: dark)" />
     <meta name="color-scheme" content="light dark" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Rolim de Moura" />
+    <meta name="apple-mobile-web-app-title" content="SUPER APP" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="SUPER APP Rolim de Moura" />
+    <meta
+      property="og:description"
+      content="Avise problemas na rua, fale com a ouvidoria e veja farmácias e funerárias de plantão. Uma iniciativa da Prefeitura Municipal de Rolim de Moura."
+    />
+    <meta property="og:image" content="/og-image.png" />
+    <meta property="og:locale" content="pt_BR" />
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" href="/logo.svg" sizes="any" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />
     <style>
-      /* Fundo imediato antes do CSS carregar (evita flash branco no modo escuro) */
-      html { background: #f6f4ee; color: #17241c; }
-      @media (prefers-color-scheme: dark) { html { background: #141a17; color: #e8eee9; } }
-      .boot { min-height: 100dvh; display: grid; place-content: center; justify-items: center; gap: 4px; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; text-align: center; }
-      .boot img { margin-bottom: 12px; }
+      /* Abertura imediata, antes do CSS e do JavaScript do app */
+      html { background: #0d7a49; color: #ffffff; }
+      @media (prefers-color-scheme: dark) { html { background: #0f3b28; } }
+      .boot { min-height: 100dvh; display: grid; grid-template-rows: 1fr auto; justify-items: center; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; text-align: center; padding: env(safe-area-inset-top) 24px calc(24px + env(safe-area-inset-bottom)); }
+      .boot-center { align-self: center; display: grid; justify-items: center; gap: 4px; }
+      .boot img { margin-bottom: 16px; }
       .boot p { margin: 0; }
-      .boot-eyebrow { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; font-weight: 700; opacity: .75; }
-      .boot-title { font-family: Georgia, "Times New Roman", serif; font-size: 28px; font-weight: 600; }
-      .boot-text { margin-top: 12px !important; font-size: 14px; opacity: .7; }
+      .boot-kicker { font-size: 13px; letter-spacing: .2em; font-weight: 800; }
+      .boot-title { font-family: Georgia, "Times New Roman", serif; font-size: 32px; font-weight: 600; }
+      .boot-dots { display: flex; gap: 8px; margin-top: 24px; }
+      .boot-dots span { width: 8px; height: 8px; border-radius: 50%; background: #ffffff; opacity: .35; animation: boot-dot 1.2s infinite ease-in-out; }
+      .boot-dots span:nth-child(2) { animation-delay: .2s; }
+      .boot-dots span:nth-child(3) { animation-delay: .4s; }
+      .boot-foot { font-size: 13px; opacity: .85; max-width: 32ch; }
+      .boot-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+      @keyframes boot-dot { 50% { opacity: 1; } }
+      @media (prefers-reduced-motion: reduce) { .boot-dots span { animation: none; opacity: .7; } }
     </style>
   </head>
   <body>
     <div id="root">
-      <!-- Abertura leve exibida enquanto o app carrega (substituída pelo React) -->
-      <div class="boot" role="status" aria-live="polite">
-        <img src="/logo.svg" alt="" width="72" height="72" />
-        <p class="boot-eyebrow">Prefeitura de</p>
-        <p class="boot-title">Rolim de Moura</p>
-        <p class="boot-text">Carregando…</p>
+      <!-- Abertura exibida enquanto o app carrega (substituída pelo React) -->
+      <div class="boot" role="status">
+        <div class="boot-center">
+          <img src="/logo-mono.svg" alt="" width="96" height="96" />
+          <p class="boot-kicker">SUPER APP</p>
+          <p class="boot-title">Rolim de Moura</p>
+          <div class="boot-dots" aria-hidden="true"><span></span><span></span><span></span></div>
+          <span class="boot-sr">Carregando o SUPER APP</span>
+        </div>
+        <p class="boot-foot">Uma iniciativa da Prefeitura Municipal de Rolim de Moura</p>
       </div>
     </div>
-    <noscript>Ative o JavaScript para usar o aplicativo da Prefeitura de Rolim de Moura.</noscript>
+    <noscript>Ative o JavaScript para usar o SUPER APP Rolim de Moura.</noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

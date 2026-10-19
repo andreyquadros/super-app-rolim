@@ -3,7 +3,9 @@ import { defineString } from "firebase-functions/params";
 /** Mesma região do Firestore (São Paulo), mantendo os dados no Brasil. */
 export const REGION = "southamerica-east1";
 
+export const APP_NAME = "SUPER APP Rolim de Moura";
 export const INSTITUTION = "Prefeitura Municipal de Rolim de Moura";
+export const MAINTAINER_LINE = `Uma iniciativa da ${INSTITUTION}`;
 
 /** Tópico FCM no qual todo dispositivo registrado é inscrito. */
 export const BROADCAST_TOPIC = "comunicados";

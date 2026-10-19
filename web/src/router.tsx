@@ -1,11 +1,14 @@
 import type { ComponentType, ReactNode } from "react";
-import { createBrowserRouter, Navigate, Outlet, useNavigation, type RouteObject } from "react-router";
+import { createBrowserRouter, Navigate, Outlet, ScrollRestoration, useNavigation, type RouteObject } from "react-router";
 import { useAuth } from "@/auth/AuthContext";
 import { RequireCitizen, RequireStaff, RequireUser } from "@/auth/guards";
 import { ForegroundPush, OfflineBanner, UpdatePrompt } from "@/components/AppStatus";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { RouteError } from "@/components/RouteError";
+import { DUTY_COPY, DUTY_META, dutyTypeFromSlug } from "@/domain/duty";
 import { CitizenLayout } from "@/layouts/CitizenLayout";
+import type { RouteHandle } from "@/layouts/routeHandle";
+import { lastDutyPath } from "@/lib/dutyMemory";
 import HomePage from "@/pages/HomePage";
 
 type Loader = () => Promise<{ default: ComponentType }>;
@@ -19,6 +22,8 @@ function Root() {
   const navigation = useNavigation();
   return (
     <>
+      {/* Cada tela guarda a própria rolagem (voltar a uma aba volta ao mesmo ponto) */}
+      <ScrollRestoration getKey={(location) => location.pathname} />
       {navigation.state === "loading" && <div className="route-progress" aria-hidden />}
       <OfflineBanner />
       <Outlet />
@@ -36,6 +41,16 @@ function AdminIndex() {
 
 const citizen = (element: ReactNode) => <RequireCitizen>{element}</RequireCitizen>;
 
+const handle = (value: RouteHandle): { handle: RouteHandle } => ({ handle: value });
+const HOME = { to: "/", label: "Início" };
+const flow = (title: string, back = HOME) => handle({ chrome: "flow", title, back });
+const root = (title: string) => handle({ chrome: "root", title });
+
+/** "/plantao" abre no último tipo visto nesta sessão. */
+function DutyIndex() {
+  return <Navigate to={lastDutyPath()} replace />;
+}
+
 export const router = createBrowserRouter([
   {
     element: <Root />,
@@ -46,10 +61,14 @@ export const router = createBrowserRouter([
       {
         element: <CitizenLayout />,
         children: [
-          { index: true, element: <HomePage /> },
-          { path: "entrar", ...page(() => import("@/pages/auth/LoginPage")) },
-          { path: "cadastro", ...page(() => import("@/pages/auth/RegisterPage")) },
-          { path: "recuperar-senha", ...page(() => import("@/pages/auth/ResetPasswordPage")) },
+          { index: true, element: <HomePage />, ...handle({ chrome: "home" }) },
+          { path: "entrar", ...page(() => import("@/pages/auth/LoginPage")), ...flow("Entrar") },
+          { path: "cadastro", ...page(() => import("@/pages/auth/RegisterPage")), ...flow("Criar conta") },
+          {
+            path: "recuperar-senha",
+            ...page(() => import("@/pages/auth/ResetPasswordPage")),
+            ...flow("Recuperar senha", { to: "/entrar", label: "Entrar" }),
+          },
           {
             path: "completar-cadastro",
             element: (
@@ -57,18 +76,39 @@ export const router = createBrowserRouter([
                 <Outlet />
               </RequireUser>
             ),
-            children: [{ index: true, ...page(() => import("@/pages/auth/CompleteProfilePage")) }],
+            children: [{ index: true, ...page(() => import("@/pages/auth/CompleteProfilePage")), ...flow("Completar cadastro") }],
           },
-          { path: "farmacias", ...page(() => import("@/pages/pharmacies/PharmaciesPage")) },
-          { path: "comunicados", ...page(() => import("@/pages/notices/NoticesPage")) },
-          { path: "privacidade", ...page(() => import("@/pages/PrivacyPage")) },
+          { path: "plantao", element: <DutyIndex /> },
+          {
+            path: "plantao/:tipo",
+            ...page(() => import("@/pages/duty/DutyPage")),
+            ...handle({
+              chrome: "root",
+              title: (params) => {
+                const type = dutyTypeFromSlug(params.tipo);
+                return type ? DUTY_COPY[type].title : "Página não encontrada";
+              },
+            }),
+          },
+          { path: "farmacias", element: <Navigate to={DUTY_META.PHARMACY.path} replace /> },
+          { path: "funerarias", element: <Navigate to={DUTY_META.FUNERAL.path} replace /> },
+          { path: "comunicados", ...page(() => import("@/pages/notices/NoticesPage")), ...root("Avisos") },
+          {
+            path: "privacidade",
+            ...page(() => import("@/pages/PrivacyPage")),
+            ...handle({ chrome: "push", title: "Privacidade", back: { to: "/", label: "Voltar" } }),
+          },
           {
             element: citizen(<Outlet />),
             children: [
-              { path: "zeladoria/nova", ...page(() => import("@/pages/issues/NewIssuePage")) },
-              { path: "ouvidoria/nova", ...page(() => import("@/pages/ombudsman/NewOmbudsmanPage")) },
-              { path: "protocolos", ...page(() => import("@/pages/requests/MyRequestsPage")) },
-              { path: "protocolos/:kind/:id", ...page(() => import("@/pages/requests/RequestDetailPage")) },
+              { path: "zeladoria/nova", ...page(() => import("@/pages/issues/NewIssuePage")), ...flow("Problema na rua") },
+              { path: "ouvidoria/nova", ...page(() => import("@/pages/ombudsman/NewOmbudsmanPage")), ...flow("Ouvidoria") },
+              { path: "protocolos", ...page(() => import("@/pages/requests/MyRequestsPage")), ...root("Meus pedidos") },
+              {
+                path: "protocolos/:kind/:id",
+                ...page(() => import("@/pages/requests/RequestDetailPage")),
+                ...handle({ chrome: "push", title: "Pedido", back: { to: "/protocolos", label: "Pedidos" } }),
+              },
             ],
           },
           {
@@ -78,9 +118,13 @@ export const router = createBrowserRouter([
                 <Outlet />
               </RequireUser>
             ),
-            children: [{ index: true, ...page(() => import("@/pages/profile/ProfilePage")) }],
+            children: [{ index: true, ...page(() => import("@/pages/profile/ProfilePage")), ...root("Perfil") }],
           },
-          { path: "*", ...page(() => import("@/pages/StatusPages")) },
+          {
+            path: "*",
+            ...page(() => import("@/pages/StatusPages")),
+            ...handle({ chrome: "push", title: "Página não encontrada", back: HOME }),
+          },
         ],
       },
       {

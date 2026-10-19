@@ -29,16 +29,18 @@ export default defineConfig({
       injectRegister: false,
       injectManifest: {
         globPatterns: ["**/*.{js,css,html,svg,png,ico,woff2,webmanifest}"],
+        // Imagem de compartilhamento não precisa ir para o cache offline
+        globIgnores: ["og-image.png", "loja/**", "apple-splash-*"],
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
       },
       devOptions: { enabled: true, type: "module", navigateFallback: "index.html" },
-      includeAssets: ["favicon.ico", "apple-touch-icon-180x180.png", "logo.svg"],
+      includeAssets: ["favicon.ico", "apple-touch-icon-180x180.png", "logo.svg", "logo-mono.svg"],
       manifest: {
         id: "/",
-        name: "Super App Rolim de Moura",
-        short_name: "Rolim de Moura",
+        name: "SUPER APP Rolim de Moura",
+        short_name: "SUPER APP",
         description:
-          "Zeladoria, ouvidoria, farmácias de plantão e comunicados da Prefeitura Municipal de Rolim de Moura.",
+          "Problemas na rua, ouvidoria, farmácias e funerárias de plantão e avisos. Uma iniciativa da Prefeitura Municipal de Rolim de Moura.",
         lang: "pt-BR",
         dir: "ltr",
         start_url: "/",
@@ -46,7 +48,8 @@ export default defineConfig({
         display: "standalone",
         orientation: "portrait",
         theme_color: THEME_COLOR,
-        background_color: "#f6f4ee",
+        background_color: THEME_COLOR,
+        launch_handler: { client_mode: "navigate-existing" },
         categories: ["government", "utilities"],
         icons: [
           { src: "pwa-64x64.png", sizes: "64x64", type: "image/png" },
@@ -55,9 +58,10 @@ export default defineConfig({
           { src: "maskable-icon-512x512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
         ],
         shortcuts: [
-          { name: "Nova solicitação de zeladoria", short_name: "Zeladoria", url: "/zeladoria/nova" },
-          { name: "Farmácias de plantão", short_name: "Farmácias", url: "/farmacias" },
-          { name: "Meus protocolos", short_name: "Protocolos", url: "/protocolos" },
+          { name: "Problema na rua", short_name: "Problema na rua", url: "/zeladoria/nova" },
+          { name: "Farmácia de plantão", short_name: "Farmácias", url: "/plantao/farmacias" },
+          { name: "Funerária de plantão", short_name: "Funerárias", url: "/plantao/funerarias" },
+          { name: "Meus pedidos", short_name: "Pedidos", url: "/protocolos" },
         ],
       },
     }),

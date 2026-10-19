@@ -1,0 +1,176 @@
+.bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding-top: env(safe-area-inset-top);
+  background: var(--app-hero);
+  color: #ffffff;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  height: var(--app-bar-h);
+  padding-inline: 8px;
+
+  .bar[data-chrome="home"] & {
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding-inline: 16px 12px;
+  }
+}
+
+.start {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.end {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  min-width: 0;
+}
+
+/* Título compacto: aparece quando o título grande passa por baixo da barra */
+.title {
+  max-width: min(60vw, 420px);
+  overflow: hidden;
+  font-size: 17px;
+  font-weight: 700;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  opacity: 0;
+  transform: translateY(4px);
+  transition:
+    opacity var(--motion-fast) var(--ease-standard),
+    transform var(--motion-fast) var(--ease-standard);
+
+  .bar[data-collapsed] &,
+  .bar[data-chrome="flow"] & {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.brandLink {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  border-radius: var(--mantine-radius-md);
+  color: inherit;
+  text-decoration: none;
+}
+
+.back,
+.close {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.back {
+  gap: 2px;
+  padding: 0 14px 0 4px;
+}
+
+.close {
+  justify-content: center;
+  width: 48px;
+}
+
+.signIn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--mantine-color-mata-9);
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+
+  /* Área de toque de 48 px sem aumentar a pílula */
+  &::after {
+    content: "";
+    position: absolute;
+    inset: -4px;
+  }
+}
+
+.avatarLink {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+}
+
+.avatar {
+  border: 2px solid rgba(255, 255, 255, 0.9);
+}
+
+.accountPlaceholder {
+  width: 48px;
+  height: 48px;
+}
+
+.brandLink,
+.back,
+.close,
+.signIn,
+.avatarLink {
+  &:focus-visible {
+    outline: 3px solid #ffffff;
+    outline-offset: 2px;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .back:hover,
+  .close:hover {
+    background: rgba(255, 255, 255, 0.12);
+  }
+}
+
+/* Barra de progresso segmentada das tarefas em tela cheia */
+.progress {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 6px;
+  padding: 0 16px 12px;
+}
+
+.segment {
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.28);
+
+  &::after {
+    content: "";
+    display: block;
+    height: 100%;
+    background: #ffffff;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--motion-emph) var(--ease-enter);
+  }
+
+  &[data-done]::after {
+    transform: scaleX(1);
+  }
+}

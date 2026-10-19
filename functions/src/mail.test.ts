@@ -16,6 +16,8 @@ describe("buildRequestMail", () => {
     expect(mail.subject).toBe("Zeladoria · ZEL-2026-ABCD2345 · Em análise");
     expect(mail.text).toContain("Olá, Maria!");
     expect(mail.html).toContain(base.link);
+    expect(mail.html).toContain("SUPER APP ROLIM DE MOURA");
+    expect(mail.text).toContain("Uma iniciativa da Prefeitura Municipal de Rolim de Moura");
   });
 
   it("inclui a resposta oficial quando existe", () => {
