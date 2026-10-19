@@ -17,14 +17,33 @@ export async function waitForScreen(page: Page): Promise<void> {
   });
 }
 
-/** Entra pela tela de login e espera chegar em `next`. */
+/**
+ * Espera a tela assentar: dados carregados (sem os blocos `.shimmer`) e as
+ * entradas animadas concluídas. Os cartões entram com `.enter-rise`
+ * (opacidade 0 → 1) quando os dados chegam, o que pode ser bem depois do
+ * título. As animações sem fim (ponto "ao vivo", indicadores de carregamento)
+ * não contam.
+ */
+export async function waitForSettled(page: Page): Promise<void> {
+  await waitForScreen(page);
+  await page.waitForFunction(
+    () =>
+      !document.querySelector(".shimmer") &&
+      document.getAnimations().every((a) => a.playState !== "running" || a.effect?.getComputedTiming().endTime === Infinity),
+  );
+}
+
+/** Entra pela tela de login e espera a tela de `next` assentar. */
 export async function signIn(page: Page, email: string, next: string): Promise<void> {
   await page.goto(`/entrar?next=${encodeURIComponent(next)}`);
+  const password = page.getByLabel("Senha");
   await page.getByLabel("E-mail").fill(email);
-  await page.getByLabel("Senha").fill(TEST_PASSWORD);
+  await password.fill(TEST_PASSWORD);
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
   await page.waitForURL((url) => url.pathname === next);
-  await waitForScreen(page);
+  // A URL muda antes da tela: o login ainda aparece e a transição nem começou
+  await password.waitFor({ state: "hidden" });
+  await waitForSettled(page);
 }
 
 /** Toca no que abre a janela do Google e devolve essa janela (Auth Emulator). */

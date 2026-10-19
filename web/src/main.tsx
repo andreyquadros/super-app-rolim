@@ -16,12 +16,15 @@ import { recordSessionEntry } from "./features/onboarding/onboardingState";
 import "./lib/installPrompt";
 import { initNavMotion } from "./lib/navMotion";
 import { applyTextSize, getTextSize } from "./lib/preferences";
+import { recoverFromStaleChunks } from "./lib/staleChunks";
 import { cssVariablesResolver, theme } from "./theme/theme";
 
 /**
  * Monta o contêiner de avisos flutuantes depois que o app abriu (fora do pacote
- * inicial). Sem React.lazy: se a conexão cair antes de o pedaço chegar, o erro
- * derrubaria o app inteiro; aqui ele só tenta de novo quando a conexão voltar.
+ * inicial). Sem React.lazy: se o pedaço não chegar, o erro derrubaria o app
+ * inteiro; aqui só os avisos faltam. Tentar de novo não adianta (o navegador
+ * guarda a falha do módulo até recarregar): o app oferece recarregar
+ * (lib/staleChunks e UpdatePrompt).
  */
 function DeferredNotifications() {
   const [Notifications, setNotifications] = useState<ComponentType<NotificationsProps> | null>(null);
@@ -30,13 +33,12 @@ function DeferredNotifications() {
     const load = () =>
       import("@mantine/notifications").then(
         (m) => !cancelled && setNotifications(() => m.Notifications),
-        () => !cancelled && window.addEventListener("online", load, { once: true }),
+        () => undefined,
       );
     const idle = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 300));
     idle(load);
     return () => {
       cancelled = true;
-      window.removeEventListener("online", load);
     };
   }, []);
   // Embaixo, acima da barra de navegação: não cobre o cabeçalho no celular
@@ -96,32 +98,6 @@ function MissingConfig() {
       </Stack>
     </Center>
   );
-}
-
-const CHUNK_RELOAD_KEY = "rolim.chunkReload";
-/** Uma recarga automática por vez: se falhar de novo logo depois, mostra o erro */
-const CHUNK_RELOAD_WINDOW_MS = 30_000;
-
-/**
- * Versão nova no ar e o aparelho pediu um pedaço da antiga: recarrega uma vez
- * (sessionStorage evita recarregar sem parar quando a rede está fora).
- */
-function recoverFromStaleChunks() {
-  window.addEventListener("vite:preloadError", (event) => {
-    // Sem internet a falha é da rede, não de versão velha: recarregar
-    // derrubaria o app (e o aviso "Sem internet") no meio do uso
-    if (!navigator.onLine) return;
-    try {
-      const last = Number(window.sessionStorage.getItem(CHUNK_RELOAD_KEY) ?? 0);
-      if (Date.now() - last < CHUNK_RELOAD_WINDOW_MS) return;
-      window.sessionStorage.setItem(CHUNK_RELOAD_KEY, String(Date.now()));
-    } catch {
-      // sem sessionStorage não há como evitar o laço: deixa o erro aparecer
-      return;
-    }
-    event.preventDefault();
-    window.location.reload();
-  });
 }
 
 const root = createRoot(document.getElementById("root")!);
