@@ -1,0 +1,90 @@
+.wrap {
+  display: grid;
+  gap: 6px;
+}
+
+.bar {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+
+  .wrap[data-size="lg"] & {
+    gap: 6px;
+  }
+}
+
+.segment {
+  position: relative;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--app-line);
+
+  .wrap[data-size="lg"] & {
+    height: 8px;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--mantine-color-mata-7);
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+
+  &[data-filled]::after {
+    transform: none;
+    animation: segment-fill var(--motion-emph) var(--ease-enter) both;
+    animation-delay: inherit;
+  }
+
+  .wrap[data-tone="rejected"] &::after {
+    background: var(--mantine-color-barro-6);
+  }
+
+  &[data-current] {
+    outline: 2px solid light-dark(var(--mantine-color-mata-3), var(--mantine-color-mata-6));
+    outline-offset: 1px;
+    animation: segment-ring 1.2s var(--ease-standard) 2 both;
+  }
+}
+
+@keyframes segment-fill {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes segment-ring {
+  50% {
+    outline-color: transparent;
+  }
+}
+
+.label {
+  color: var(--app-ink-soft);
+  font-size: 0.9375rem;
+  font-weight: 600;
+
+  .wrap[data-tone="rejected"] & {
+    color: light-dark(var(--mantine-color-barro-8), var(--mantine-color-barro-3));
+  }
+
+  .wrap[data-tone="done"] & {
+    color: light-dark(var(--mantine-color-mata-9), var(--mantine-color-mata-3));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .segment,
+  .segment::after {
+    animation: none !important;
+  }
+}
+
+:global(html[data-motion="lite"]) .segment,
+:global(html[data-motion="lite"]) .segment::after {
+  animation: none !important;
+}

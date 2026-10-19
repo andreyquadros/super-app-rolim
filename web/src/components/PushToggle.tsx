@@ -4,14 +4,14 @@ import { IconBellRinging } from "@tabler/icons-react";
 import { useState } from "react";
 import { useAuth } from "@/auth/AuthContext";
 import { errorMessage } from "@/lib/errors";
-import { currentPushState, disablePush, enablePush, isIos, isStandalone, type PushState } from "@/lib/push";
+import { isIos, isStandalone } from "@/lib/platform";
+import { currentPushState, disablePush, enablePush, type PushState } from "@/lib/push";
 
 const HINTS: Partial<Record<PushState, string>> = {
   denied: "As notificações estão bloqueadas. Libere nas configurações do navegador para este site.",
   unsupported: isIos() && !isStandalone()
     ? "No iPhone, instale o app na Tela de Início para receber avisos."
     : "Este navegador não suporta notificações.",
-  unconfigured: "Notificações ainda não configuradas neste ambiente.",
 };
 
 export function PushToggle() {
@@ -19,7 +19,8 @@ export function PushToggle() {
   const [state, setState] = useState<PushState>(currentPushState);
   const [busy, setBusy] = useState(false);
 
-  if (!user) return null;
+  // Sem chave de push configurada neste ambiente: não oferece o que não funciona
+  if (!user || state === "unconfigured") return null;
 
   const toggle = async (checked: boolean) => {
     setBusy(true);
@@ -55,7 +56,7 @@ export function PushToggle() {
         <Switch
           size="md"
           checked={state === "enabled"}
-          disabled={busy || state === "unsupported" || state === "unconfigured" || state === "denied"}
+          disabled={busy || state === "unsupported" || state === "denied"}
           onChange={(e) => toggle(e.currentTarget.checked)}
           aria-label="Ativar avisos no celular"
         />

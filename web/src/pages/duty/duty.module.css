@@ -71,60 +71,8 @@
   line-height: 1.45;
 }
 
-/* ---------- Filtros ---------- */
-.chips {
-  display: flex;
-  gap: 8px;
-  margin-inline: -16px;
-  padding: 2px 16px 4px;
-  overflow-x: auto;
-  scrollbar-width: none;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
-}
-
-.chip {
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  gap: 6px;
-  min-height: 44px;
-  padding: 0 16px;
-  border: 1px solid var(--app-line);
-  border-radius: 999px;
-  background: var(--app-surface);
-  color: var(--app-ink);
-  font: inherit;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  white-space: nowrap;
-  cursor: pointer;
-
-  &[aria-pressed="true"] {
-    border-color: transparent;
-    background: var(--mantine-color-mata-8);
-    color: #ffffff;
-  }
-
-  &[data-action][aria-pressed="true"] {
-    background: var(--mantine-color-mata-light);
-    color: light-dark(var(--mantine-color-mata-9), var(--mantine-color-mata-2));
-  }
-
-  &:disabled {
-    opacity: 0.55;
-    cursor: default;
-  }
-
-  &:focus-visible {
-    outline: 3px solid var(--mantine-color-mata-6);
-    outline-offset: 2px;
-  }
-}
-
-.page[data-type="FUNERAL"] .chip:not([data-action])[aria-pressed="true"] {
+/* ---------- Filtros (chips compartilhados; funerárias em ardósia) ---------- */
+.page[data-type="FUNERAL"] button[data-kind="filter"][aria-pressed="true"] {
   background: var(--mantine-color-slate-8);
 }
 

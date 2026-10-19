@@ -1,0 +1,103 @@
+.group {
+  display: grid;
+  gap: 8px;
+}
+
+.title {
+  margin: 0;
+  padding-inline: 4px;
+  color: var(--app-ink-soft);
+  font-family: var(--mantine-font-family);
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--app-line);
+  border-radius: 20px;
+  background: var(--app-surface);
+  list-style: none;
+
+  li + li {
+    border-top: 1px solid var(--app-line);
+  }
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 56px;
+  padding: 10px 16px;
+  border: 0;
+  background: transparent;
+  color: var(--app-ink);
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+
+  &[data-static] {
+    cursor: default;
+  }
+
+  &[data-tone="danger"] {
+    color: light-dark(var(--mantine-color-barro-8), var(--mantine-color-barro-3));
+  }
+
+  &:focus-visible {
+    outline: 3px solid var(--mantine-color-mata-6);
+    outline-offset: -3px;
+  }
+
+  /* Sem a escala do toque: a linha inteira escurece um pouco */
+  &[data-press]:active {
+    transform: none;
+  }
+}
+
+.icon {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--mantine-color-mata-light);
+  color: light-dark(var(--mantine-color-mata-8), var(--mantine-color-mata-3));
+
+  .row[data-tone="danger"] & {
+    background: var(--mantine-color-barro-light);
+    color: inherit;
+  }
+}
+
+.text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.label {
+  font-size: 1.0625rem;
+  font-weight: 600;
+}
+
+.description {
+  color: var(--app-ink-soft);
+  font-size: 0.9375rem;
+}
+
+.right {
+  flex-shrink: 0;
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--app-ink-soft);
+}

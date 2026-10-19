@@ -4,6 +4,8 @@ import { isPushConfigured, vapidKey } from "@/config/env";
 import { app, db } from "./firebase";
 import { storageGet, storageRemove, storageSet } from "./safeStorage";
 
+export { isIos, isStandalone } from "./platform";
+
 const TOKEN_KEY = "rolim.pushToken";
 
 export type PushState = "enabled" | "disabled" | "denied" | "unsupported" | "unconfigured";
@@ -11,14 +13,6 @@ export type PushState = "enabled" | "disabled" | "denied" | "unsupported" | "unc
 async function messagingIfSupported() {
   const { getMessaging, isSupported } = await import("firebase/messaging");
   return (await isSupported()) ? getMessaging(app) : null;
-}
-
-export function isIos(): boolean {
-  return /iphone|ipad|ipod/i.test(navigator.userAgent);
-}
-
-export function isStandalone(): boolean {
-  return window.matchMedia("(display-mode: standalone)").matches || (navigator as { standalone?: boolean }).standalone === true;
 }
 
 export function currentPushState(): PushState {

@@ -1,11 +1,12 @@
 import type { ComponentType, ReactNode } from "react";
-import { createBrowserRouter, Navigate, Outlet, ScrollRestoration, useNavigation, type RouteObject } from "react-router";
+import { createBrowserRouter, Navigate, Outlet, redirect, ScrollRestoration, useNavigation, type RouteObject } from "react-router";
 import { useAuth } from "@/auth/AuthContext";
 import { RequireCitizen, RequireStaff, RequireUser } from "@/auth/guards";
 import { ForegroundPush, OfflineBanner, UpdatePrompt } from "@/components/AppStatus";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { RouteError } from "@/components/RouteError";
 import { DUTY_COPY, DUTY_META, dutyTypeFromSlug } from "@/domain/duty";
+import { shouldShowOnboarding } from "@/features/onboarding/onboardingState";
 import { CitizenLayout } from "@/layouts/CitizenLayout";
 import type { RouteHandle } from "@/layouts/routeHandle";
 import { lastDutyPath } from "@/lib/dutyMemory";
@@ -58,10 +59,18 @@ export const router = createBrowserRouter([
     // Exibido enquanto a primeira tela (carregada sob demanda) chega
     hydrateFallbackElement: <LoadingScreen />,
     children: [
+      // Apresentação dos primeiros acessos: tela cheia, fora da casca do app
+      { path: "boas-vindas", ...page(() => import("@/features/onboarding/OnboardingPage")) },
       {
         element: <CitizenLayout />,
         children: [
-          { index: true, element: <HomePage />, ...handle({ chrome: "home" }) },
+          {
+            index: true,
+            element: <HomePage />,
+            ...handle({ chrome: "home" }),
+            // Primeiro acesso pela tela inicial: apresentação antes (sem piscar a Início)
+            loader: ({ request }) => (shouldShowOnboarding(new URL(request.url)) ? redirect("/boas-vindas") : null),
+          },
           { path: "entrar", ...page(() => import("@/pages/auth/LoginPage")), ...flow("Entrar") },
           { path: "cadastro", ...page(() => import("@/pages/auth/RegisterPage")), ...flow("Criar conta") },
           {
@@ -118,7 +127,14 @@ export const router = createBrowserRouter([
                 <Outlet />
               </RequireUser>
             ),
-            children: [{ index: true, ...page(() => import("@/pages/profile/ProfilePage")), ...root("Perfil") }],
+            children: [
+              { index: true, ...page(() => import("@/pages/profile/ProfilePage")), ...root("Perfil") },
+              {
+                path: "dados",
+                ...page(() => import("@/pages/profile/ProfileDataPage")),
+                ...handle({ chrome: "push", title: "Meus dados", back: { to: "/perfil", label: "Perfil" } }),
+              },
+            ],
           },
           {
             path: "*",

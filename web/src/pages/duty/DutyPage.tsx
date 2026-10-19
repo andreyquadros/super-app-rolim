@@ -4,6 +4,7 @@ import { useParams, useSearchParams } from "react-router";
 import { EmptyState } from "@/components/EmptyState";
 import { MapView } from "@/components/map";
 import { BottomSheet } from "@/components/sheet/BottomSheet";
+import { Chip, ChipRow } from "@/components/ui/Chips";
 import { DUTY_COPY, DUTY_META, dutyCounts, dutyTypeFromSlug, filterDuty, isDutyFilter, sortDuty, type DutyFilter } from "@/domain/duty";
 import { relativeTime } from "@/domain/format";
 import { distanceMeters, formatDistance } from "@/domain/geo";
@@ -71,21 +72,19 @@ function DutyList({ type }: { type: DutyType }) {
 
   return (
     <>
-      <div className={classes.chips} role="group" aria-label="Filtrar a lista">
+      <ChipRow label="Filtrar a lista">
         {FILTERS.map((f) => (
-          <button key={f.value} type="button" className={classes.chip} aria-pressed={filter === f.value} onClick={() => setFilter(f.value)} data-press>
+          <Chip key={f.value} pressed={filter === f.value} onClick={() => setFilter(f.value)}>
             {f.label}
-          </button>
+          </Chip>
         ))}
-        <button type="button" className={classes.chip} data-action aria-pressed={position !== null} onClick={nearMe} disabled={geo.loading} data-press>
-          <IconCurrentLocation size={18} aria-hidden />
+        <Chip kind="action" pressed={position !== null} onClick={nearMe} disabled={geo.loading} icon={<IconCurrentLocation size={18} aria-hidden />}>
           {geo.loading ? "Localizando…" : "Perto de mim"}
-        </button>
-        <button type="button" className={classes.chip} data-action aria-pressed={mapOpen} onClick={() => setMapOpen(true)} disabled={data.length === 0} data-press>
-          <IconMap size={18} aria-hidden />
+        </Chip>
+        <Chip kind="action" pressed={mapOpen} onClick={() => setMapOpen(true)} disabled={data.length === 0} icon={<IconMap size={18} aria-hidden />}>
           Mapa
-        </button>
-      </div>
+        </Chip>
+      </ChipRow>
 
       {geo.error && <p className={classes.notice}>{geo.error}</p>}
       {updated && !loading && <p className={classes.updatedAll}>Atualizado {relativeTime(updated)}</p>}

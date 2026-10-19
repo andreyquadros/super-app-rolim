@@ -10,6 +10,8 @@ import { lazy, StrictMode, Suspense, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { RouterProvider } from "react-router/dom";
 import { isFirebaseConfigured } from "./config/env";
+import { recordSessionEntry } from "./features/onboarding/onboardingState";
+import "./lib/installPrompt";
 import { initNavMotion } from "./lib/navMotion";
 import { applyTextSize, getTextSize } from "./lib/preferences";
 import { cssVariablesResolver, theme } from "./theme/theme";
@@ -51,6 +53,7 @@ async function start() {
   // tamanho de texto escolhido já vale na primeira pintura
   initNavMotion();
   applyTextSize(getTextSize());
+  recordSessionEntry();
   const root = createRoot(document.getElementById("root")!);
   if (!isFirebaseConfigured) {
     root.render(

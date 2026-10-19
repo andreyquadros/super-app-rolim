@@ -1,5 +1,6 @@
-import { useCallback, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useRef, useState } from "react";
 import { Outlet, useLocation } from "react-router";
+import { shouldShowWhatsNew } from "@/features/onboarding/onboardingState";
 import { useCollapsedTitle } from "@/hooks/useCollapsedTitle";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useFocusOnNavigate } from "@/hooks/useFocusOnNavigate";
@@ -12,6 +13,8 @@ import classes from "./CitizenLayout.module.css";
 import { NewRequestSheet } from "./NewRequestSheet";
 import { RequestSheetContext } from "./requestSheetContext";
 import { useRouteHandle } from "./routeHandle";
+
+const WhatsNewSheet = lazy(() => import("@/features/onboarding/WhatsNewSheet"));
 
 /**
  * Casca do app do cidadão: barra superior verde, barra de abas (celular) ou
@@ -32,6 +35,8 @@ export function CitizenLayout() {
   useDocumentTitle(title);
   useFocusOnNavigate(pathname);
 
+  // "Novidade" só na Início e só para quem já usava o app (decidido uma vez)
+  const [whatsNew] = useState(shouldShowWhatsNew);
   const openSheet = useCallback(() => setSheetOpen(true), []);
   const closeSheet = useCallback(() => setSheetOpen(false), []);
 
@@ -74,6 +79,11 @@ export function CitizenLayout() {
 
       {chrome !== "flow" && <TabBar sheetOpen={sheetOpen} onRequest={openSheet} hasUnreadNotices={hasUnreadNotices} />}
       <NewRequestSheet open={sheetOpen} onClose={closeSheet} />
+      {whatsNew && pathname === "/" && (
+        <Suspense fallback={null}>
+          <WhatsNewSheet />
+        </Suspense>
+      )}
     </div>
   );
 }
