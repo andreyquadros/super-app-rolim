@@ -48,8 +48,10 @@ export default function CompleteProfilePage() {
   const closeSheet = useCloseGuard({ dirty: !busy && form.isDirty(), onLeave: goHome });
 
   // Durante o envio o cadastro aparece localmente antes da confirmação do
-  // servidor; só redirecionamos depois, para não esconder um erro de CPF
-  if (profile && !busy) return <Navigate to={next} replace />;
+  // servidor; só redirecionamos depois, para não esconder um erro de CPF.
+  // Com erro, também não: o Firestore rejeita a gravação antes de desfazer
+  // o cadastro local, e esse cadastro fantasma levaria à Início sem salvar
+  if (profile && !busy && !error) return <Navigate to={next} replace />;
   // Cadastro ilegível agora (sem conexão): não pede CPF de novo a quem já tem
   if (profileError) return <ProfileUnavailable onRetry={retryProfile} />;
   if (!user) return <Navigate to="/entrar" replace />;
