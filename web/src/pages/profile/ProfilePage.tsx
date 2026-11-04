@@ -1,5 +1,13 @@
 import { Avatar } from "@mantine/core";
-import { IconDeviceMobileDown, IconId, IconInfoCircle, IconLayoutDashboard, IconPresentation, IconShieldLock } from "@tabler/icons-react";
+import {
+  IconDeviceMobileDown,
+  IconHandFinger,
+  IconId,
+  IconInfoCircle,
+  IconLayoutDashboard,
+  IconPresentation,
+  IconShieldLock,
+} from "@tabler/icons-react";
 import { useId } from "react";
 import { useAuth } from "@/auth/AuthContext";
 import { InstallHowToSheet } from "@/components/install/InstallHowToSheet";
@@ -79,6 +87,14 @@ export default function ProfilePage() {
       </ListGroup>
 
       <ListGroup title="Ajuda">
+        {/* A Início abre o passeio no passo 1 (o loader tira o ?passeio=1) */}
+        <ListRow
+          icon={<IconHandFinger size={22} stroke={1.8} />}
+          label="Passeio pela tela inicial"
+          description="Mostra onde fica cada coisa, passo a passo"
+          to="/?passeio=1"
+          nav="tab"
+        />
         <ListRow
           icon={<IconPresentation size={22} stroke={1.8} />}
           label="Ver a apresentação de novo"

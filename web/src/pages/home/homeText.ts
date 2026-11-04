@@ -63,6 +63,23 @@ export function dutyTileTarget(state: DutyListState, path: string, emptyFilter: 
   return known && !anyOnDuty ? `${path}?filtro=${emptyFilter}` : path;
 }
 
+/** Variante do passo "De plantão agora" do passeio (data-tour-state do cartão) */
+export type DutyTourState = "ok" | "sem-ligar" | "carregando" | "erro";
+
+interface DutyTourInput {
+  loading: boolean;
+  failed: boolean;
+  /** Há pelo menos um botão "Ligar" no cartão */
+  callable: boolean;
+}
+
+/** O mesmo que o cartão mostra: o erro vence o carregamento, como no DutyNowCard. */
+export function dutyTourState({ loading, failed, callable }: DutyTourInput): DutyTourState {
+  if (failed) return "erro";
+  if (loading) return "carregando";
+  return callable ? "ok" : "sem-ligar";
+}
+
 export interface DutyPick {
   /** A primeira de plantão (a mais perto, se houver localização) */
   first: Building | null;

@@ -1,5 +1,5 @@
 import { IconArrowLeft, IconArrowRight } from "@tabler/icons-react";
-import { useCallback, useEffect, useId, useRef } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import { useAuth } from "@/auth/AuthContext";
 import { useAppNavigate } from "@/components/AppLink";
@@ -7,6 +7,7 @@ import { BrandMark } from "@/components/brand/BrandMark";
 import { MaintainerCredit } from "@/components/brand/MaintainerCredit";
 import { APP_NAME } from "@/config/city";
 import { useBackNavigation } from "@/hooks/useBackNavigation";
+import { markTourPending } from "@/features/tour/tourState";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { completeOnboarding } from "./onboardingState";
 import classes from "./OnboardingPage.module.css";
@@ -17,8 +18,29 @@ import { usePager } from "./usePager";
 const TOTAL = SLIDES.length;
 const LAST = TOTAL - 1;
 
+/** Como a apresentação terminou: só "Começar a usar" deixa o passeio pendente */
+type Exit = "comecar" | "pular";
+
 function isTextField(target: EventTarget | null): boolean {
   return target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement;
+}
+
+/** Prazo da pré-carga ociosa do passeio (o mesmo da Início) */
+const TOUR_PREFETCH_MS = 2000;
+
+/** Último slide: baixa o passeio enquanto a pessoa lê (uma vez; erro ignorado, a Início tenta de novo). */
+function usePrefetchTour(enabled: boolean): void {
+  const done = useRef(false);
+  useEffect(() => {
+    // Modo leve: economia de dados, o passeio só baixa se for mostrado
+    if (!enabled || done.current || document.documentElement.dataset.motion === "lite") return;
+    done.current = true;
+    const load = () => {
+      import("@/features/tour/HomeTour").catch(() => undefined);
+    };
+    if (window.requestIdleCallback) window.requestIdleCallback(load, { timeout: TOUR_PREFETCH_MS });
+    else window.setTimeout(load, 300);
+  }, [enabled]);
 }
 
 /**
@@ -40,19 +62,35 @@ export default function OnboardingPage() {
   // Revendo pelo Perfil: sair devolve para lá (e não para a Início)
   const backToProfile = useBackNavigation("/perfil");
 
-  const start = useCallback(() => {
-    completeOnboarding();
-    if (reviewing) {
-      backToProfile();
-      return;
-    }
-    navigate("/", { replace: true, nav: "tab" });
-  }, [navigate, reviewing, backToProfile]);
+  // O rótulo do botão principal entra suave só quando troca (Próximo ↔ Começar
+  // a usar), nunca ao montar nem de um Próximo para outro
+  const [labelSwapped, setLabelSwapped] = useState(false);
+  useEffect(() => {
+    if (isLast) setLabelSwapped(true);
+  }, [isLast]);
+  usePrefetchTour(isLast && !reviewing);
+
+  const start = useCallback(
+    (exit: Exit) => {
+      completeOnboarding();
+      if (reviewing) {
+        backToProfile();
+        return;
+      }
+      if (exit === "comecar") markTourPending();
+      navigate("/", { replace: true, nav: "tab" });
+      // Depois do setNavKind (que limpa o escopo): no celular, a faixa verde
+      // da ilustração vira o cabeçalho da Início
+      document.documentElement.dataset.navScope = "welcome";
+    },
+    [navigate, reviewing, backToProfile],
+  );
 
   const signIn = useCallback(() => {
     completeOnboarding();
+    if (!reviewing) markTourPending();
     navigate("/entrar?next=/", { replace: true, nav: "flow" });
-  }, [navigate]);
+  }, [navigate, reviewing]);
 
   // Quem já tem conta não precisa da apresentação (a não ser que peça para rever)
   useEffect(() => {
@@ -76,7 +114,7 @@ export default function OnboardingPage() {
       if (document.querySelector("dialog[open]")) return;
       if (event.key === "Escape") {
         event.preventDefault();
-        start();
+        start("pular");
         return;
       }
       if (isTextField(event.target)) return;
@@ -91,13 +129,14 @@ export default function OnboardingPage() {
 
   return (
     <main className={classes.page} aria-labelledby={headingId}>
-      <div className={classes.top}>
+      {/* app-bar-vt: a faixa da marca vira a barra da Início sem se mover */}
+      <div className={`${classes.top} app-bar-vt`}>
         <div className={classes.topRow}>
           <span className={classes.brand} aria-hidden>
             <BrandMark variant="onGreen" />
           </span>
           {!isLast && (
-            <button type="button" className={classes.skip} onClick={start} data-press>
+            <button type="button" className={classes.skip} onClick={() => start("pular")} data-press>
               Pular
             </button>
           )}
@@ -145,20 +184,23 @@ export default function OnboardingPage() {
                 Voltar
               </button>
             )}
-            {isLast ? (
-              <button type="button" className={classes.next} onClick={start} data-press>
-                Começar a usar
-              </button>
-            ) : (
-              <button type="button" className={classes.next} onClick={() => goTo(index + 1)} data-press>
-                Próximo
-                <IconArrowRight size={22} stroke={2.2} aria-hidden />
-              </button>
-            )}
+            {/* Um só botão (o foco não se perde); só o rótulo troca, pela key */}
+            <button type="button" className={classes.next} onClick={isLast ? () => start("comecar") : () => goTo(index + 1)} data-press>
+              <span key={isLast ? "comecar" : "proximo"} className={classes.label} data-swap={isLast || labelSwapped || undefined}>
+                {isLast ? (
+                  "Começar a usar"
+                ) : (
+                  <>
+                    Próximo
+                    <IconArrowRight size={22} stroke={2.2} aria-hidden />
+                  </>
+                )}
+              </span>
+            </button>
           </div>
           {/* No rodapé fixo, e não no fim do slide: sempre à vista, sem rolar */}
           {isLast && !signedIn && (
-            <button type="button" className={classes.signIn} onClick={signIn} data-press>
+            <button type="button" className={`${classes.signIn} enter-rise`} onClick={signIn} data-press>
               Entrar ou criar conta
             </button>
           )}

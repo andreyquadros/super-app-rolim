@@ -23,14 +23,17 @@ function Group({ icon, title, children }: { icon: ReactNode; title: string; chil
 /** "Aa" em três tamanhos; a tela inteira muda na hora (prévia ao vivo). */
 function TextSizeChoice() {
   const [size, setSize] = useState<TextSize>(getTextSize);
+  // O check só anima depois do primeiro toque (a escolha padrão nunca anima ao montar)
+  const [touched, setTouched] = useState(false);
   const choose = (value: TextSize) => {
     setSize(value);
+    setTouched(true);
     setTextSize(value);
   };
 
   return (
     <Group icon={<IconTextSize size={22} stroke={1.8} />} title="Tamanho do texto">
-      <div role="radiogroup" aria-label="Tamanho do texto" className={classes.sizes}>
+      <div role="radiogroup" aria-label="Tamanho do texto" className={classes.sizes} data-touched={touched || undefined}>
         {TEXT_SIZES.map((value) => (
           <label key={value} className={classes.size} data-size={value} data-press>
             <input
@@ -59,10 +62,12 @@ function TextSizeChoice() {
 /** Instalar na tela inicial: botão no Android, passo a passo no iPhone. */
 function InstallChoice() {
   const { canPrompt, needsIosInstructions, installed, install } = useInstallPrompt();
+  // Já instalado ao abrir: sem o grupo. Instalou com a tela aberta: o grupo confirma
+  const [installedAtOpen] = useState(installed);
   const [howToOpen, setHowToOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (installed) return null;
+  if (installedAtOpen) return null;
 
   const onInstall = async () => {
     setError(null);
@@ -75,7 +80,7 @@ function InstallChoice() {
 
   return (
     <Group icon={<IconDeviceMobile size={22} stroke={1.8} />} title="Colocar o app na tela do celular">
-      {canPrompt ? (
+      {installed ? null : canPrompt ? (
         <>
           <p className={classes.groupText}>Ele abre com um toque, como os outros apps.</p>
           <button type="button" className={classes.action} onClick={onInstall} data-press>
@@ -93,11 +98,22 @@ function InstallChoice() {
       ) : (
         <p className={classes.groupText}>Você pode instalar depois pelo menu do navegador.</p>
       )}
-      {error && (
+      {error && !installed && (
         <p className={classes.error} role="alert">
           {error}
         </p>
       )}
+      {/* Região viva presente desde o início: o leitor de tela anuncia a confirmação */}
+      <div role="status" className={classes.status}>
+        {installed && (
+          <p className={classes.done}>
+            <span className={classes.doneIcon} aria-hidden>
+              <IconCheck size={20} stroke={3} />
+            </span>
+            Pronto! O app está na tela do celular.
+          </p>
+        )}
+      </div>
     </Group>
   );
 }

@@ -1,5 +1,5 @@
 import { IconFlower, IconMessages, IconPill, IconTools, type Icon } from "@tabler/icons-react";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { AppLink } from "@/components/AppLink";
 import { DUTY_META } from "@/domain/duty";
 import type { NavKind } from "@/lib/navMotion";
@@ -18,16 +18,18 @@ interface ServiceTileProps {
   line: ReactNode;
   /** Ponto ipê no ícone quando há alguém de plantão (pulsa só nas farmácias) */
   badge?: "live" | "still" | null;
+  /** Posição na grade: escalona a entrada da primeira abertura */
+  index: number;
 }
 
-function ServiceTile({ to, nav, tone, icon: TileIcon, title, line, badge = null }: ServiceTileProps) {
+function ServiceTile({ to, nav, tone, icon: TileIcon, title, line, badge = null, index }: ServiceTileProps) {
   return (
-    <li className={classes.item}>
+    <li className={classes.item} style={{ "--i": index } as CSSProperties}>
       <AppLink to={to} nav={nav} className={classes.tile} data-tone={tone} data-press>
         <span className={classes.body}>
           <span className={classes.icon} aria-hidden>
             <TileIcon size={28} stroke={1.7} />
-            {badge && <span className={badge === "live" ? `live-dot ${classes.badge}` : classes.badge} />}
+            {badge && <span className={badge === "live" ? `live-dot ${classes.badge}` : classes.badge} data-badge={badge} />}
           </span>
           <span className={classes.text}>
             <span className={classes.title}>{title}</span>
@@ -70,9 +72,18 @@ export function ServiceGrid({ pharmacies, funerals }: ServiceGridProps) {
       <h2 id="home-servicos" className={classes.heading}>
         Serviços
       </h2>
-      <ul className={classes.grid}>
-        <ServiceTile to="/zeladoria/nova" nav="flow" tone="mata" icon={IconTools} title="Problema na rua" line="Zeladoria: buraco, poste, lixo, mato" />
-        <ServiceTile to="/ouvidoria/nova" nav="flow" tone="ipe" icon={IconMessages} title="Ouvidoria" line="Elogio, sugestão ou reclamação" />
+      {/* home-tiles-vt: na passagem da apresentação, os blocos ficam acima do cabeçalho (motion.css) */}
+      <ul className={`${classes.grid} home-tiles-vt`} data-tour="servicos">
+        <ServiceTile
+          to="/zeladoria/nova"
+          nav="flow"
+          tone="mata"
+          icon={IconTools}
+          title="Problema na rua"
+          line="Zeladoria: buraco, poste, lixo, mato"
+          index={0}
+        />
+        <ServiceTile to="/ouvidoria/nova" nav="flow" tone="ipe" icon={IconMessages} title="Ouvidoria" line="Elogio, sugestão ou reclamação" index={1} />
         <ServiceTile
           to={dutyTileTarget(pharmacies, DUTY_META.PHARMACY.path, "abertas")}
           nav="tab"
@@ -81,6 +92,7 @@ export function ServiceGrid({ pharmacies, funerals }: ServiceGridProps) {
           title="Farmácias"
           line={<DutyLine state={pharmacies} fallback="Ver abertas" />}
           badge={anyPharmacy ? "live" : null}
+          index={2}
         />
         <ServiceTile
           to={dutyTileTarget(funerals, DUTY_META.FUNERAL.path, "todas")}
@@ -90,6 +102,7 @@ export function ServiceGrid({ pharmacies, funerals }: ServiceGridProps) {
           title="Funerárias"
           line={<DutyLine state={funerals} fallback="Ver lista" />}
           badge={anyFuneral ? "still" : null}
+          index={3}
         />
       </ul>
     </section>

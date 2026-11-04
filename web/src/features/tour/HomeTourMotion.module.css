@@ -1,0 +1,110 @@
+/* Movimento do passeio, embutido em HomeTour.module.css pelo @import (o mesmo
+   escopo de módulo: .layer e os keyframes são os de lá). Só transform,
+   opacity e clip-path. */
+
+/* Opt-in. Opacidade (véu, anel e cartão) também no lite, como a folha; furo deslizando,
+   deslocamentos, escala, pulso e aceno só com movimento liberado. */
+@media (prefers-reduced-motion: no-preference) {
+  [data-tour-scrim] {
+    animation: tour-fade var(--motion-sheet-in) var(--ease-enter) backwards;
+  }
+
+  [data-tour-ring] {
+    transition: opacity var(--motion-fast) var(--ease-exit);
+
+    &[data-on] {
+      transition-duration: var(--motion-base);
+      transition-timing-function: var(--ease-enter);
+    }
+  }
+
+  [data-tour-phase] {
+    --tour-rise: 8px;
+    animation: tour-fade var(--motion-base) var(--ease-enter) backwards;
+    transition: opacity var(--motion-fast) var(--ease-exit);
+
+    &[data-tour-phase="open"] {
+      --tour-rise: 24px;
+      animation-duration: var(--motion-sheet-in);
+    }
+  }
+
+  [data-tour-scrim],
+  [data-tour-card] {
+    transition: opacity var(--motion-sheet-out) var(--ease-exit);
+  }
+
+  :global(html:not([data-motion="lite"])) [data-tour-scrim] {
+    transition:
+      opacity var(--motion-sheet-out) var(--ease-exit),
+      clip-path var(--motion-emph) var(--ease-standard);
+  }
+
+  :global(html:not([data-motion="lite"])) [data-tour-ring] {
+    transition-property: opacity, scale;
+  }
+
+  :global(html:not([data-motion="lite"])) [data-tour-ring][data-on][data-pulse]::after {
+    animation: tour-pulse 1200ms var(--ease-standard) var(--motion-base) 2;
+  }
+
+  :global(html:not([data-motion="lite"])) [data-tour-phase] {
+    animation-name: tour-rise;
+  }
+
+  :global(html:not([data-motion="lite"])) [data-tour-card][data-nudge] {
+    animation: tour-nudge var(--motion-base) var(--ease-spring);
+  }
+}
+
+.layer[data-instant] [data-tour-scrim] {
+  transition: none;
+}
+
+/* Movimento reduzido: tudo na hora. A regra global (0,01 ms em "all") atrasaria
+   em um quadro a troca de tamanho do texto, e o passeio mediria o cartão errado */
+@media (prefers-reduced-motion: reduce) {
+  .layer,
+  .layer * {
+    transition: none !important;
+  }
+}
+
+.layer[data-leaving] {
+  [data-tour-scrim],
+  [data-tour-ring],
+  [data-tour-card] {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+@keyframes tour-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes tour-rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--tour-rise));
+  }
+}
+
+@keyframes tour-pulse {
+  from {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.15);
+  }
+}
+
+@keyframes tour-nudge {
+  50% {
+    scale: 1.03;
+  }
+}

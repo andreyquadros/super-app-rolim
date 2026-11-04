@@ -16,7 +16,8 @@ export function HomeHeader({ now }: HomeHeaderProps) {
   const title = greetingParts(homeGreeting({ loading, signedIn: user !== null, name }, now));
 
   return (
-    <header className={classes.header}>
+    // home-hero-vt: a ilustração da apresentação encolhe até aqui (View Transition, só no celular)
+    <header className={`${classes.header} home-hero-vt`}>
       <h1 className={classes.title} tabIndex={-1}>
         <span className={classes.lead}>{title.lead}</span>
         {title.rest}

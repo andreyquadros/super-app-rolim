@@ -51,6 +51,12 @@ html.sheet-open {
   overflow: hidden;
 }
 
+/* Só com barra de rolagem clássica (acquireScrollLock mede): a página não
+   pula para o lado quando a barra some. No celular a barra é sobreposta. */
+html.sheet-open[data-scroll-gutter] {
+  scrollbar-gutter: stable;
+}
+
 /* App do cidadão: corpo de 17 px, pensado para leitura confortável */
 .citizen {
   --mantine-font-size-xs: 0.8125rem;

@@ -33,14 +33,23 @@ export function NavRail({ sheetOpen, onRequest, hasUnreadNotices }: NavRailProps
         <img src="/logo-mono.svg" alt="" width={40} height={40} />
       </AppLink>
 
-      <button type="button" className={classes.request} onClick={onRequest} aria-haspopup="dialog" aria-expanded={sheetOpen} data-press>
+      {/* data-tour*: alvos do passeio pela tela inicial */}
+      <button
+        type="button"
+        className={classes.request}
+        onClick={onRequest}
+        aria-haspopup="dialog"
+        aria-expanded={sheetOpen}
+        data-press
+        data-tour="solicitar"
+      >
         <span className={classes.fab} aria-hidden>
           <IconPlus size={28} stroke={2.4} />
         </span>
         <span className={classes.label}>Solicitar</span>
       </button>
 
-      <ul className={classes.items}>
+      <ul className={classes.items} data-tour="abas">
         {NAV_ITEMS.map((item) => {
           const state = tabState(item, pathname);
           const Icon = state === "inactive" ? item.icon : item.activeIcon;
@@ -87,6 +96,7 @@ export function NavRail({ sheetOpen, onRequest, hasUnreadNotices }: NavRailProps
             className={classes.item}
             aria-current={ariaCurrentFor(profileState)}
             onClick={(event) => onPress(event, profileState, PROFILE_ROOT)}
+            data-tour="conta"
           >
             <span className={classes.iconWrap}>
               <span className={classes.pill} aria-hidden />
@@ -95,7 +105,7 @@ export function NavRail({ sheetOpen, onRequest, hasUnreadNotices }: NavRailProps
             <span className={classes.label}>Perfil</span>
           </AppLink>
         ) : (
-          <AppLink to={withNext("/entrar", pathname + search)} nav="flow" className={classes.item}>
+          <AppLink to={withNext("/entrar", pathname + search)} nav="flow" className={classes.item} data-tour="conta">
             <span className={classes.iconWrap}>
               <span className={classes.pill} aria-hidden />
               <IconLogin2 size={24} stroke={1.8} aria-hidden className={classes.icon} />

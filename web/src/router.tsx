@@ -7,6 +7,7 @@ import {
   ScrollRestoration,
   useMatches,
   useNavigation,
+  type LoaderFunctionArgs,
   type RouteObject,
 } from "react-router";
 import { useAuth } from "@/auth/AuthContext";
@@ -15,7 +16,8 @@ import { ForegroundPush, OfflineBanner, UpdatePrompt } from "@/components/AppSta
 import { BootSplash } from "@/components/LoadingScreen";
 import { RouteError } from "@/components/RouteError";
 import { DUTY_COPY, DUTY_META, dutyTypeFromSlug } from "@/domain/duty";
-import { shouldShowOnboarding, withoutIntroParam } from "@/features/onboarding/onboardingState";
+import { shouldShowOnboarding, withoutParams } from "@/features/onboarding/onboardingState";
+import { requestTourFromLink } from "@/features/tour/tourState";
 import { CitizenLayout } from "@/layouts/CitizenLayout";
 import type { RouteHandle } from "@/layouts/routeHandle";
 import { lastDutyPath } from "@/lib/dutyMemory";
@@ -30,6 +32,21 @@ function page(load: Loader): Pick<RouteObject, "lazy"> {
 
 const CITIZEN_ROUTE = "citizen";
 const PANEL_ROUTE = "painel";
+/** Parâmetros da Início atendidos no loader: saem do endereço depois */
+const HOME_PARAMS = ["intro", "passeio"] as const;
+
+/**
+ * Loader da Início. Primeiro acesso pela tela inicial: apresentação antes
+ * (sem piscar a Início). "?passeio=1" (Perfil › Ajuda) deixa o pedido do
+ * passeio para o CitizenLayout consumir.
+ */
+function homeLoader({ request }: LoaderFunctionArgs) {
+  const url = new URL(request.url);
+  if (shouldShowOnboarding(url)) return redirect("/boas-vindas");
+  if (url.searchParams.get("passeio") === "1") requestTourFromLink();
+  // "?intro=0" e "?passeio=1" já foram atendidos: somem também da localização do roteador
+  return HOME_PARAMS.some((name) => url.searchParams.has(name)) ? redirect(withoutParams(url, HOME_PARAMS)) : null;
+}
 
 function Root() {
   const navigation = useNavigation();
@@ -86,13 +103,7 @@ export const router = createBrowserRouter([
             index: true,
             element: <HomePage />,
             ...handle({ chrome: "home" }),
-            // Primeiro acesso pela tela inicial: apresentação antes (sem piscar a Início)
-            loader: ({ request }) => {
-              const url = new URL(request.url);
-              if (shouldShowOnboarding(url)) return redirect("/boas-vindas");
-              // "?intro=0" já foi atendido: some também da localização do roteador
-              return url.searchParams.has("intro") ? redirect(withoutIntroParam(url)) : null;
-            },
+            loader: homeLoader,
           },
           { path: "entrar", ...page(() => import("@/pages/auth/LoginPage")), ...flow("Entrar") },
           { path: "cadastro", ...page(() => import("@/pages/auth/RegisterPage")), ...flow("Criar conta") },

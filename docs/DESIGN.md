@@ -647,7 +647,7 @@ Base: a proposta **calm** ("Guia calmo"), com enxertos das propostas **native** 
 **Slide 1, "Bem-vindo" (`CityArt`): a cidade se arruma e o pino pousa (cerca de 800 ms)**
 - O caminho único dos prédios vira 3 `<g>` (prédio e suas janelas), com `--n` de 0 a 2: `onb-rise` `from{transform:translateY(14px);opacity:.4}`, `--motion-sheet-in`, `--ease-enter`, atraso `calc(var(--n) * var(--stagger))`.
 - As 3 copas do ipê (`--n` de 0 a 2), com `fill-box` e origem no centro: `onb-bloom` `from{transform:scale(.3)}`, `--motion-sheet-in`, `--ease-spring`, atraso `calc(160ms + var(--n) * var(--stagger))`. O tronco fica parado: o ipê floresce.
-- Pino: o `<Pin>` fica dentro de um `<g class=drop>` sem atributo. `onb-drop` `from{transform:translateY(-36px)}`, `--motion-emph`, `--ease-spring`, atraso 200 ms.
+- Pino: o `<Pin>` fica dentro de um `<g class=drop>` sem atributo. `onb-drop` `from{transform:translateY(-14px);opacity:.4}`, `--motion-emph`, `--ease-spring`, atraso 200 ms. O topo do pino fica em y ≈ 15 e o `<svg>` recorta a borda: subindo só 14, o primeiro quadro (parado durante o atraso) mostra o pino inteiro, com a mesma opacidade parcial dos prédios.
 - Sombra do pino: `onb-shadow` `from{transform:scale(.3);opacity:0}`, origem `140px 64px`, `--motion-emph`, `--ease-enter`, atraso 200 ms.
 - Raios acima do pino ("é aqui"): `onb-fade` `from{opacity:0}`, `--motion-fast`, atraso 640 ms.
 - Sol e chão: parados.
@@ -693,18 +693,23 @@ Base: a proposta **calm** ("Guia calmo"), com enxertos das propostas **native** 
 - `start()` passa a receber o tipo de saída: `"comecar"` (Começar a usar) ou `"pular"` (Pular e Esc). Fora do `?rever=1`, logo depois de `navigate("/", { replace: true, nav: "tab" })`, grava `document.documentElement.dataset.navScope = "welcome"`. É o mesmo padrão do `DutyTypeSwitch`; o próximo `setNavKind` limpa.
 - O `.top` da apresentação ganha a classe global `app-bar-vt`: a faixa da marca vira a AppBar da Início sem se mover (as regras de `app-bar` já existem).
 - Só o `.art` do slide **ativo** recebe `onb-hero-vt`, e o `<header>` do `HomeHeader` recebe `home-hero-vt`. Um nome repetido abortaria a transição.
+- O `<ul>` do `ServiceGrid` recebe `home-tiles-vt`. No celular os blocos sobem 28 px (`--home-overlap`) sobre o verde; sem nome próprio iriam na raiz, por baixo do grupo do cabeçalho, e pulariam para a frente no fim da passagem.
 - Em `theme/motion.css` (global; um módulo renomearia o `vt-fade-out`):
 ```css
 @media (max-width: 47.99em) {
   html[data-nav-scope="welcome"] .onb-hero-vt,
   html[data-nav-scope="welcome"] .home-hero-vt { view-transition-name: welcome-hero; }
+  html[data-nav-scope="welcome"] .home-tiles-vt { view-transition-name: welcome-tiles; }
 }
 ::view-transition-group(welcome-hero) { animation-duration: var(--motion-emph); animation-timing-function: var(--ease-standard); }
 ::view-transition-old(welcome-hero) { animation: vt-fade-out var(--motion-fast) var(--ease-exit) both; }
 ::view-transition-new(welcome-hero) { animation: none; }
+::view-transition-group(welcome-tiles) { animation: none; }
+::view-transition-new(welcome-tiles) { animation: vt-tab-in 200ms var(--ease-enter) 60ms both; }
 ```
 - Resultado:
   - a faixa verde da ilustração encolhe até o cabeçalho verde da Início. No celular as duas têm a mesma largura, então a imagem nova não estica;
+  - os blocos só existem na Início: o grupo deles vem depois do `welcome-hero` e pinta por cima durante toda a passagem, como em repouso. Ficam parados no lugar e aparecem junto com a raiz (o mesmo `vt-tab-in`); a imagem nova é ao vivo, então o assentamento dos `li` aparece;
   - a marca fica parada e as abas sobem com o `vt-bar-in` existente;
   - no tablet e no computador, onde o cabeçalho é um cartão de outra proporção, vale só o fade de aba.
 - Sem suporte, com movimento reduzido ou no lite, o `AppLink` já desliga a transição.
@@ -980,7 +985,7 @@ São cinco passos, sempre "Passo N de 5".
 - Nada avança sozinho, nada some com o tempo e nenhuma dica depende de passar o mouse.
 
 **Foco e rolagem na saída**
-- Sair, Esc e Voltar deixam a rolagem onde está. O foco vai para:
+- Sair, Esc e Voltar deixam a rolagem onde está, a não ser que o alvo da página (passos 1 e 2) esteja sob a AppBar ou a TabBar medidas. Aí rola só o necessário para ele ficar a 12 px delas; se não couber inteiro, vence o topo. A AppBar cresce com a faixa "Sem internet". O foco vai para:
   - passo 1: o primeiro bloco ("Problema na rua");
   - passo 2: o título "De plantão agora" (`tabIndex=-1`), com o "Ligar" a poucos Tabs;
   - passo 3: o botão Solicitar;
@@ -1017,7 +1022,7 @@ São cinco passos, sempre "Passo N de 5".
   - posição **só por `transform`**, a partir de `top:0; left:0`, para que nenhuma mudança de altura gere deslocamento de layout.
 - **Cartão no celular** (< 48em, "encaixado"): largura `min(32rem, 100vw - 24px)`, centrado. Embaixo, `y = vh - 12 - inset inferior - altura`; em cima, `y = 12 + inset superior`.
 - **Cartão a partir de 48em** ("ancorado"): largura `min(26rem, 100vw - var(--app-rail-w) - 32px)`. Tem uma seta de 18 px (quadrado girado) no lado voltado ao alvo, em `clamp(centro do alvo - borda do cartão, 28, tamanho - 28)`.
-- `@media (forced-colors: active)`: o véu vira `Canvas`; o anel usa `border-color: Highlight`, sem sombra; o cartão ganha `border: 2px solid CanvasText`.
+- `@media (forced-colors: active)`: o véu vira `Canvas`; o anel usa `border-color: Highlight`, sem sombra; o cartão ganha `border: 2px solid CanvasText`; os botões do passeio e da oferta e as cópias de "Ligar" ganham `border: 2px solid ButtonText` (só tinham fundo); as setas de Voltar e Próximo usam `background: ButtonText` com `forced-color-adjust: none`.
 
 **Alvos e candidatos** (`tourDom.ts`)
 - `findTarget(id)` devolve o primeiro `[data-tour=id]` com `getClientRects().length > 0`, área maior que zero e `visibility` diferente de `hidden`. Assim escolhe sozinho entre TabBar e NavRail.
@@ -1052,7 +1057,8 @@ São cinco passos, sempre "Passo N de 5".
 - **A partir de 48em:**
   - alvo no trilho: cartão à direita, com `x = direita do trilho + 16` e `y = clamp(centro do alvo - altura/2, 12 + inset, vh - 12 - altura)`;
   - alvo na página: para cada tipo de letra e cada candidato, tenta abaixo, acima (sob a AppBar) e ao lado (esquerda, depois direita, sem passar do trilho). Se nada couber, rola o alvo para `fundo da AppBar + 12` e tenta abaixo; depois, encaixado embaixo; por fim, o centro.
-- Preferência branda em todos os passos: entre posições válidas, a que não cobre um "Ligar" visível.
+- Preferência branda em todos os passos: a primeira posição válida, de qualquer passada ou candidato, que não cobre um "Ligar" visível (no passo 2 é obrigatório). Se todas cobrem, fica a primeira válida. Fora do passo 2, a preferência fica no tipo de texto da primeira posição válida: nunca encurta o texto.
+- Abaixo e acima tentam o x centrado no furo e, depois, o x mais à esquerda em que a seta ainda alcança o centro do furo (preso ao trilho). Os "Ligar" ficam na borda direita do plantão.
 
 **Medidas de referência** (servidor de desenvolvimento, sem login; alturas do cartão em px, nos tipos normal / compacto / curto)
 
@@ -1241,7 +1247,7 @@ export function clearTourRequest(): void;
 | `data-tour="ajuda"` | `<button>` do HomeHelp | — |
 | `data-home-intro` | `.page` da HomePage | presente só na primeira montagem da carga |
 
-6. **Classes e escopos globais:** `home-hero-vt` (`<header>` do HomeHeader), `onb-hero-vt` (`.art` do slide ativo), `app-bar-vt` (`.top` da apresentação) e `html[data-nav-scope="welcome"]`.
+6. **Classes e escopos globais:** `home-hero-vt` (`<header>` do HomeHeader), `home-tiles-vt` (`<ul>` do ServiceGrid), `onb-hero-vt` (`.art` do slide ativo), `app-bar-vt` (`.top` da apresentação) e `html[data-nav-scope="welcome"]`.
 7. **e2e:**
    - `e2e/helpers.ts` ganha `firstVisit(page)`, `answerTourOffer(page, "Mostrar o passeio" | "Agora não")`, `waitForTourStep(page, n)` e `tourCard(page)`;
    - `playwright.config.ts` grava `rolim.passeio = "v1"` no `storageState` e inclui os specs novos nos projetos listados no plano de testes.
@@ -1289,7 +1295,7 @@ export function clearTourRequest(): void;
   - `TourLayer`: portal, véu, anel e cartão; medida e aplicação no `useLayoutEffect`; trava de rolagem; observadores; `makeLive`; ouvinte de clique na captura; teclado, `CloseWatcher` e a guarda de 400 ms; o aceno;
   - `tourSteps`: a tabela pura de passos e textos;
   - `tourGeometry`, puro: `unionRect`, `inflate`, `clampToViewport`, `holeRadius`, `holePath(vw, vh, principal, [ligar1, ligar2])` e `chooseLayout(...)`. O `chooseLayout` devolve `{ typo, place, candidate, scrollDelta, hole, radius, card: {x, y}, caret, callCopies }`;
-  - `tourDom`: `findTarget`, `candidateGroups`, `makeLive`, `telLinks`, `onCloseRequest` (com a declaração mínima de `CloseWatcher` em TS), `waitForScrollEnd` e `readMs`.
+  - `tourDom`: `findTarget`, `candidateGroups`, `makeLive`, `telLinks`, `onCloseRequest` (com a declaração mínima de `CloseWatcher` em TS), `waitForScrollEnd`, `band` (a faixa visível entre a AppBar e a TabBar, usada na medida e na saída) e `readMs`.
 - **Testa:**
   - `tourGeometry.test.ts`:
     - os casos da tabela de medidas: 360×640 normal; 375×667 grande; 320×568 muito grande (centro com cópias no passo 2; 1º bloco com texto curto no passo 1); 768×1024 acima; 1024×768 ao lado, à esquerda; trilho com `x ≥ 104`;
@@ -1297,6 +1303,9 @@ export function clearTourRequest(): void;
     - virada para cima no fim da página; espiada com ≥ 56 px à vista; centro abaixo disso e com alvo ausente;
     - teste de propriedade: em telas de 320 a 430 px de largura e 568 a 900 px de altura, nos 3 tamanhos de texto, o passo 2 nunca devolve cartão que cruze um "Ligar";
     - `holePath` mantém a mesma assinatura de comandos para qualquer entrada, inclusive furos de tamanho zero;
+  - `tourGeometry.ligar.test.ts` (medidas reais):
+    - no passo 1, nenhum "Ligar" coberto em 1366×768, 1280×800 e 768×1024;
+    - em 412×915, os passos 1 e 3 ficam no texto normal;
   - `tourSteps.test.ts`:
     - sempre 5 passos, na mesma ordem;
     - todas as combinações de passo, estado, conta e nav respeitam os limites, não usam "clique" e trazem palavra de lugar nos passos 3 a 5;
@@ -1311,7 +1320,8 @@ export function clearTourRequest(): void;
     - "Ligar" alcançável: no passo 2, `getByRole("link", { name: /^Ligar para/ }).first().click({ trial: true })` passa e o retângulo do cartão não cruza nenhum "Ligar"; nos outros passos, todo "Ligar" visível e fora do cartão também passa;
     - toque em "Problema na rua" no passo 1 sai do passeio e abre o fluxo (ou o login);
     - Solicitar no passo 3 abre a folha e esconde o passeio; Cancelar faz o passo 3 voltar com o foco no título;
-    - Esc no passo 2: a camada some, o foco vai para "De plantão agora" e o `scrollY` não muda;
+    - Esc no passo 2: a camada some, o foco vai para "De plantão agora", inteiro na faixa visível, e o `scrollY` não muda se ele já estava à vista. Em 360×640 e em 375×667 sem internet, o título estava sob a AppBar e volta à vista logo abaixo dela;
+    - Sair logo depois de Próximo (durante a troca de passo): o foco de saída é o do passo que estava à vista;
     - "Como usar o app" → passo 1 → Sair: o foco volta à linha;
     - Perfil › "Passeio pela tela inicial": a URL fica `/` e o passeio começa no passo 1;
     - ordem do Tab, setas e toque duplo (2 cliques em menos de 400 ms avançam um passo só);
@@ -1337,7 +1347,7 @@ export function clearTourRequest(): void;
   - as regras de movimento da tabela (com keyframes locais) e a `key` das linhas do plantão;
   - `.enter-rise` no convite de "Seus pedidos";
   - o `HomeHelp` na posição definida;
-  - em `motion.css`, as regras do `welcome-hero` e a correção do `.live-dot` no lite;
+  - em `motion.css`, as regras do `welcome-hero` e do `welcome-tiles` e a correção do `.live-dot` no lite;
   - a calha só com barra clássica (`scrollLock.ts` e `global.css`).
 - **Testa:**
   - `homeText.test.ts`: os 4 estados do `dutyTourState`;
@@ -1394,3 +1404,37 @@ export function clearTourRequest(): void;
    - `check-bundle` ≤ 300 KB, com a apresentação ≤ 9 KB e o passeio ≤ 8 KB;
    - Lighthouse de acessibilidade 100 em `/?intro=0` e em `/boas-vindas`;
    - conferência manual no Android lite e no iPhone.
+### Como ficou (desvios da implementação)
+Registro do que mudou em relação ao plano acima, para quem mexer depois.
+
+**Passeio**
+- O cartão é desenhado dentro de `TourLayer.tsx`; não há `TourCard.tsx`.
+- As partes são escolhidas por atributos: `data-tour-scrim`, `data-tour-ring`, `data-tour-card`, `data-tour-phase` e `data-tour-offer`. Só `.layer` é classe de módulo.
+- O movimento fica em `HomeTourMotion.module.css`, importado por `HomeTour.module.css` no mesmo escopo, para cada arquivo ficar abaixo de 400 linhas.
+- Não há alternativa para navegador sem `clip-path: path()`: todo navegador que roda o pacote es2022 tem o recurso.
+- O fim da rolagem é `scrollend` ou 800 ms, o que vier antes (iOS < 26 não tem `scrollend`). `waitForScrollEnd(then)` recebe a função a chamar (não devolve promessa), e o que vier primeiro desliga o outro: nenhum ouvinte fica na janela.
+- `readMs` lê só tokens em ms: todos os `--motion-*` são em ms (`theme/motion.css`).
+- As linhas de cima e dos botões do cartão são `<div>`, e não `header` e `footer`. Dentro do `role="dialog"`, esses elementos virariam marcos `banner` e `contentinfo` da página. O CSS escolhe as linhas pela posição e os textos pelo `id`.
+- Saída por Sair, Esc ou Voltar: `band()` mede o fundo da AppBar e o topo da TabBar, e `scrollBy` rola só o necessário. Não há `scroll-margin` em `#home-plantao` nem `scrollIntoView`, porque `--app-bar-h` não conta a faixa "Sem internet": em 375×667 sem internet, o título ficava sob a faixa.
+- Sair durante a troca de passo (`--motion-fast`) não aplica a troca: ficam o passo que estava à vista e o foco de saída dele.
+- Antes da preferência global, o passo 1 cobria o plantão inteiro em 1366×768, 1280×800 e 768×1024. Agora fica:
+  - em 1366×768 e 1280×800: a primeira fileira, com o cartão à direita;
+  - em 768×1024: abaixo da grade inteira, em x 104 (rente ao trilho, na mesma linha da grade), com a seta no centro do furo.
+- Nos celulares medidos (8 tamanhos, de 360 a 430 px de largura, nos passos 1 a 5), as posições são as mesmas de antes da preferência global.
+- A variante da navegação (barra ou trilho) sai do trilho visível (`.nav-rail-vt`), com o mesmo ponto de quebra de 48em.
+- A pausa atrás da folha Solicitar usa um `MutationObserver` no atributo `open`, mais checagens a cada 32 ms.
+- A medida de correção só rola a partir de 2 px, para não ficar num vaivém de 1 px no limite.
+- Com movimento reduzido, a camada força `transition: none`. A regra global de 0,01 ms faria cada medida ler a altura antiga.
+- Medido no build (gzip):
+  - passeio: 7,99 KB de JS (8184 B com o `openDialogs`, para um teto de 8192 B) e 2,2 KB de CSS. Sobram 8 B, então qualquer acréscimo ao passeio precisa de um corte;
+  - apresentação: 7,2 KB de JS e 3,3 KB de CSS;
+  - JS inicial: 297,2 KB.
+
+**Início**
+- O LCP real é o próprio `<header>` da Início, porque o `::after` com as curvas de nível conta como imagem. O teste confere que nada anima no cabeçalho nem nos ancestrais do H1.
+- O `h2#home-plantao` tem `tabIndex=-1`, para receber o foco ao sair do passeio no passo 2.
+- Em 1024×768 a linha "Como usar o app" termina perto de y=802, um pouco abaixo da primeira tela.
+
+**Apresentação e esperas**
+- As pré-cargas ociosas usam `requestIdleCallback(…, { timeout: 2000 })`. O Chromium sem tela pode nunca abrir um período ocioso quando nada anima.
+- Corrigido depois da revisão: o pino do slide 1 sobe 14 px com opacidade .4, e não 36 px, porque assim nascia cortado pela borda do `<svg>`. Na passagem, os blocos ganharam o nome `welcome-tiles`; antes o cabeçalho cobria o topo deles por meio segundo e eles pulavam para a frente no fim. O nome dura o mesmo que o `welcome-hero` (até o próximo `setNavKind`), e no Chromium deixa uma diferença de rasterização de até 3/255, invisível, no cabeçalho e nos blocos.

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { signIn, waitForScreen } from "./helpers";
+import { signIn, waitForScreen, waitForSettled } from "./helpers";
 
 // Varredura visual: cada tela em 5 larguras e nos dois temas, sem rolagem
 // lateral. As capturas ficam anexadas ao relatório para revisão humana
@@ -31,6 +31,20 @@ for (const scheme of ["light", "dark"] as const) {
         for (const path of CITIZEN) await checkPage(page, path, `${width}px ${scheme}`);
       });
     }
+
+    test("Início em 320px com texto muito grande, com Como usar o app", async ({ page }) => {
+      await page.setViewportSize({ width: 320, height: 568 });
+      await page.addInitScript(() => localStorage.setItem("rolim.textSize", "muito-grande"));
+      await page.goto("/");
+      await expect(page.locator("main h1")).toBeVisible();
+      await waitForSettled(page);
+      const help = page.getByRole("button", { name: /Como usar o app/ });
+      await help.scrollIntoViewIfNeeded();
+      await expect(help).toBeVisible();
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      expect(overflow, `rolagem lateral na Início (320px, texto 125%, ${scheme})`).toBeLessThanOrEqual(0);
+      await test.info().attach(`Início 320px muito grande ${scheme}`, { body: await page.screenshot({ fullPage: true }), contentType: "image/png" });
+    });
   });
 }
 

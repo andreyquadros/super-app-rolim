@@ -6,11 +6,17 @@ import { storageGet, storageRemove, storageSet } from "@/lib/safeStorage";
 
 const ONBOARDING_KEY = "rolim.onboarding";
 const VIEWS_KEY = "rolim.onboarding.vezes";
-const FIRST_SEEN_KEY = "rolim.firstSeen";
-const NEWS_KEY = "rolim.novidades";
-const ENTRY_KEY = "rolim.entry";
 const INTRO_SHOWN_KEY = "rolim.introShown";
 const PROBE_KEY = "rolim.probe";
+/** AAAA-MM-DD do primeiro acesso (local) */
+export const FIRST_SEEN_KEY = "rolim.firstSeen";
+export const NEWS_KEY = "rolim.novidades";
+/** pathname + search da primeira tela da sessão (sessão) */
+export const ENTRY_KEY = "rolim.entry";
+/** Passeio pela tela inicial (local): ausente · "pendente" · "v1" (features/tour/tourState) */
+export const TOUR_KEY = "rolim.passeio";
+/** Passeio visto ou dispensado: nunca mais automático */
+export const TOUR_DONE = "v1";
 
 export const ONBOARDING_DONE = "v1";
 export const NEWS_PENDING = "pendente";
@@ -83,12 +89,17 @@ export function isReturningUser(local: KeyValueStore, serviceWorkerControlled: b
   return serviceWorkerControlled || RETURNING_USER_KEYS.some((key) => local.get(key) !== null);
 }
 
-/** O mesmo endereço sem o parâmetro intro (mantém os demais). */
-export function withoutIntroParam(url: URL): string {
+/** O mesmo endereço sem os parâmetros indicados (mantém os demais e o hash). */
+export function withoutParams(url: URL, names: readonly string[]): string {
   const params = new URLSearchParams(url.search);
-  params.delete("intro");
+  for (const name of names) params.delete(name);
   const search = params.toString();
   return `${url.pathname}${search ? `?${search}` : ""}${url.hash}`;
+}
+
+/** Atalho: o mesmo endereço sem o parâmetro intro. */
+export function withoutIntroParam(url: URL): string {
+  return withoutParams(url, ["intro"]);
 }
 
 // ---------- Armazenamento do navegador ----------
@@ -130,20 +141,23 @@ function replaceBrowserUrl(from: URL, to: string): void {
   window.history.replaceState(window.history.state, "", to);
 }
 
-const BROWSER_ENV: OnboardingEnv = { local: localStore, session: sessionStore, replaceUrl: replaceBrowserUrl };
+/** safeStorage no local e a sessão com cópia em memória (também usado por tourState). */
+export const BROWSER_ENV: OnboardingEnv = { local: localStore, session: sessionStore, replaceUrl: replaceBrowserUrl };
 
-function localDate(date: Date): string {
+/** Data de hoje no relógio do aparelho, AAAA-MM-DD. */
+export function todayLocal(): string {
+  const date = new Date();
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
 function browserEntryContext(): EntryContext {
   const controlled = "serviceWorker" in navigator && navigator.serviceWorker.controller !== null;
-  return { path: window.location.pathname + window.location.search, serviceWorkerControlled: controlled, today: localDate(new Date()) };
+  return { path: window.location.pathname + window.location.search, serviceWorkerControlled: controlled, today: todayLocal() };
 }
 
-/** Teste de escrita e leitura: sem armazenamento a apresentação voltaria sempre. */
-function storageWorks(local: KeyValueStore): boolean {
+/** Teste de escrita e leitura: sem armazenamento a apresentação (e a oferta do passeio) voltaria sempre. */
+export function storageWorks(local: KeyValueStore): boolean {
   local.set(PROBE_KEY, "1");
   const works = local.get(PROBE_KEY) === "1";
   local.remove(PROBE_KEY);
@@ -164,6 +178,8 @@ export function recordSessionEntry(env: OnboardingEnv = BROWSER_ENV, context: En
   if (env.local.get(FIRST_SEEN_KEY) !== null) return;
   if (isReturningUser(env.local, context.serviceWorkerControlled)) {
     env.local.set(ONBOARDING_KEY, ONBOARDING_DONE);
+    // Quem já usava o app nunca recebe a oferta do passeio
+    env.local.set(TOUR_KEY, TOUR_DONE);
     if (env.local.get(NEWS_KEY) === null) env.local.set(NEWS_KEY, NEWS_PENDING);
   }
   env.local.set(FIRST_SEEN_KEY, context.today);
@@ -182,6 +198,8 @@ export function shouldShowOnboarding(url: URL, env: OnboardingEnv = BROWSER_ENV)
 
   if (decision === "disable") {
     env.local.set(ONBOARDING_KEY, ONBOARDING_DONE);
+    // Também sem oferta do passeio: Lighthouse e e2e ficam limpos
+    env.local.set(TOUR_KEY, TOUR_DONE);
     env.replaceUrl?.(url, withoutIntroParam(url));
     return false;
   }

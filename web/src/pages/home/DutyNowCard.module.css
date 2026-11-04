@@ -273,3 +273,17 @@
     text-underline-offset: 3px;
   }
 }
+
+/* Primeira abertura da Início nesta carga: o cartão assenta logo depois dos
+   blocos (só desloca; nada pisca) */
+@media (prefers-reduced-motion: no-preference) {
+  :global(html:not([data-motion="lite"]) [data-home-intro]) .card {
+    animation: duty-settle var(--motion-sheet-in) var(--ease-spring) 160ms backwards;
+  }
+}
+
+@keyframes duty-settle {
+  from {
+    transform: translateY(16px);
+  }
+}

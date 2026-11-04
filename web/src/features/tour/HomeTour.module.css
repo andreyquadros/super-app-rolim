@@ -1,0 +1,348 @@
+/* Passeio pela tela inicial: véu com furos, anel, cartão e a oferta.
+   Posição do cartão e do anel só por transform (a partir de top/left 0).
+   Só a camada usa classe (o que prende este arquivo ao pedaço); as partes são
+   achadas por atributos data-tour-* (únicos do passeio), para o pedaço não
+   levar um mapa de classes. O movimento fica no arquivo ao lado, embutido
+   aqui pelo @import (mesmo escopo: os keyframes continuam locais). */
+@import "./HomeTourMotion.module.css";
+
+.layer {
+  --tour-scrim: rgb(8 20 14 / 0.62);
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  /* A área segura, lida pelo passeio (os filhos absolutos partem da borda, não do padding) */
+  padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+  pointer-events: none;
+  color: var(--app-ink);
+}
+
+:global([data-mantine-color-scheme="dark"]) .layer {
+  --tour-scrim: rgb(0 0 0 / 0.68);
+}
+
+[data-tour-scrim] {
+  position: absolute;
+  inset: 0;
+  background: var(--tour-scrim);
+  pointer-events: auto;
+  touch-action: none;
+}
+
+[data-tour-ring] {
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  border: 3px solid var(--mantine-color-ipe-4);
+  box-shadow: 0 0 0 6px rgb(255 187 54 / 0.28);
+  opacity: 0;
+  scale: 1.04;
+  pointer-events: none;
+
+  &[data-on] {
+    opacity: 1;
+    scale: 1;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: -3px;
+    border: 3px solid var(--mantine-color-ipe-4);
+    border-radius: inherit;
+    opacity: 0;
+  }
+}
+
+/* Cartão: encaixado no celular, ancorado (com seta) a partir de 48em */
+[data-tour-card] {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: min(32rem, 100vw - 24px);
+  container: tour-card / inline-size;
+  pointer-events: auto;
+
+  @media (min-width: $mantine-breakpoint-sm) {
+    width: min(26rem, 100vw - var(--app-rail-w) - 32px);
+  }
+}
+
+[data-tour-phase] {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  max-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  padding: 8px 16px 16px;
+  border: 1px solid light-dark(transparent, rgb(255 255 255 / 0.08));
+  border-radius: 28px;
+  background: var(--app-surface);
+  box-shadow: 0 -12px 40px -12px rgb(8 20 14 / 0.45);
+
+  &[data-tour-phase="out"] {
+    opacity: 0;
+  }
+
+  /* Filhos em ordem (são <div>, sem marcos): linha de cima com "Passo N de 5" e
+     [Sair do passeio], o conteúdo, os botões e, no cartão ancorado, a seta */
+  & > :first-child {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0 4px;
+    margin-right: -4px;
+    color: var(--app-ink-soft);
+    font-size: 0.9375rem;
+    font-weight: 700;
+  }
+
+  /* Título, texto, nota e cópias: rolam por dentro; os botões ficam à vista */
+  & > :nth-child(2) {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  & h2 {
+    margin: 0;
+    font-family: var(--mantine-font-family-headings);
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.2;
+    outline: none;
+  }
+
+  & p {
+    margin: 8px 0 0;
+    font-size: 1.1875rem;
+    line-height: 1.45;
+  }
+
+  /* Texto longo, curto e nota: pelos ids (o cartão não leva atributos só para o CSS) */
+  & [id="passeio-n"] {
+    margin-top: 10px;
+    color: var(--app-ink-soft);
+    font-size: 0.9375rem;
+    line-height: 1.4;
+  }
+
+  & > :nth-child(3) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 14px;
+  }
+}
+
+[data-tour-card]:not([data-typo="curto"]) [id="passeio-s"],
+[data-tour-card][data-typo="curto"] [id="passeio-l"] {
+  display: none;
+}
+
+[data-tour-card]:is([data-typo="compacto"], [data-typo="curto"]) {
+  & h2 {
+    font-size: 1.3125rem;
+  }
+
+  & p:not([id="passeio-n"]) {
+    font-size: 1.0625rem;
+  }
+}
+
+[data-tour-phase] button,
+[data-tour-offer] button,
+[data-tour-copy] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 56px;
+  padding: 8px 18px;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 3px solid var(--mantine-color-mata-6);
+    outline-offset: 2px;
+  }
+}
+
+/* [Sair do passeio]: botão de texto sublinhado, 48 px */
+[data-tour-phase] > :first-child button {
+  min-height: 48px;
+  margin-left: auto;
+  padding: 0 4px;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--app-ink);
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 4px;
+}
+
+[data-tour-phase] [data-back],
+[data-tour-offer] button + button {
+  flex: none;
+  background: light-dark(rgb(23 36 28 / 0.07), rgb(255 255 255 / 0.09));
+  color: var(--app-ink);
+}
+
+[data-tour-phase] [data-back] {
+  padding: 0 18px 0 12px;
+
+  &::before {
+    rotate: 180deg;
+  }
+}
+
+[data-tour-phase] [data-next],
+[data-tour-offer] button,
+[data-tour-copy] {
+  flex: 1 1 auto;
+  background: var(--mantine-color-mata-8);
+  color: #ffffff;
+}
+
+[data-tour-phase] [data-next] {
+  box-shadow: 0 10px 22px -14px rgb(13 122 73 / 0.9);
+}
+
+/* Seta "→" de Próximo; Voltar usa a mesma, virada */
+[data-tour-phase] [data-back]::before,
+[data-tour-phase] [data-next="Próximo"]::after {
+  content: "";
+  width: 20px;
+  height: 20px;
+  background: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14M13 6l6 6-6 6'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+
+/* Modo centro do passo 2: cópias dos "Ligar" da página */
+[data-tour-copies] {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+
+  [data-tour-card][data-measure] & {
+    display: none;
+  }
+}
+
+[data-tour-copy][data-variant="outline"] {
+  border: 2px solid var(--mantine-color-slate-6);
+  background: transparent;
+  color: light-dark(var(--mantine-color-slate-8), var(--mantine-color-slate-1));
+}
+
+/* Cartão estreito com texto grande: Voltar sem a seta, para os dois botões caberem na linha */
+@container tour-card (max-width: 17rem) {
+  [data-tour-phase] [data-back] {
+    padding: 0 18px;
+
+    &::before {
+      display: none;
+    }
+  }
+}
+
+/* Seta do cartão ancorado, no lado voltado ao alvo */
+[data-caret] {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  background: var(--app-surface);
+  rotate: 45deg;
+
+  &[data-caret="top"],
+  &[data-caret="bottom"] {
+    left: calc(var(--at) - 9px);
+    inset-block: -9px auto;
+  }
+
+  &[data-caret="bottom"] {
+    inset-block: auto -9px;
+  }
+
+  &[data-caret="left"],
+  &[data-caret="right"] {
+    top: calc(var(--at) - 9px);
+    inset-inline: -9px auto;
+  }
+
+  &[data-caret="right"] {
+    inset-inline: auto -9px;
+  }
+}
+
+/* Oferta (folha): nota, [Mostrar o passeio] (56 px) e [Agora não] (52 px) */
+[data-tour-offer] {
+  display: grid;
+  gap: 10px;
+
+  & p {
+    margin: 0 0 6px;
+    color: var(--app-ink-soft);
+    font-size: 0.9375rem;
+    line-height: 1.4;
+  }
+
+  & button + button {
+    min-height: 52px;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  [data-tour-phase] [data-next]:hover,
+  [data-tour-offer] button:first-of-type:hover {
+    background: var(--mantine-color-mata-9);
+  }
+
+  [data-tour-phase] [data-back]:hover,
+  [data-tour-offer] button + button:hover,
+  [data-tour-phase] > :first-child button:hover {
+    background: light-dark(rgb(23 36 28 / 0.11), rgb(255 255 255 / 0.14));
+  }
+}
+
+@media (forced-colors: active) {
+  [data-tour-scrim] {
+    background: Canvas;
+  }
+
+  [data-tour-ring] {
+    border-color: Highlight;
+    box-shadow: none;
+  }
+
+  [data-tour-phase] {
+    border: 2px solid CanvasText;
+  }
+
+  /* Os botões só têm fundo, que as cores forçadas apagam: ganham contorno */
+  [data-tour-phase] button,
+  [data-tour-offer] button,
+  [data-tour-copy] {
+    border: 2px solid ButtonText;
+  }
+
+  /* As setas são máscara sobre o fundo: fora do ajuste, na cor do texto do botão */
+  [data-tour-phase] [data-back]::before,
+  [data-tour-phase] [data-next="Próximo"]::after {
+    forced-color-adjust: none;
+    background: ButtonText;
+  }
+}

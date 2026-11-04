@@ -15,8 +15,9 @@ export default defineConfig({
     baseURL: BASE_URL,
     serviceWorkers: "allow",
     trace: "retain-on-failure",
-    // Pessoa que já conhece o app: sem apresentação nem "Novidade"
-    // (e2e/onboarding.spec.ts zera este estado para testar o primeiro acesso)
+    // Pessoa que já conhece o app: sem apresentação, "Novidade" nem oferta do
+    // passeio (e2e/onboarding.spec.ts e firstVisit zeram este estado para
+    // testar o primeiro acesso)
     storageState: {
       cookies: [],
       origins: [
@@ -26,6 +27,7 @@ export default defineConfig({
             { name: "rolim.onboarding", value: "v1" },
             { name: "rolim.firstSeen", value: "2026-01-01" },
             { name: "rolim.novidades", value: "2026-10-funerarias" },
+            { name: "rolim.passeio", value: "v1" },
           ],
         },
       ],
@@ -35,10 +37,15 @@ export default defineConfig({
     { name: "celular", testIgnore: /visual\.spec\.ts/, use: { ...devices["Pixel 7"] } },
     { name: "telas", testMatch: /visual\.spec\.ts/, use: { ...devices["Desktop Chrome"] } },
     // Quem pede "reduzir movimento" no sistema usa o app do mesmo jeito
-    { name: "movimento-reduzido", testMatch: /plantao\.spec\.ts/, use: { ...devices["Pixel 7"], contextOptions: { reducedMotion: "reduce" } } },
-    // Safari do iPhone (WebKit): folhas <dialog>, barra verde, plantão e
-    // navegação com pedaços do app ainda baixando
-    { name: "iphone", testMatch: /(plantao|visual|atualizacao)\.spec\.ts/, use: { ...devices["iPhone 13"] } },
+    {
+      name: "movimento-reduzido",
+      testMatch: /(plantao|passeio|inicio|apresentacao)\.spec\.ts/,
+      use: { ...devices["Pixel 7"], contextOptions: { reducedMotion: "reduce" } },
+    },
+    // Safari do iPhone (WebKit): folhas <dialog>, barra verde, plantão,
+    // navegação com pedaços do app ainda baixando, e o clip-path e as View
+    // Transitions do passeio e da apresentação
+    { name: "iphone", testMatch: /(plantao|visual|atualizacao|passeio|apresentacao)\.spec\.ts/, use: { ...devices["iPhone 13"] } },
   ],
   webServer: {
     command: "npx vite build --mode e2e && npx vite preview --mode e2e",

@@ -1,13 +1,7 @@
 import type { ComponentType, ReactNode } from "react";
-import { StepBar } from "@/components/ui/StepBar";
 import { APP_NAME } from "@/config/city";
-import { CityArt, DutyArt, SettingsArt, StreetArt } from "./illustrations";
+import { CityArt, DutyArt, SettingsArt, StreetArt, TrackArt, type ArtProps } from "./illustrations";
 import classes from "./OnboardingPage.module.css";
-
-interface ArtProps {
-  /** O slide está na tela (reinicia a animação da barra de etapas) */
-  active: boolean;
-}
 
 export interface SlideCopy {
   id: string;
@@ -16,19 +10,6 @@ export interface SlideCopy {
   Art: ComponentType<ArtProps>;
   /** Faixa verde mais baixa (slide de preferências, que tem mais conteúdo) */
   compactArt?: boolean;
-}
-
-/** Slide 3: a mesma barra de 4 etapas que aparece nos pedidos. */
-function TrackArt({ active }: ArtProps) {
-  return (
-    <div className={classes.mockStack}>
-      <div className={classes.mock}>
-        <span className={`protocol ${classes.mockProtocol}`}>ZEL-2026-K7Q2MX9P</span>
-        <span className={classes.mockTitle}>Poste apagado na Rua das Flores</span>
-        <StepBar key={active ? "on" : "off"} status="IN_PROGRESS" size="lg" />
-      </div>
-    </div>
-  );
 }
 
 const BRAND = "SUPER APP";
@@ -101,7 +82,8 @@ export function Slide({ copy, position, total, active, titleRef, children }: Sli
       inert={!active}
       tabIndex={active ? 0 : -1}
     >
-      <div className={classes.art} data-compact={copy.compactArt || undefined} aria-hidden>
+      {/* Só o slide ativo leva o nome da passagem para a Início (um nome repetido a abortaria) */}
+      <div className={active ? `${classes.art} onb-hero-vt` : classes.art} data-compact={copy.compactArt || undefined} aria-hidden>
         <Art active={active} />
       </div>
       <div className={classes.sheet}>

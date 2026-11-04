@@ -1,17 +1,24 @@
+import { useEffect, useState } from "react";
 import { useAuth } from "@/auth/AuthContext";
 import { useDutyUnits, useMyRequests } from "@/hooks/useCitizenData";
 import { ContextInvite } from "./ContextInvite";
 import { DutyNowCard } from "./DutyNowCard";
 import { HomeHeader } from "./HomeHeader";
+import { HomeHelp } from "./HomeHelp";
 import { useNow, useWideLayout } from "./homeHooks";
 import { LatestNotice } from "./LatestNotice";
 import { MyRequestsPreview } from "./MyRequestsPreview";
 import { ServiceGrid } from "./ServiceGrid";
 import classes from "./HomePage.module.css";
 
+// A entrada animada toca na primeira montagem da Início em cada carga da
+// página (abrir, recarregar, chegar da apresentação); voltar pela aba não repete
+let homeEntered = false;
+
 /**
  * Início. No celular: saudação, serviços, plantão agora, seus pedidos, último
- * aviso e um convite. No computador: cabeçalho em cartão e duas colunas.
+ * aviso, "Como usar o app" e um convite. No computador: cabeçalho em cartão e
+ * duas colunas.
  */
 export default function HomePage() {
   const { user, profile } = useAuth();
@@ -20,21 +27,28 @@ export default function HomePage() {
   const requests = useMyRequests();
   const now = useNow();
   const wide = useWideLayout();
+  const [intro] = useState(() => !homeEntered);
+  useEffect(() => {
+    homeEntered = true;
+  }, []);
 
   const services = <ServiceGrid pharmacies={pharmacies} funerals={funerals} />;
   const duty = <DutyNowCard pharmacies={pharmacies} funerals={funerals} now={now} />;
   const mine = <MyRequestsPreview requests={requests} />;
   const notice = <LatestNotice now={now} />;
+  // Antes do convite, que pode surgir tarde (beforeinstallprompt) e a empurraria
+  const help = <HomeHelp />;
   const invite = <ContextInvite signedIn={user !== null && profile !== null} hasRequests={(requests.data?.length ?? 0) > 0} />;
 
   return (
-    <div className={classes.page}>
+    <div className={classes.page} data-home-intro={intro || undefined}>
       <HomeHeader now={now} />
       {wide ? (
         <div className={classes.columns}>
           <div className={classes.column}>
             {services}
             {mine}
+            {help}
           </div>
           <div className={classes.column}>
             {duty}
@@ -48,6 +62,7 @@ export default function HomePage() {
           {duty}
           {mine}
           {notice}
+          {help}
           {invite}
         </div>
       )}

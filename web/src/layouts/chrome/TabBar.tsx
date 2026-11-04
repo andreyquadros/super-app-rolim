@@ -53,7 +53,8 @@ export function TabBar({ sheetOpen, onRequest, hasUnreadNotices }: TabBarProps) 
     <Tab key={item.key} item={item} pathname={pathname} unread={item.key === "avisos" && hasUnreadNotices} onPress={onPress} />
   );
   return (
-    <nav className={`${classes.bar} tab-bar-vt`} aria-label="Navegação principal">
+    // data-tour*: alvos do passeio pela tela inicial (o círculo sobe acima da caixa do botão)
+    <nav className={`${classes.bar} tab-bar-vt`} aria-label="Navegação principal" data-tour="abas">
       {tab(first)}
       {tab(second)}
       <button
@@ -63,8 +64,9 @@ export function TabBar({ sheetOpen, onRequest, hasUnreadNotices }: TabBarProps) 
         aria-haspopup="dialog"
         aria-expanded={sheetOpen}
         data-open={sheetOpen || undefined}
+        data-tour="solicitar"
       >
-        <span className={classes.fab} aria-hidden>
+        <span className={classes.fab} aria-hidden data-tour-part="fab">
           <IconPlus size={30} stroke={2.4} className={classes.plus} />
         </span>
         <span className={classes.label}>Solicitar</span>

@@ -1,0 +1,299 @@
+/* Cenas das ilustrações da apresentação. Cada parte toca uma vez quando o
+   slide fica ativo (data-play na raiz) e para no quadro final, que é o
+   próprio estilo base (keyframes só com "from"). Até lá, o slide mostra o
+   primeiro quadro, pausado. Movimento reduzido e modo leve: sem cena, o
+   quadro final aparece na hora (transformar partes de SVG pesa em aparelho
+   fraco). Só transform, opacity e clip-path. */
+
+/* Origens em unidades do SVG (view-box); fill-box só onde a parte cresce em
+   torno de si mesma */
+.bloom,
+.photo,
+.press {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.shadow,
+.clock,
+.hand,
+.balloon,
+.appIcon,
+.bellDot {
+  transform-box: view-box;
+}
+
+.shadow {
+  transform-origin: 140px 64px;
+}
+
+.clock,
+.hand {
+  transform-origin: 150px 72px;
+}
+
+.balloon {
+  transform-origin: 282px 46px;
+}
+
+.appIcon {
+  transform-origin: 162px 50px;
+}
+
+.bellDot {
+  transform-origin: 280px 44px;
+}
+
+/* "Aa": o <g> de fora acompanha o tamanho escolhido (resposta ao toque, vale
+   no modo leve); o de dentro faz a entrada, sem disputar a propriedade */
+.aaSize,
+.aa {
+  transform-box: fill-box;
+  transform-origin: 0 100%;
+}
+
+.aaSize {
+  transition: transform var(--motion-base) var(--ease-spring);
+}
+
+:global(html[data-text-size="grande"]) .aaSize {
+  transform: scale(1.12);
+}
+
+:global(html[data-text-size="muito-grande"]) .aaSize {
+  transform: scale(1.25);
+}
+
+/* Slide 3: cartão de pedido com a barra de etapas (HTML, não SVG) */
+.mockStack {
+  position: relative;
+  width: min(100%, 21rem);
+  margin-top: 12px;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.16);
+    transform: translate(10px, -10px) rotate(3deg);
+  }
+}
+
+.mock {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 20px;
+  background: var(--app-surface);
+  color: var(--app-ink);
+  box-shadow: 0 18px 32px -18px rgba(0, 0, 0, 0.55);
+}
+
+.mockProtocol {
+  color: light-dark(var(--mantine-color-mata-8), var(--mantine-color-mata-3));
+  font-size: 0.875rem;
+}
+
+.mockTitle {
+  margin-bottom: 4px;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Slide 1: a cidade se arruma e o pino pousa (cerca de 800 ms) */
+  :global(html:not([data-motion="lite"])) .rise {
+    animation: onb-rise var(--motion-sheet-in) var(--ease-enter) calc(var(--n) * var(--stagger)) both paused;
+  }
+
+  :global(html:not([data-motion="lite"])) .bloom {
+    animation: onb-bloom var(--motion-sheet-in) var(--ease-spring) calc(160ms + var(--n) * var(--stagger)) both paused;
+  }
+
+  :global(html:not([data-motion="lite"])) .drop {
+    animation: onb-drop var(--motion-emph) var(--ease-spring) 200ms both paused;
+  }
+
+  :global(html:not([data-motion="lite"])) .shadow {
+    animation: onb-shadow var(--motion-emph) var(--ease-enter) 200ms both paused;
+  }
+
+  :global(html:not([data-motion="lite"])) .rays {
+    animation: onb-fade var(--motion-fast) var(--ease-enter) 640ms both paused;
+  }
+
+  /* Slide 2: foto, local, enviar (cerca de 1 s) */
+  :global(html:not([data-motion="lite"])) .phone {
+    animation: onb-rise-lg var(--motion-sheet-in) var(--ease-spring) both paused;
+  }
+
+  :global(html:not([data-motion="lite"])) .photo {
+    animation: onb-photo var(--motion-base) var(--ease-enter) 240ms both paused;
+  }
+
+  :global(html:not([data-motion="lite"])) .dropSm {
+    animation: onb-drop-sm var(--motion-sheet-in) var(--ease-spring) 420ms both paused;
+  }
+
+  :global(html:not([data-motion="lite"])) .press {
+    animation: onb-press var(--motion-base) var(--ease-standard) 760ms both paused;
+  }
+
+  /* Slide 3: o cartão sobe e a pilha de pedidos se abre */
+  :global(html:not([data-motion="lite"])) .mock {
+    animation: onb-card var(--motion-sheet-in) var(--ease-enter) both paused;
+  }
+
+  :global(html:not([data-motion="lite"])) .mockStack::before {
+    animation: onb-fan var(--motion-emph) var(--ease-spring) 120ms both paused;
+  }
+
+  /* Slide 4: plantão 24 h, ligue com um toque, trace a rota (cerca de 1 s) */
+  :global(html:not([data-motion="lite"])) .clock {
+    animation: onb-pop var(--motion-sheet-in) var(--ease-spring) both paused;
+  }
+
+  :global(html:not([data-motion="lite"])) .hand {
+    animation: onb-turn var(--motion-emph) var(--ease-enter) 120ms both paused;
+  }
+
+  :global(html:not([data-motion="lite"])) .balloon {
+    --pop-opacity: 0;
+    animation: onb-pop var(--motion-sheet-in) var(--ease-spring) 320ms both paused;
+  }
+
+  :global(html:not([data-motion="lite"])) .draw {
+    animation: onb-draw var(--motion-emph) var(--ease-standard) 480ms both paused;
+  }
+
+  /* Slide 5: letras, o app na tela, chegou um aviso (cerca de 800 ms) */
+  :global(html:not([data-motion="lite"])) .aa {
+    animation: onb-grow var(--motion-emph) var(--ease-enter) both paused;
+  }
+
+  :global(html:not([data-motion="lite"])) .appIcon {
+    --pop-scale: 0.5;
+    animation: onb-pop var(--motion-sheet-in) var(--ease-spring) 200ms both paused;
+  }
+
+  :global(html:not([data-motion="lite"])) .bellDot {
+    --pop-scale: 0;
+    animation: onb-pop var(--motion-base) var(--ease-spring) 420ms both paused;
+  }
+
+  /* O slide ativo toca a cena; voltar a ele não repete (já terminou) */
+  :global(html:not([data-motion="lite"])) [data-play] [class],
+  :global(html:not([data-motion="lite"])) .mockStack[data-play]::before {
+    animation-play-state: running;
+  }
+}
+
+@keyframes onb-rise {
+  from {
+    opacity: 0.4;
+    transform: translateY(14px);
+  }
+}
+
+@keyframes onb-bloom {
+  from {
+    transform: scale(0.3);
+  }
+}
+
+/* O topo do pino fica em y ≈ 15 e o <svg> recorta a borda: subir só 14
+   mantém o primeiro quadro inteiro (com 36, nascia fatiado no meio do verde).
+   A opacidade parcial, a mesma dos prédios, ajuda a ler a queda curta */
+@keyframes onb-drop {
+  from {
+    opacity: 0.4;
+    transform: translateY(-14px);
+  }
+}
+
+@keyframes onb-shadow {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+}
+
+@keyframes onb-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes onb-rise-lg {
+  from {
+    transform: translateY(28px);
+  }
+}
+
+@keyframes onb-photo {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+}
+
+@keyframes onb-drop-sm {
+  from {
+    opacity: 0;
+    transform: translateY(-18px);
+  }
+}
+
+@keyframes onb-press {
+  50% {
+    transform: scale(0.9);
+  }
+}
+
+/* Mesmo "pop" com pontos de partida diferentes (--pop-scale, --pop-opacity) */
+@keyframes onb-pop {
+  from {
+    opacity: var(--pop-opacity, 1);
+    transform: scale(var(--pop-scale, 0.6));
+  }
+}
+
+/* Sem opacidade: o cartão tem texto */
+@keyframes onb-card {
+  from {
+    transform: translateY(16px);
+  }
+}
+
+/* Da pilha alinhada até o repouso, translate(10px, -10px) rotate(3deg) */
+@keyframes onb-fan {
+  from {
+    transform: none;
+  }
+}
+
+@keyframes onb-turn {
+  from {
+    transform: rotate(-90deg);
+  }
+}
+
+/* inset() não interpola com "none": o fim é um recorte folgado, que não
+   corta as pontas redondas do traço (sem cena, não há recorte nenhum) */
+@keyframes onb-draw {
+  from {
+    clip-path: inset(-8px 100% -8px -8px);
+  }
+  to {
+    clip-path: inset(-8px);
+  }
+}
+
+@keyframes onb-grow {
+  from {
+    transform: scale(0.8);
+  }
+}

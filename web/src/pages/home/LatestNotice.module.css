@@ -88,3 +88,16 @@
     border-color: light-dark(var(--mantine-color-mata-3), rgba(114, 194, 151, 0.45));
   }
 }
+
+/* "Novo" acena uma vez na primeira abertura da Início */
+@media (prefers-reduced-motion: no-preference) {
+  :global(html:not([data-motion="lite"]) [data-home-intro]) .new {
+    animation: notice-bump var(--motion-base) var(--ease-spring) 400ms;
+  }
+}
+
+@keyframes notice-bump {
+  50% {
+    transform: scale(1.08);
+  }
+}

@@ -46,6 +46,42 @@ html[data-nav-scope="duty"] .duty-switch-vt {
   view-transition-name: duty-switch;
 }
 
+/* Apresentação → Início (só no celular, onde as duas faixas verdes têm a mesma
+   largura): a ilustração do slide ativo encolhe até o cabeçalho da Início.
+   O OnboardingPage grava data-nav-scope="welcome"; o próximo setNavKind limpa.
+   Global de propósito: num módulo o vt-fade-out seria renomeado. */
+@media (max-width: 47.99em) {
+  html[data-nav-scope="welcome"] .onb-hero-vt,
+  html[data-nav-scope="welcome"] .home-hero-vt {
+    view-transition-name: welcome-hero;
+  }
+
+  /* Os blocos sobem sobre o verde (--home-overlap): na raiz ficariam por baixo
+     do cabeçalho que encolhe; com grupo próprio, pintam por cima, como em repouso */
+  html[data-nav-scope="welcome"] .home-tiles-vt {
+    view-transition-name: welcome-tiles;
+  }
+}
+
+::view-transition-group(welcome-hero) {
+  animation-duration: var(--motion-emph);
+  animation-timing-function: var(--ease-standard);
+}
+
+::view-transition-old(welcome-hero) {
+  animation: vt-fade-out var(--motion-fast) var(--ease-exit) both;
+}
+
+::view-transition-new(welcome-hero) {
+  animation: none;
+}
+
+/* Blocos (só na Início, grupo parado): entram com a raiz; a imagem é ao vivo e mostra o assentamento */
+::view-transition-new(welcome-tiles) {
+  animation: vt-tab-in 200ms var(--ease-enter) 60ms both;
+}
+
+::view-transition-group(welcome-tiles),
 ::view-transition-group(app-bar),
 ::view-transition-group(tab-bar),
 ::view-transition-group(nav-rail),
@@ -347,8 +383,10 @@ html[data-nav="flow-exit"]::view-transition-new(root) {
   }
 }
 
+/* No lite o ponto "ao vivo" fica parado: "De plantão" continua no texto */
 html[data-motion="lite"] .enter-rise,
 html[data-motion="lite"] .shimmer::after,
+html[data-motion="lite"] .live-dot::after,
 html[data-motion="lite"] .bump {
   animation: none !important;
 }

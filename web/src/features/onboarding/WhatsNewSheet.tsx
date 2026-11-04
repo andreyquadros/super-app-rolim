@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppLink, useAppNavigate } from "@/components/AppLink";
 import { BottomSheet } from "@/components/sheet/BottomSheet";
+import { anotherDialogOpen } from "@/components/sheet/openDialogs";
 import { DUTY_META } from "@/domain/duty";
 import { markWhatsNewSeen, shouldShowWhatsNew } from "./onboardingState";
 import classes from "./WhatsNewSheet.module.css";
@@ -11,11 +12,6 @@ const OPEN_DELAY_MS = 1200;
 interface WhatsNewSheetProps {
   /** Chamado depois que a folha fechou: o CitizenLayout deixa de montá-la */
   onDone: () => void;
-}
-
-/** Outra folha ou diálogo aberto (ex.: Solicitar): a Novidade espera a vez. */
-function anotherDialogOpen(): boolean {
-  return document.querySelector("dialog[open], [role='dialog'][aria-modal='true']") !== null;
 }
 
 /**

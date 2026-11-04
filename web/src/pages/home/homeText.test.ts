@@ -5,6 +5,7 @@ import {
   chooseInvite,
   dutyCountLabel,
   dutyTileTarget,
+  dutyTourState,
   greetingParts,
   homeGreeting,
   latestUpdate,
@@ -124,6 +125,25 @@ describe("plantão na Início", () => {
     ).toBe("tel:6934420001");
     expect(callablePhone([{ type: "WHATSAPP", number: "69999991001" }])).toBe("tel:69999991001");
     expect(callablePhone([])).toBeNull();
+  });
+});
+
+describe("estado do plantão para o passeio", () => {
+  it("diz que o cartão está carregando enquanto as listas não chegaram", () => {
+    expect(dutyTourState({ loading: true, failed: false, callable: false })).toBe("carregando");
+  });
+
+  it("diz que houve erro, mesmo com a outra lista ainda carregando", () => {
+    expect(dutyTourState({ loading: false, failed: true, callable: false })).toBe("erro");
+    expect(dutyTourState({ loading: true, failed: true, callable: true })).toBe("erro");
+  });
+
+  it("diz ok quando há um Ligar no cartão", () => {
+    expect(dutyTourState({ loading: false, failed: false, callable: true })).toBe("ok");
+  });
+
+  it("diz sem-ligar quando ninguém de plantão tem telefone para ligar", () => {
+    expect(dutyTourState({ loading: false, failed: false, callable: false })).toBe("sem-ligar");
   });
 });
 

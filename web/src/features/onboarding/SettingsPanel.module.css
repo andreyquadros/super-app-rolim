@@ -145,6 +145,34 @@
   }
 }
 
+/* Instalação concluída com a tela aberta. Vazia, a região viva fica fora da
+   grade (sem somar espaço); com a confirmação, entra no fluxo */
+.status:empty {
+  position: absolute;
+}
+
+.done {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  color: light-dark(var(--mantine-color-mata-9), var(--mantine-color-mata-2));
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.doneIcon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: light-dark(var(--mantine-color-mata-8), var(--mantine-color-mata-4));
+  color: light-dark(#ffffff, #0f3b28);
+}
+
 .action {
   display: inline-flex;
   align-items: center;
@@ -172,5 +200,29 @@
 @media (hover: hover) and (pointer: fine) {
   .size:hover {
     border-color: light-dark(var(--mantine-color-mata-4), var(--mantine-color-mata-6));
+  }
+}
+
+/* O check responde ao toque (vale também no modo leve); a confirmação da
+   instalação é entrada, e não toca no modo leve */
+@media (prefers-reduced-motion: no-preference) {
+  .sizes[data-touched] .size:has(:checked) .check {
+    animation: size-check var(--motion-base) var(--ease-spring);
+  }
+
+  :global(html:not([data-motion="lite"])) .doneIcon {
+    animation: install-pop var(--motion-sheet-in) var(--ease-spring) backwards;
+  }
+}
+
+@keyframes size-check {
+  from {
+    transform: scale(0.6);
+  }
+}
+
+@keyframes install-pop {
+  from {
+    transform: scale(0.6);
   }
 }

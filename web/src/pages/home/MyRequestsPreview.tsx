@@ -22,7 +22,7 @@ interface PromptProps {
 /** Convite no lugar da lista (sem login, cadastro incompleto, nada em andamento). */
 function Prompt({ text, children }: PromptProps) {
   return (
-    <div className={classes.prompt}>
+    <div className={`${classes.prompt} enter-rise`}>
       <p className={classes.promptText}>{text}</p>
       <div className={classes.actions}>{children}</div>
     </div>

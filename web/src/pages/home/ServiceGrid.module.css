@@ -112,6 +112,7 @@
   width: 52px;
   height: 52px;
   border-radius: 16px;
+  transition: transform var(--motion-press) var(--ease-standard);
 
   .tile[data-tone="mata"] & {
     background: var(--mantine-color-mata-light);
@@ -188,5 +189,77 @@
 
   .tile:hover::after {
     opacity: 1;
+  }
+}
+
+/* Toque (toda visita, também no lite): o quadrado do ícone afunda junto com o
+   bloco. As funerárias ficam só com o retorno do data-press. */
+.tile:not([data-tone="slate"]):active .icon {
+  transform: scale(0.94);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile:not([data-tone="slate"]):active .icon {
+    transform: none;
+  }
+}
+
+/* Primeira abertura da Início nesta carga: os blocos assentam (só transform;
+   tudo visível desde o primeiro quadro). Anima o li, não o .tile, para o
+   :active e o hover do bloco continuarem livres. */
+@media (prefers-reduced-motion: no-preference) {
+  :global(html:not([data-motion="lite"]) [data-home-intro]) .item {
+    animation: home-settle var(--motion-sheet-in) var(--ease-spring) backwards;
+    animation-delay: calc(var(--i, 0) * var(--stagger));
+  }
+
+  /* O ícone desperta logo depois; o das funerárias (ardósia) fica parado */
+  :global(html:not([data-motion="lite"]) [data-home-intro]) .tile:not([data-tone="slate"]) .icon {
+    animation: home-wake var(--motion-sheet-in) var(--ease-spring) backwards;
+    animation-delay: calc(80ms + var(--i, 0) * var(--stagger));
+  }
+
+  /* Selo da farmácia aparece num pop (depois, o pulso do .live-dot); o das funerárias só esmaece */
+  :global(html:not([data-motion="lite"]) [data-home-intro]) .badge[data-badge="live"] {
+    animation: badge-pop var(--motion-sheet-in) var(--ease-spring);
+  }
+
+  :global(html:not([data-motion="lite"]) [data-home-intro]) .badge[data-badge="still"] {
+    animation: badge-fade var(--motion-base) var(--ease-standard);
+  }
+
+  /* "1 de plantão agora" no lugar do esqueleto (em toda visita) */
+  :global(html:not([data-motion="lite"])) .live {
+    animation: line-in var(--motion-fast) var(--ease-enter);
+  }
+}
+
+@keyframes home-settle {
+  from {
+    transform: translateY(12px);
+  }
+}
+
+@keyframes home-wake {
+  from {
+    transform: scale(0.88);
+  }
+}
+
+@keyframes badge-pop {
+  from {
+    transform: scale(0);
+  }
+}
+
+@keyframes badge-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes line-in {
+  from {
+    opacity: 0;
   }
 }
